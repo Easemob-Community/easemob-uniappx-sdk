@@ -3,7 +3,6 @@
     "Foundation.framework",
     "UIKit.framework",
     "CoreFoundation.framework",
-    "CoreGraphics.framework",
     "Security.framework",
     "CFNetwork.framework",
     "libxml2.tbd",
@@ -15,6 +14,6 @@
     "arm64"
   ],
   "dependencies-pods": {
-    "HyphenateChat": "4.11.0"
+    "HyphenateChat": "4.15.1"
   }
 }
