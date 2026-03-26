@@ -1,0 +1,170 @@
+import { ref } from 'vue'
+import easemobIM from '@/uni_modules/easemob-im'
+
+
+const __sfc__ = defineComponent({
+  __name: 'index',
+  setup(__props) {
+const __ins = getCurrentInstance()!;
+const _ctx = __ins.proxy as InstanceType<typeof __sfc__>;
+const _cache = __ins.renderCache;
+
+const appKey = ref('')
+const username = ref('')
+const password = ref('')
+const target = ref('')
+const content = ref('')
+const logs = ref<string[]>([])
+const initStatus = ref('未初始化')
+const loginStatus = ref('未登录')
+
+const addLog = (msg: string) => {
+  const time = new Date().toLocaleTimeString()
+  logs.value.unshift(`${time}: ${msg}`)
+  if (logs.value.length > 20) logs.value.pop()
+}
+
+const initSDK = () => {
+  if (!appKey.value) {
+    addLog('请输入AppKey')
+    return
+  }
+  const ok = easemobIM.im.init(appKey.value)
+  if (ok) {
+    initStatus.value = '已初始化'
+    addLog('初始化成功')
+    
+    // 监听消息
+    easemobIM.im.onMessage((msg: any) => {
+      addLog(`收到: ${msg.from} -> ${msg.content}`)
+    })
+  } else {
+    addLog('初始化失败')
+  }
+}
+
+const doLogin = () => {
+  if (!username.value || !password.value) {
+    addLog('请输入用户名密码')
+    return
+  }
+  easemobIM.im.login(
+    username.value,
+    password.value,
+    () => {
+      loginStatus.value = '已登录: ' + username.value
+      addLog('登录成功')
+    },
+    (code: number, msg: string) => {
+      addLog(`登录失败: ${code} ${msg}`)
+    }
+  )
+}
+
+const doLogout = () => {
+  easemobIM.im.logout(() => {
+    loginStatus.value = '未登录'
+    addLog('已登出')
+  })
+}
+
+const sendMsg = () => {
+  if (!target.value || !content.value) {
+    addLog('请输入对方用户名和消息内容')
+    return
+  }
+  easemobIM.im.sendText(
+    target.value,
+    content.value,
+    () => {
+      addLog('发送成功')
+      content.value = ''
+    },
+    (code: number, msg: string) => {
+      addLog(`发送失败: ${code} ${msg}`)
+    }
+  )
+}
+
+return (): any | null => {
+
+  return _cE("view", _uM({ class: "container" }), [
+    _cE("text", _uM({ class: "title" }), "环信IM Demo"),
+    _cE("view", _uM({ class: "card" }), [
+      _cE("text", _uM({ class: "label" }), "AppKey:"),
+      _cE("input", _uM({
+        class: "input",
+        modelValue: appKey.value,
+        onInput: ($event: UniInputEvent) => {(appKey).value = $event.detail.value},
+        placeholder: "请输入AppKey"
+      }), null, 40 /* PROPS, NEED_HYDRATION */, ["modelValue", "onInput"]),
+      _cE("button", _uM({
+        class: "btn",
+        onClick: initSDK
+      }), "初始化"),
+      _cE("text", _uM({ class: "info" }), _tD(initStatus.value), 1 /* TEXT */)
+    ]),
+    _cE("view", _uM({ class: "card" }), [
+      _cE("text", _uM({ class: "label" }), "用户名:"),
+      _cE("input", _uM({
+        class: "input",
+        modelValue: username.value,
+        onInput: ($event: UniInputEvent) => {(username).value = $event.detail.value},
+        placeholder: "用户名"
+      }), null, 40 /* PROPS, NEED_HYDRATION */, ["modelValue", "onInput"]),
+      _cE("text", _uM({ class: "label" }), "密码:"),
+      _cE("input", _uM({
+        class: "input",
+        modelValue: password.value,
+        onInput: ($event: UniInputEvent) => {(password).value = $event.detail.value},
+        placeholder: "密码",
+        password: ""
+      }), null, 40 /* PROPS, NEED_HYDRATION */, ["modelValue", "onInput"]),
+      _cE("button", _uM({
+        class: "btn",
+        onClick: doLogin
+      }), "登录"),
+      _cE("button", _uM({
+        class: "btn btn-gray",
+        onClick: doLogout
+      }), "登出"),
+      _cE("text", _uM({ class: "info" }), _tD(loginStatus.value), 1 /* TEXT */)
+    ]),
+    _cE("view", _uM({ class: "card" }), [
+      _cE("text", _uM({ class: "label" }), "发给:"),
+      _cE("input", _uM({
+        class: "input",
+        modelValue: target.value,
+        onInput: ($event: UniInputEvent) => {(target).value = $event.detail.value},
+        placeholder: "对方用户名"
+      }), null, 40 /* PROPS, NEED_HYDRATION */, ["modelValue", "onInput"]),
+      _cE("text", _uM({ class: "label" }), "内容:"),
+      _cE("input", _uM({
+        class: "input",
+        modelValue: content.value,
+        onInput: ($event: UniInputEvent) => {(content).value = $event.detail.value},
+        placeholder: "消息内容"
+      }), null, 40 /* PROPS, NEED_HYDRATION */, ["modelValue", "onInput"]),
+      _cE("button", _uM({
+        class: "btn",
+        onClick: sendMsg
+      }), "发送")
+    ]),
+    _cE("view", _uM({ class: "card" }), [
+      _cE("text", _uM({ class: "label" }), "日志:"),
+      _cE("scroll-view", _uM({ class: "log-box" }), [
+        _cE(Fragment, null, RenderHelpers.renderList(logs.value, (log, i, __index, _cached): any => {
+          return _cE("text", _uM({
+            key: i,
+            class: "log-text"
+          }), _tD(log), 1 /* TEXT */)
+        }), 128 /* KEYED_FRAGMENT */)
+      ])
+    ])
+  ])
+}
+}
+
+})
+export default __sfc__
+const GenPagesIndexIndexStyles = [_uM([["container", _pS(_uM([["paddingTop", 16], ["paddingRight", 16], ["paddingBottom", 16], ["paddingLeft", 16], ["backgroundColor", "#f5f5f5"]]))], ["title", _pS(_uM([["fontSize", 20], ["fontWeight", "bold"], ["textAlign", "center"], ["marginTop", 20], ["marginRight", 0], ["marginBottom", 20], ["marginLeft", 0]]))], ["card", _pS(_uM([["backgroundColor", "#ffffff"], ["borderTopLeftRadius", 8], ["borderTopRightRadius", 8], ["borderBottomRightRadius", 8], ["borderBottomLeftRadius", 8], ["paddingTop", 12], ["paddingRight", 12], ["paddingBottom", 12], ["paddingLeft", 12], ["marginBottom", 12]]))], ["label", _pS(_uM([["fontSize", 14], ["color", "#666666"], ["marginBottom", 6]]))], ["input", _pS(_uM([["height", 40], ["borderTopWidth", 1], ["borderRightWidth", 1], ["borderBottomWidth", 1], ["borderLeftWidth", 1], ["borderTopStyle", "solid"], ["borderRightStyle", "solid"], ["borderBottomStyle", "solid"], ["borderLeftStyle", "solid"], ["borderTopColor", "#dddddd"], ["borderRightColor", "#dddddd"], ["borderBottomColor", "#dddddd"], ["borderLeftColor", "#dddddd"], ["borderTopLeftRadius", 6], ["borderTopRightRadius", 6], ["borderBottomRightRadius", 6], ["borderBottomLeftRadius", 6], ["paddingTop", 0], ["paddingRight", 10], ["paddingBottom", 0], ["paddingLeft", 10], ["marginBottom", 10], ["fontSize", 14]]))], ["btn", _pS(_uM([["height", 40], ["backgroundColor", "#007AFF"], ["color", "#ffffff"], ["borderTopLeftRadius", 6], ["borderTopRightRadius", 6], ["borderBottomRightRadius", 6], ["borderBottomLeftRadius", 6], ["fontSize", 15], ["marginBottom", 8]]))], ["btn-gray", _pS(_uM([["backgroundColor", "#999999"]]))], ["info", _pS(_uM([["fontSize", 13], ["color", "#333333"], ["marginTop", 6]]))], ["log-box", _pS(_uM([["height", 150], ["backgroundColor", "#1e1e1e"], ["borderTopLeftRadius", 6], ["borderTopRightRadius", 6], ["borderBottomRightRadius", 6], ["borderBottomLeftRadius", 6], ["paddingTop", 8], ["paddingRight", 8], ["paddingBottom", 8], ["paddingLeft", 8]]))], ["log-text", _pS(_uM([["fontSize", 12], ["color", "#00ff00"], ["lineHeight", 1.5]]))]])]
