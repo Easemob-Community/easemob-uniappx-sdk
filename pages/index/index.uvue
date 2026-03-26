@@ -1,0 +1,562 @@
+<template>
+  <view class="container">
+    <view class="header">
+      <text class="title">环信IM SDK Demo</text>
+      <text class="subtitle">UniAppX 原生桥接版</text>
+    </view>
+    
+    <view class="card">
+      <text class="card-title">SDK初始化</text>
+      <view class="input-row">
+        <text class="label">AppKey:</text>
+        <input class="input" v-model="appKey" placeholder="请输入环信AppKey" />
+      </view>
+      <button class="btn btn-primary" @click="initSDK" :disabled="isInitialized">
+        {{ isInitialized ? '已初始化' : '初始化SDK' }}
+      </button>
+      <text class="version">SDK版本: {{ sdkVersion }}</text>
+    </view>
+    
+    <view class="card" v-if="isInitialized">
+      <text class="card-title">用户认证</text>
+      <view class="input-row">
+        <text class="label">用户名:</text>
+        <input class="input" v-model="username" placeholder="请输入用户名" />
+      </view>
+      <view class="input-row">
+        <text class="label">密码:</text>
+        <input class="input" v-model="password" placeholder="请输入密码" password />
+      </view>
+      <view class="button-row">
+        <button class="btn btn-secondary" @click="register" :disabled="isLoggedIn">
+          注册
+        </button>
+        <button class="btn btn-primary" @click="login" :disabled="isLoggedIn">
+          登录
+        </button>
+      </view>
+      <button class="btn btn-danger" v-if="isLoggedIn" @click="logout">
+        登出
+      </button>
+      <text class="status" :class="{ 'status-online': isLoggedIn }">
+        状态: {{ isLoggedIn ? `已登录 (${currentUser?.userId})` : '未登录' }}
+      </text>
+    </view>
+    
+    <view class="card" v-if="isLoggedIn">
+      <text class="card-title">单聊消息</text>
+      <view class="input-row">
+        <text class="label">对方ID:</text>
+        <input class="input" v-model="targetUser" placeholder="请输入对方用户名" />
+      </view>
+      <view class="input-row">
+        <text class="label">消息内容:</text>
+        <input class="input" v-model="messageContent" placeholder="请输入消息内容" />
+      </view>
+      <button class="btn btn-primary" @click="sendTextMessage" :disabled="!targetUser || !messageContent">
+        发送文本消息
+      </button>
+      
+      <view class="message-section">
+        <text class="section-title">消息记录 ({{ messages.length }}条)</text>
+        <scroll-view class="message-list" scroll-y>
+          <view v-for="(msg, index) in messages" :key="msg.msgId" class="message-item"
+            :class="{ 'message-mine': msg.isSender }
+          >
+            <view class="message-header">
+              <text class="message-from">{{ msg.isSender ? '我' : msg.from }}</text>
+              <text class="message-time">{{ formatTime(msg.timestamp) }}</text>
+            </view>
+            <text class="message-content">{{ msg.body.content }}</text>
+            <text class="message-status" :class="'status-' + msg.status">{{ msg.status }}</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+    
+    <view class="card" v-if="isLoggedIn">
+      <text class="card-title">会话列表</text>
+      <view v-for="conv in conversations" :key="conv.conversationId" class="conversation-item">
+        <view class="conv-info">
+          <text class="conv-name">{{ conv.conversationId }}</text>
+          <text class="conv-type">{{ conv.type }}</text>
+        </view>
+        <view class="conv-meta">
+          <text class="conv-unread" v-if="conv.unreadCount > 0">{{ conv.unreadCount }}条未读</text>
+          <text class="conv-last" v-if="conv.lastMessage">{{ conv.lastMessage.body.content }}</text>
+        </view>
+      </view>
+      <text v-if="conversations.length === 0" class="empty-text">暂无会话</text>
+    </view>
+    
+    <view class="card">
+      <text class="card-title">日志输出</text>
+      <scroll-view class="log-view" scroll-y>
+        <text v-for="(log, index) in logs" :key="index" class="log-item">{{ log }}</text>
+      </scroll-view>
+      <button class="btn btn-secondary" @click="clearLogs">清空日志</button>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import easemobIM from '@/uni_modules/easemob-im'
+
+// SDK状态
+const isInitialized = ref(false)
+const isLoggedIn = ref(false)
+const sdkVersion = ref('')
+
+// 用户输入
+const appKey = ref('')
+const username = ref('')
+const password = ref('')
+const targetUser = ref('')
+const messageContent = ref('')
+
+// 数据
+const currentUser = ref<EMUserInfo | null>(null)
+const messages = ref<EMMessage[]>([])
+const conversations = ref<EMConversation[]>([])
+const logs = ref<string[]>([])
+
+// 添加日志
+const addLog = (msg: string) => {
+  const time = new Date().toLocaleTimeString()
+  logs.value.unshift(`[${time}] ${msg}`)
+  if (logs.value.length > 100) {
+    logs.value.pop()
+  }
+}
+
+// 清空日志
+const clearLogs = () => {
+  logs.value = []
+}
+
+// 格式化时间
+const formatTime = (timestamp: number): string => {
+  const date = new Date(timestamp)
+  return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+}
+
+// 初始化SDK
+const initSDK = () => {
+  if (!appKey.value) {
+    addLog('错误: 请输入AppKey')
+    return
+  }
+  
+  try {
+    easemobIM.im.init({
+      appKey: appKey.value,
+      autoLogin: false,
+      debugMode: true
+    })
+    isInitialized.value = true
+    sdkVersion.value = easemobIM.im.getVersion()
+    addLog(`SDK初始化成功, 版本: ${sdkVersion.value}`)
+    
+    // 设置连接监听
+    setupListeners()
+  } catch (e) {
+    addLog(`SDK初始化失败: ${e}`)
+  }
+}
+
+// 设置监听器
+const setupListeners = () => {
+  // 消息接收监听
+  easemobIM.im.addMessageListener((message: EMMessage) => {
+    addLog(`收到消息: ${message.body.content} 来自: ${message.from}`)
+    messages.value.push(message)
+    // 刷新会话列表
+    refreshConversations()
+  })
+  
+  // 连接状态监听
+  easemobIM.im.addConnectionListener((state: EMConnectionState, error?: EMError) => {
+    addLog(`连接状态变更: ${state}`)
+    if (error) {
+      addLog(`连接错误: ${error.message}`)
+    }
+    if (state === 'disconnected') {
+      isLoggedIn.value = false
+    }
+  })
+  
+  // Token过期监听
+  easemobIM.im.addTokenWillExpireListener(() => {
+    addLog('Token即将过期，请重新登录')
+  })
+  
+  easemobIM.im.addTokenDidExpireListener(() => {
+    addLog('Token已过期，请重新登录')
+    isLoggedIn.value = false
+  })
+}
+
+// 注册
+const register = () => {
+  if (!username.value || !password.value) {
+    addLog('错误: 请输入用户名和密码')
+    return
+  }
+  
+  addLog(`开始注册: ${username.value}`)
+  easemobIM.im.register(
+    username.value,
+    password.value,
+    () => {
+      addLog('注册成功')
+    },
+    (code: number, message: string) => {
+      addLog(`注册失败: ${code} - ${message}`)
+    }
+  )
+}
+
+// 登录
+const login = () => {
+  if (!username.value || !password.value) {
+    addLog('错误: 请输入用户名和密码')
+    return
+  }
+  
+  addLog(`开始登录: ${username.value}`)
+  easemobIM.im.login(
+    {
+      username: username.value,
+      password: password.value
+    },
+    () => {
+      addLog('登录成功')
+      isLoggedIn.value = true
+      currentUser.value = easemobIM.im.getCurrentUser()
+      // 加载会话列表
+      refreshConversations()
+    },
+    (code: number, message: string) => {
+      addLog(`登录失败: ${code} - ${message}`)
+    }
+  )
+}
+
+// 登出
+const logout = () => {
+  addLog('开始登出')
+  easemobIM.im.logout(
+    true,
+    () => {
+      addLog('登出成功')
+      isLoggedIn.value = false
+      currentUser.value = null
+      messages.value = []
+      conversations.value = []
+    },
+    (code: number, message: string) => {
+      addLog(`登出失败: ${code} - ${message}`)
+    }
+  )
+}
+
+// 发送文本消息
+const sendTextMessage = () => {
+  if (!targetUser.value || !messageContent.value) {
+    addLog('错误: 请输入对方ID和消息内容')
+    return
+  }
+  
+  addLog(`发送消息给 ${targetUser.value}: ${messageContent.value}`)
+  
+  // 创建消息参数
+  const param = easemobIM.im.createTextMessage(
+    targetUser.value,
+    messageContent.value,
+    'chat'
+  )
+  
+  // 发送消息
+  easemobIM.im.sendMessage(
+    param,
+    (message: EMMessage) => {
+      addLog(`消息发送成功: ${message.msgId}`)
+      messages.value.push(message)
+      messageContent.value = ''
+      refreshConversations()
+    },
+    (code: number, message: string) => {
+      addLog(`消息发送失败: ${code} - ${message}`)
+    },
+    (progress: number) => {
+      // 文本消息无进度
+    }
+  )
+}
+
+// 刷新会话列表
+const refreshConversations = () => {
+  conversations.value = easemobIM.im.getAllConversations()
+}
+
+onMounted(() => {
+  addLog('Demo页面已加载')
+})
+
+onUnmounted(() => {
+  // 清理工作
+})
+</script>
+
+<style scoped>
+.container {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.card {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.label {
+  width: 80px;
+  font-size: 14px;
+  color: #666;
+}
+
+.input {
+  flex: 1;
+  height: 40px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.button-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.btn {
+  height: 44px;
+  border-radius: 6px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary {
+  background-color: #007AFF;
+  color: #fff;
+}
+
+.btn-secondary {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.btn-danger {
+  background-color: #FF3B30;
+  color: #fff;
+  margin-top: 10px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+}
+
+.status {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #999;
+}
+
+.status-online {
+  color: #34C759;
+}
+
+.version {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #999;
+}
+
+.message-section {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.message-list {
+  max-height: 300px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.message-item {
+  margin-bottom: 12px;
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.message-mine {
+  background-color: #DCF8C6;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.message-from {
+  font-size: 13px;
+  font-weight: bold;
+  color: #333;
+}
+
+.message-time {
+  font-size: 11px;
+  color: #999;
+}
+
+.message-content {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.message-status {
+  font-size: 11px;
+  color: #999;
+  margin-top: 5px;
+}
+
+.status-success {
+  color: #34C759;
+}
+
+.status-fail {
+  color: #FF3B30;
+}
+
+.conversation-item {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.conv-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.conv-name {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+}
+
+.conv-type {
+  font-size: 12px;
+  color: #999;
+  background-color: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.conv-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.conv-unread {
+  font-size: 12px;
+  color: #FF3B30;
+  background-color: #FFE5E5;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.conv-last {
+  font-size: 13px;
+  color: #999;
+  flex: 1;
+  margin-left: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty-text {
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  padding: 20px;
+}
+
+.log-view {
+  max-height: 200px;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.log-item {
+  font-size: 12px;
+  color: #0f0;
+  line-height: 1.6;
+  font-family: monospace;
+}
+</style>

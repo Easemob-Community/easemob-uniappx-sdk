@@ -1,0 +1,480 @@
+/**
+ * 环信IM SDK - 跨平台主入口
+ * 自动根据平台导出对应的实现
+ */
+
+import { EaseMobIMPlugin } from './interface.uts'
+import { EMErrorCode } from './interface.uts'
+
+// ==================== 平台判断 ====================
+
+// #ifdef APP-ANDROID
+import {
+  init as androidInit,
+  isSDKInitialized as androidIsInitialized,
+  register as androidRegister,
+  login as androidLogin,
+  logout as androidLogout,
+  getCurrentUser as androidGetCurrentUser,
+  isUserLoggedIn as androidIsLoggedIn,
+  getUserToken as androidGetToken,
+  sendMessage as androidSendMessage,
+  createTextMessage as androidCreateTextMessage,
+  createImageMessage as androidCreateImageMessage,
+  createVoiceMessage as androidCreateVoiceMessage,
+  createFileMessage as androidCreateFileMessage,
+  createCustomMessage as androidCreateCustomMessage,
+  resendMessage as androidResendMessage,
+  recallMessage as androidRecallMessage,
+  deleteMessage as androidDeleteMessage,
+  getMessageById as androidGetMessageById,
+  loadMessages as androidLoadMessages,
+  getAllConversations as androidGetAllConversations,
+  getConversation as androidGetConversation,
+  deleteConversation as androidDeleteConversation,
+  getUnreadMessageCount as androidGetUnreadCount,
+  markAllMessagesAsRead as androidMarkAllRead,
+  markMessageAsRead as androidMarkMessageRead,
+  addMessageListener as androidAddMessageListener,
+  removeMessageListener as androidRemoveMessageListener,
+  addConnectionListener as androidAddConnectionListener,
+  removeConnectionListener as androidRemoveConnectionListener,
+  addTokenWillExpireListener as androidAddTokenWillExpireListener,
+  removeTokenWillExpireListener as androidRemoveTokenWillExpireListener,
+  addTokenDidExpireListener as androidAddTokenDidExpireListener,
+  removeTokenDidExpireListener as androidRemoveTokenDidExpireListener,
+  renewToken as androidRenewToken,
+  getVersion as androidGetVersion,
+  setLogLevel as androidSetLogLevel
+} from './app-android/index.uts'
+// #endif
+
+// #ifdef APP-IOS
+import {
+  init as iosInit,
+  isSDKInitialized as iosIsInitialized,
+  register as iosRegister,
+  login as iosLogin,
+  logout as iosLogout,
+  getCurrentUser as iosGetCurrentUser,
+  isUserLoggedIn as iosIsLoggedIn,
+  getUserToken as iosGetToken,
+  sendMessage as iosSendMessage,
+  createTextMessage as iosCreateTextMessage,
+  createImageMessage as iosCreateImageMessage,
+  createVoiceMessage as iosCreateVoiceMessage,
+  createFileMessage as iosCreateFileMessage,
+  createCustomMessage as iosCreateCustomMessage,
+  resendMessage as iosResendMessage,
+  recallMessage as iosRecallMessage,
+  deleteMessage as iosDeleteMessage,
+  getMessageById as iosGetMessageById,
+  loadMessages as iosLoadMessages,
+  getAllConversations as iosGetAllConversations,
+  getConversation as iosGetConversation,
+  deleteConversation as iosDeleteConversation,
+  getUnreadMessageCount as iosGetUnreadCount,
+  markAllMessagesAsRead as iosMarkAllRead,
+  markMessageAsRead as iosMarkMessageRead,
+  addMessageListener as iosAddMessageListener,
+  removeMessageListener as iosRemoveMessageListener,
+  addConnectionListener as iosAddConnectionListener,
+  removeConnectionListener as iosRemoveConnectionListener,
+  addTokenWillExpireListener as iosAddTokenWillExpireListener,
+  removeTokenWillExpireListener as iosRemoveTokenWillExpireListener,
+  addTokenDidExpireListener as iosAddTokenDidExpireListener,
+  removeTokenDidExpireListener as iosRemoveTokenDidExpireListener,
+  renewToken as iosRenewToken,
+  getVersion as iosGetVersion,
+  setLogLevel as iosSetLogLevel
+} from './app-ios/index.uts'
+// #endif
+
+// ==================== 统一导出 ====================
+
+/**
+ * SDK实例
+ */
+export const im = {
+  // 初始化
+  init: (options: any) => {
+    // #ifdef APP-ANDROID
+    return androidInit(options)
+    // #endif
+    // #ifdef APP-IOS
+    return iosInit(options)
+    // #endif
+    // #ifndef APP-ANDROID || APP-IOS
+    console.warn('[EaseMobIM] SDK only supports Android and iOS platforms')
+    // #endif
+  },
+  
+  isInitialized: (): boolean => {
+    // #ifdef APP-ANDROID
+    return androidIsInitialized()
+    // #endif
+    // #ifdef APP-IOS
+    return iosIsInitialized()
+    // #endif
+    // #ifndef APP-ANDROID || APP-IOS
+    return false
+    // #endif
+  },
+  
+  // 用户管理
+  register: (username: string, password: string, onSuccess?: any, onFail?: any) => {
+    // #ifdef APP-ANDROID
+    return androidRegister(username, password, onSuccess, onFail)
+    // #endif
+    // #ifdef APP-IOS
+    return iosRegister(username, password, onSuccess, onFail)
+    // #endif
+  },
+  
+  login: (params: any, onSuccess?: any, onFail?: any) => {
+    // #ifdef APP-ANDROID
+    return androidLogin(params, onSuccess, onFail)
+    // #endif
+    // #ifdef APP-IOS
+    return iosLogin(params, onSuccess, onFail)
+    // #endif
+  },
+  
+  logout: (unbindDeviceToken?: boolean, onSuccess?: any, onFail?: any) => {
+    // #ifdef APP-ANDROID
+    return androidLogout(unbindDeviceToken, onSuccess, onFail)
+    // #endif
+    // #ifdef APP-IOS
+    return iosLogout(unbindDeviceToken, onSuccess, onFail)
+    // #endif
+  },
+  
+  getCurrentUser: () => {
+    // #ifdef APP-ANDROID
+    return androidGetCurrentUser()
+    // #endif
+    // #ifdef APP-IOS
+    return iosGetCurrentUser()
+    // #endif
+    return null
+  },
+  
+  isLoggedIn: (): boolean => {
+    // #ifdef APP-ANDROID
+    return androidIsLoggedIn()
+    // #endif
+    // #ifdef APP-IOS
+    return iosIsLoggedIn()
+    // #endif
+    return false
+  },
+  
+  getToken: () => {
+    // #ifdef APP-ANDROID
+    return androidGetToken()
+    // #endif
+    // #ifdef APP-IOS
+    return iosGetToken()
+    // #endif
+    return null
+  },
+  
+  // 消息管理
+  sendMessage: (param: any, onSuccess?: any, onFail?: any, onProgress?: any) => {
+    // #ifdef APP-ANDROID
+    return androidSendMessage(param, onSuccess, onFail, onProgress)
+    // #endif
+    // #ifdef APP-IOS
+    return iosSendMessage(param, onSuccess, onFail, onProgress)
+    // #endif
+  },
+  
+  createTextMessage: (to: string, content: string, chatType?: any) => {
+    // #ifdef APP-ANDROID
+    return androidCreateTextMessage(to, content, chatType)
+    // #endif
+    // #ifdef APP-IOS
+    return iosCreateTextMessage(to, content, chatType)
+    // #endif
+    return null
+  },
+  
+  createImageMessage: (to: string, localPath: string, chatType?: any) => {
+    // #ifdef APP-ANDROID
+    return androidCreateImageMessage(to, localPath, chatType)
+    // #endif
+    // #ifdef APP-IOS
+    return iosCreateImageMessage(to, localPath, chatType)
+    // #endif
+    return null
+  },
+  
+  createVoiceMessage: (to: string, localPath: string, duration: number, chatType?: any) => {
+    // #ifdef APP-ANDROID
+    return androidCreateVoiceMessage(to, localPath, duration, chatType)
+    // #endif
+    // #ifdef APP-IOS
+    return iosCreateVoiceMessage(to, localPath, duration, chatType)
+    // #endif
+    return null
+  },
+  
+  createFileMessage: (to: string, localPath: string, displayName: string, chatType?: any) => {
+    // #ifdef APP-ANDROID
+    return androidCreateFileMessage(to, localPath, displayName, chatType)
+    // #endif
+    // #ifdef APP-IOS
+    return iosCreateFileMessage(to, localPath, displayName, chatType)
+    // #endif
+    return null
+  },
+  
+  createCustomMessage: (to: string, event: string, params?: any, chatType?: any) => {
+    // #ifdef APP-ANDROID
+    return androidCreateCustomMessage(to, event, params, chatType)
+    // #endif
+    // #ifdef APP-IOS
+    return iosCreateCustomMessage(to, event, params, chatType)
+    // #endif
+    return null
+  },
+  
+  resendMessage: (msgId: string, onSuccess?: any, onFail?: any) => {
+    // #ifdef APP-ANDROID
+    return androidResendMessage(msgId, onSuccess, onFail)
+    // #endif
+    // #ifdef APP-IOS
+    return iosResendMessage(msgId, onSuccess, onFail)
+    // #endif
+  },
+  
+  recallMessage: (msgId: string, onSuccess?: any, onFail?: any) => {
+    // #ifdef APP-ANDROID
+    return androidRecallMessage(msgId, onSuccess, onFail)
+    // #endif
+    // #ifdef APP-IOS
+    return iosRecallMessage(msgId, onSuccess, onFail)
+    // #endif
+  },
+  
+  deleteMessage: (msgId: string, onSuccess?: any, onFail?: any) => {
+    // #ifdef APP-ANDROID
+    return androidDeleteMessage(msgId, onSuccess, onFail)
+    // #endif
+    // #ifdef APP-IOS
+    return iosDeleteMessage(msgId, onSuccess, onFail)
+    // #endif
+  },
+  
+  getMessageById: (msgId: string) => {
+    // #ifdef APP-ANDROID
+    return androidGetMessageById(msgId)
+    // #endif
+    // #ifdef APP-IOS
+    return iosGetMessageById(msgId)
+    // #endif
+    return null
+  },
+  
+  loadMessages: (conversationId: string, chatType: any, limit?: number, fromId?: string) => {
+    // #ifdef APP-ANDROID
+    return androidLoadMessages(conversationId, chatType, limit, fromId)
+    // #endif
+    // #ifdef APP-IOS
+    return iosLoadMessages(conversationId, chatType, limit, fromId)
+    // #endif
+    return []
+  },
+  
+  // 会话管理
+  getAllConversations: () => {
+    // #ifdef APP-ANDROID
+    return androidGetAllConversations()
+    // #endif
+    // #ifdef APP-IOS
+    return iosGetAllConversations()
+    // #endif
+    return []
+  },
+  
+  getConversation: (conversationId: string, chatType: any, createIfNotExists?: boolean) => {
+    // #ifdef APP-ANDROID
+    return androidGetConversation(conversationId, chatType, createIfNotExists)
+    // #endif
+    // #ifdef APP-IOS
+    return iosGetConversation(conversationId, chatType, createIfNotExists)
+    // #endif
+    return null
+  },
+  
+  deleteConversation: (conversationId: string, chatType: any, deleteMessages?: boolean, onSuccess?: any, onFail?: any) => {
+    // #ifdef APP-ANDROID
+    return androidDeleteConversation(conversationId, chatType, deleteMessages, onSuccess, onFail)
+    // #endif
+    // #ifdef APP-IOS
+    return iosDeleteConversation(conversationId, chatType, deleteMessages, onSuccess, onFail)
+    // #endif
+  },
+  
+  getUnreadMessageCount: (): number => {
+    // #ifdef APP-ANDROID
+    return androidGetUnreadCount()
+    // #endif
+    // #ifdef APP-IOS
+    return iosGetUnreadCount()
+    // #endif
+    return 0
+  },
+  
+  markAllMessagesAsRead: (conversationId?: string) => {
+    // #ifdef APP-ANDROID
+    return androidMarkAllRead(conversationId)
+    // #endif
+    // #ifdef APP-IOS
+    return iosMarkAllRead(conversationId)
+    // #endif
+  },
+  
+  markMessageAsRead: (msgId: string) => {
+    // #ifdef APP-ANDROID
+    return androidMarkMessageRead(msgId)
+    // #endif
+    // #ifdef APP-IOS
+    return iosMarkMessageRead(msgId)
+    // #endif
+  },
+  
+  // 事件监听
+  addMessageListener: (listener: any) => {
+    // #ifdef APP-ANDROID
+    return androidAddMessageListener(listener)
+    // #endif
+    // #ifdef APP-IOS
+    return iosAddMessageListener(listener)
+    // #endif
+  },
+  
+  removeMessageListener: (listener: any) => {
+    // #ifdef APP-ANDROID
+    return androidRemoveMessageListener(listener)
+    // #endif
+    // #ifdef APP-IOS
+    return iosRemoveMessageListener(listener)
+    // #endif
+  },
+  
+  addConnectionListener: (listener: any) => {
+    // #ifdef APP-ANDROID
+    return androidAddConnectionListener(listener)
+    // #endif
+    // #ifdef APP-IOS
+    return iosAddConnectionListener(listener)
+    // #endif
+  },
+  
+  removeConnectionListener: (listener: any) => {
+    // #ifdef APP-ANDROID
+    return androidRemoveConnectionListener(listener)
+    // #endif
+    // #ifdef APP-IOS
+    return iosRemoveConnectionListener(listener)
+    // #endif
+  },
+  
+  addTokenWillExpireListener: (listener: any) => {
+    // #ifdef APP-ANDROID
+    return androidAddTokenWillExpireListener(listener)
+    // #endif
+    // #ifdef APP-IOS
+    return iosAddTokenWillExpireListener(listener)
+    // #endif
+  },
+  
+  removeTokenWillExpireListener: (listener: any) => {
+    // #ifdef APP-ANDROID
+    return androidRemoveTokenWillExpireListener(listener)
+    // #endif
+    // #ifdef APP-IOS
+    return iosRemoveTokenWillExpireListener(listener)
+    // #endif
+  },
+  
+  addTokenDidExpireListener: (listener: any) => {
+    // #ifdef APP-ANDROID
+    return androidAddTokenDidExpireListener(listener)
+    // #endif
+    // #ifdef APP-IOS
+    return iosAddTokenDidExpireListener(listener)
+    // #endif
+  },
+  
+  removeTokenDidExpireListener: (listener: any) => {
+    // #ifdef APP-ANDROID
+    return androidRemoveTokenDidExpireListener(listener)
+    // #endif
+    // #ifdef APP-IOS
+    return iosRemoveTokenDidExpireListener(listener)
+    // #endif
+  },
+  
+  // 其他
+  renewToken: (token: string) => {
+    // #ifdef APP-ANDROID
+    return androidRenewToken(token)
+    // #endif
+    // #ifdef APP-IOS
+    return iosRenewToken(token)
+    // #endif
+  },
+  
+  getVersion: (): string => {
+    // #ifdef APP-ANDROID
+    return androidGetVersion()
+    // #endif
+    // #ifdef APP-IOS
+    return iosGetVersion()
+    // #endif
+    return ''
+  },
+  
+  setLogLevel: (level: number) => {
+    // #ifdef APP-ANDROID
+    return androidSetLogLevel(level)
+    // #endif
+    // #ifdef APP-IOS
+    return iosSetLogLevel(level)
+    // #endif
+  }
+}
+
+/**
+ * 消息类型枚举
+ */
+export const MessageType = {
+  TEXT: 'txt' as const,
+  IMAGE: 'image' as const,
+  VOICE: 'voice' as const,
+  VIDEO: 'video' as const,
+  LOCATION: 'location' as const,
+  FILE: 'file' as const,
+  CMD: 'cmd' as const
+}
+
+/**
+ * 聊天类型枚举
+ */
+export const ChatType = {
+  CHAT: 'chat' as const,
+  GROUP_CHAT: 'groupChat' as const,
+  CHAT_ROOM: 'chatRoom' as const
+}
+
+/**
+ * 插件默认导出
+ */
+export default {
+  im,
+  ErrorCode: EMErrorCode,
+  MessageType,
+  ChatType
+} as EaseMobIMPlugin
