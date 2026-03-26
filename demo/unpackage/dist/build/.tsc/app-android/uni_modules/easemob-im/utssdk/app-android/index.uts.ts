@@ -454,14 +454,14 @@ export function createTextMessage(
   to: string,
   content: string,
   chatType: EMChatType = 'chat'
-): any {
+): EMSendMessageParam {
   return {
     to: to,
     chatType: chatType,
     body: {
       type: 'txt',
       content: content
-    }
+    } as EMTextMessageBody
   }
 }
 
@@ -472,14 +472,14 @@ export function createImageMessage(
   to: string,
   localPath: string,
   chatType: EMChatType = 'chat'
-): any {
+): EMSendMessageParam {
   return {
     to: to,
     chatType: chatType,
     body: {
       type: 'image',
       localPath: localPath
-    }
+    } as EMImageMessageBody
   }
 }
 
@@ -491,7 +491,7 @@ export function createVoiceMessage(
   localPath: string,
   duration: number,
   chatType: EMChatType = 'chat'
-): any {
+): EMSendMessageParam {
   return {
     to: to,
     chatType: chatType,
@@ -499,7 +499,7 @@ export function createVoiceMessage(
       type: 'voice',
       localPath: localPath,
       duration: duration
-    }
+    } as EMVoiceMessageBody
   }
 }
 
@@ -511,7 +511,7 @@ export function createFileMessage(
   localPath: string,
   displayName: string,
   chatType: EMChatType = 'chat'
-): any {
+): EMSendMessageParam {
   return {
     to: to,
     chatType: chatType,
@@ -519,7 +519,7 @@ export function createFileMessage(
       type: 'file',
       localPath: localPath,
       displayName: displayName
-    }
+    } as EMFileMessageBody
   }
 }
 
@@ -531,7 +531,7 @@ export function createCustomMessage(
   event: string,
   params: UTSJSONObject | undefined = undefined,
   chatType: EMChatType = 'chat'
-): any {
+): EMSendMessageParam {
   return {
     to: to,
     chatType: chatType,
@@ -539,7 +539,7 @@ export function createCustomMessage(
       type: 'custom',
       event: event,
       params: params
-    }
+    } as EMCustomMessageBody
   }
 }
 

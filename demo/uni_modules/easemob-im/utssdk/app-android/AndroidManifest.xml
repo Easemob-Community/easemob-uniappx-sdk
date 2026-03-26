@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.easemob.uniappx">
+
+    <!-- ============================================ -->
+    <!-- 环信IM SDK 必要权限 - Android SDK 4.15.1 -->
+    <!-- ============================================ -->
+
+    <!-- 访问网络权限（必需） -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- 获取网络状态（必需） -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- 允许程序在手机屏幕关闭后后台进程仍然运行（必需） -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    
+    <!-- 允许程序振动，用于本地通知设置振动 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
+    <!-- ============================================ -->
+    <!-- 可选权限（根据业务需求选择） -->
+    <!-- ============================================ -->
+    
+    <!-- 麦克风权限，用于语音消息时录制语音 -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    
+    <!-- 相机权限，用于图片消息时拍摄图片 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    
+    <!-- 存储权限，用于附件等的存储 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    
+    <!-- 访问 GPS 定位，用于定位消息 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    
+    <!-- 申请闹钟定时权限，SDK 心跳中使用（3.9.8及以后版本可以不添加） -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <application>
+        <!-- ============================================ -->
+        <!-- 环信IM SDK 核心服务 - SDK 4.15.1 -->
+        <!-- ============================================ -->
+        
+        <!-- 声明 SDK 所需的 service 的核心功能 -->
+        <service
+            android:name="com.hyphenate.chat.EMChatService"
+            android:exported="true" />
+        <service
+            android:name="com.hyphenate.chat.EMJobService"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+        
+        <!-- 声明 SDK 所需的 receiver -->
+        <receiver
+            android:name="com.hyphenate.chat.EMMonitorReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+                <data android:scheme="package" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
