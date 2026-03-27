@@ -1,221 +1,31 @@
 <template>
-  <view class="container">
-    <text class="title">环信IM SDK 测试</text>
-    
-    <view class="form">
-      <text class="label">AppKey:</text>
-      <input class="input" v-model="appKey" placeholder="请输入AppKey"/>
-      
-      <text class="label">用户名:</text>
-      <input class="input" v-model="username" placeholder="请输入用户名"/>
-      
-      <text class="label">密码:</text>
-      <input class="input" v-model="password" placeholder="请输入密码" password/>
-      
-      <button class="btn-primary" @click="initSDK">1. 初始化SDK</button>
-      <button class="btn-primary" @click="login" :disabled="!initialized">2. 登录</button>
-      <button class="btn-secondary" @click="logout" :disabled="!logined">3. 登出</button>
-      <button class="btn-secondary" @click="checkVersion">获取版本</button>
-    </view>
-    
-    <view class="status">
-      <text class="status-text">初始化: {{ initialized ? '✅' : '❌' }} | 登录: {{ logined ? '✅' : '❌' }}</text>
-    </view>
-    
-    <view class="logs">
-      <text class="logs-title">运行日志:</text>
-      <scroll-view class="log-scroll" scroll-y>
-        <text v-for="(log, index) in logs" :key="index" class="log-item">{{ log }}</text>
-      </scroll-view>
-      <button class="btn-clear" @click="clearLogs">清空日志</button>
-    </view>
-  </view>
+	<view class="content">
+		<text class="title">环信 SDK Demo</text>
+		<text class="desc">SDK 初始化请在 App.uvue 中查看</text>
+	</view>
 </template>
 
 <script setup lang="uts">
-import { ref } from 'vue'
-import { 
-  init, 
-  login as emLogin, 
-  logout as emLogout,
-  getVersion, 
-  isInitialized, 
-  isLoggedIn 
-} from '@/uni_modules/easemob-im'
-
-const appKey = ref('easemob-demo#support')
-const username = ref('hfp')
-const password = ref('1')
-const initialized = ref(false)
-const logined = ref(false)
-const logs = ref<string[]>([])
-
-const addLog = (msg: string) => {
-  const time = new Date().toLocaleTimeString()
-  logs.value.push(`[${time}] ${msg}`)
-}
-
-const initSDK = () => {
-  if (appKey.value.length == 0) {
-    addLog('错误: 请输入AppKey')
-    return
-  }
-  
-  addLog('开始初始化SDK...')
-  const result = init(appKey.value)
-  initialized.value = isInitialized()
-  
-  if (result) {
-    addLog('✅ 初始化成功!')
-  } else {
-    addLog('❌ 初始化失败!')
-  }
-}
-
-const login = () => {
-  if (username.value.length == 0 || password.value.length == 0) {
-    addLog('错误: 请输入用户名和密码')
-    return
-  }
-  
-  addLog(`开始登录: ${username.value}...`)
-  
-  emLogin(
-    username.value,
-    password.value,
-    () => {
-      logined.value = isLoggedIn()
-      addLog('✅ 登录成功!')
-    },
-    (code: number, error: string) => {
-      addLog(`❌ 登录失败: [${code}] ${error}`)
-    }
-  )
-}
-
-const logout = () => {
-  addLog('开始登出...')
-  
-  emLogout(() => {
-    logined.value = isLoggedIn()
-    addLog('✅ 登出成功!')
-  })
-}
-
-const checkVersion = () => {
-  const version = getVersion()
-  addLog(`SDK版本: ${version}`)
-}
-
-const clearLogs = () => {
-  logs.value = []
-}
+// 当前页面不引入任何 SDK 相关代码
+// 初始化逻辑统一在 App.uvue 中处理
 </script>
 
 <style>
-.container {
-  flex-direction: column;
-  padding: 20px;
-  background-color: #f5f5f5;
+.content {
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
 }
 
 .title {
-  font-size: 22px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  text-align: center;
-  color: #333;
+	font-size: 20px;
+	font-weight: bold;
+	margin-bottom: 10px;
 }
 
-.form {
-  flex-direction: column;
-  background-color: #fff;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-
-.label {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.input {
-  height: 44px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 0 12px;
-  font-size: 14px;
-  margin-bottom: 15px;
-}
-
-.btn-primary {
-  background-color: #0066ff;
-  color: #fff;
-  height: 44px;
-  border-radius: 6px;
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-
-.btn-secondary {
-  background-color: #f0f0f0;
-  color: #333;
-  height: 44px;
-  border-radius: 6px;
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-
-.btn-clear {
-  background-color: #ff4444;
-  color: #fff;
-  height: 36px;
-  border-radius: 6px;
-  font-size: 14px;
-  margin-top: 10px;
-}
-
-.status {
-  background-color: #fff;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-
-.status-text {
-  font-size: 14px;
-  color: #333;
-}
-
-.logs {
-  flex: 1;
-  flex-direction: column;
-  background-color: #fff;
-  padding: 15px;
-  border-radius: 8px;
-}
-
-.logs-title {
-  font-size: 14px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #333;
-}
-
-.log-scroll {
-  flex: 1;
-  height: 300px;
-  background-color: #1e1e1e;
-  border-radius: 6px;
-  padding: 10px;
-}
-
-.log-item {
-  font-size: 12px;
-  color: #4caf50;
-  line-height: 20px;
-  margin-bottom: 4px;
+.desc {
+	font-size: 14px;
+	color: #666;
 }
 </style>
