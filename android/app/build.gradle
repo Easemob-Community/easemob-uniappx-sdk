@@ -1,0 +1,68 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
+
+android {
+    namespace 'com.easemob.uniappx'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.easemob.uniappx"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0.0"
+        
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            debuggable true
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    
+    // 支持 UTS 插件
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets']
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+}
+
+dependencies {
+    // UniApp 核心库（从离线 SDK 获取）
+    implementation fileTree(include: ['*.aar'], dir: 'libs')
+    
+    // AndroidX
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    
+    // UTS 依赖
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    implementation 'com.alibaba:fastjson:1.2.83'
+    
+    // 环信 SDK 依赖
+    implementation 'io.hyphenate:hyphenate-chat:4.15.1'
+    
+    // UTS 插件模块
+    implementation project(':uni_modules:easemob-im')
+}
