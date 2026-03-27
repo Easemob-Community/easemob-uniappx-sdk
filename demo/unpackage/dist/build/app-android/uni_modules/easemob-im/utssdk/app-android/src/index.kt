@@ -36,78 +36,95 @@ var gSendSuccess: EMSendSuccess? = null
 var gSendFail: EMSendFail? = null
 var gMsgCallback: EMMessageCallback? = null
 open class EMLoginCallBack : com.hyphenate.EMCallBack {
-    open fun onSuccess(): Unit {
+    constructor() : super() {}
+    override fun onSuccess(): Unit {
         gLogined = true
         com.hyphenate.chat.EMClient.getInstance().chatManager().loadAllConversations()
-        if (gLoginSuccess != null) {
-            gLoginSuccess()
-            gLoginSuccess = null
-            gLoginFail = null
+        val callback = gLoginSuccess
+        if (callback != null) {
+            callback()
         }
+        gLoginSuccess = null
+        gLoginFail = null
     }
-    open fun onError(code: Number, error: String): Unit {
-        if (gLoginFail != null) {
-            gLoginFail(code, error)
-            gLoginSuccess = null
-            gLoginFail = null
+    override fun onError(code: Int, error: String): Unit {
+        val callback = gLoginFail
+        if (callback != null) {
+            callback(code as Number, error)
         }
+        gLoginSuccess = null
+        gLoginFail = null
     }
-    open fun onProgress(progress: Number, status: String): Unit {}
+    override fun onProgress(progress: Int, status: String): Unit {}
 }
 open class EMLogoutCallBack : com.hyphenate.EMCallBack {
-    open fun onSuccess(): Unit {
+    constructor() : super() {}
+    override fun onSuccess(): Unit {
         gLogined = false
-        if (gLogoutSuccess != null) {
-            gLogoutSuccess()
-            gLogoutSuccess = null
+        val callback = gLogoutSuccess
+        if (callback != null) {
+            callback()
         }
+        gLogoutSuccess = null
     }
-    open fun onError(code: Number, error: String): Unit {
+    override fun onError(code: Int, error: String): Unit {
         gLogined = false
-        if (gLogoutSuccess != null) {
-            gLogoutSuccess()
-            gLogoutSuccess = null
+        val callback = gLogoutSuccess
+        if (callback != null) {
+            callback()
         }
+        gLogoutSuccess = null
     }
-    open fun onProgress(progress: Number, status: String): Unit {}
+    override fun onProgress(progress: Int, status: String): Unit {}
 }
 open class EMSendCallBack : com.hyphenate.EMCallBack {
-    open fun onSuccess(): Unit {
-        if (gSendSuccess != null) {
-            gSendSuccess()
-            gSendSuccess = null
-            gSendFail = null
+    constructor() : super() {}
+    override fun onSuccess(): Unit {
+        val callback = gSendSuccess
+        if (callback != null) {
+            callback()
         }
+        gSendSuccess = null
+        gSendFail = null
     }
-    open fun onError(code: Number, error: String): Unit {
-        if (gSendFail != null) {
-            gSendFail(code, error)
-            gSendSuccess = null
-            gSendFail = null
+    override fun onError(code: Int, error: String): Unit {
+        val callback = gSendFail
+        if (callback != null) {
+            callback(code as Number, error)
         }
+        gSendSuccess = null
+        gSendFail = null
     }
-    open fun onProgress(progress: Number, status: String): Unit {}
+    override fun onProgress(progress: Int, status: String): Unit {}
 }
 open class EMMessageListenerImpl : com.hyphenate.EMMessageListener {
-    open fun onMessageReceived(messages: UTSArray<Any>): Unit {
-        if (gMsgCallback == null) {
+    constructor() : super() {}
+    override fun onMessageReceived(messages: MutableList<com.hyphenate.chat.EMMessage>): Unit {
+        val callback = gMsgCallback
+        if (callback == null) {
             return
         }
-        for(msg in resolveUTSValueIterator(messages)){
-            if (msg == null) {
-                continue
-            }
-            try {
-                val body = msg.getBody()
-                var content = ""
-                if (body is com.hyphenate.chat.EMTextMessageBody) {
-                    content = (body as com.hyphenate.chat.EMTextMessageBody).getMessage()
+        run {
+            var i: Number = 0
+            while(i < messages.size){
+                val msg = messages.get(i)
+                if (msg == null) {
+                    i++
+                    continue
                 }
-                val message = EMMessage(messageId = msg.getMsgId(), from = msg.getFrom(), to = msg.getTo(), content = content, timestamp = msg.getMsgTime())
-                gMsgCallback(message)
-            }
-             catch (e: Throwable) {
-                console.error("[EM] process message error:", e)
+                try {
+                    val body = msg.getBody()
+                    var content = ""
+                    if (body is com.hyphenate.chat.EMTextMessageBody) {
+                        content = (body as com.hyphenate.chat.EMTextMessageBody).getMessage()
+                    }
+                    val message = EMMessage(messageId = msg.getMsgId(), from = msg.getFrom(), to = msg.getTo(), content = content, timestamp = msg.getMsgTime())
+                    callback(message)
+                }
+                 catch (e: Throwable) {
+                    console.error("[EM] process message error:", e)
+                }
+                i++
             }
         }
     }

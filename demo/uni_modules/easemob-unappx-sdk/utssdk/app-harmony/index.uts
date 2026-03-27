@@ -1,0 +1,115 @@
+import { 
+    EasemobInitOptions, 
+    EasemobLoginOptions, 
+    EasemobSendMessageOptions,
+    EasemobRegisterOptions,
+    EasemobResult,
+    EasemobInitResult,
+    EasemobLoginResult,
+    EasemobMessageResult
+} from '../interface.uts';
+
+import { EasemobErrorImpl } from '../unierror';
+
+/**
+ * 初始化环信 SDK (HarmonyOS 待实现)
+ */
+export function initChat(options: EasemobInitOptions): void {
+    console.warn('[Easemob HarmonyOS] 暂不支持 HarmonyOS 平台');
+    const err = new EasemobErrorImpl(9010001, '暂不支持 HarmonyOS 平台');
+    options.fail?.(err);
+    options.complete?.(err);
+}
+
+/**
+ * 用户注册 (HarmonyOS 待实现)
+ */
+export function registerUser(options: EasemobRegisterOptions): void {
+    console.warn('[Easemob HarmonyOS] 暂不支持 HarmonyOS 平台');
+    const err = new EasemobErrorImpl(9010001, '暂不支持 HarmonyOS 平台');
+    options.fail?.(err);
+    options.complete?.(err);
+}
+
+/**
+ * 用户登录 - 使用密码登录 (HarmonyOS 待实现)
+ */
+export function loginWithPassword(options: EasemobLoginOptions): void {
+    console.warn('[Easemob HarmonyOS] 暂不支持 HarmonyOS 平台');
+    const err = new EasemobErrorImpl(9010001, '暂不支持 HarmonyOS 平台');
+    options.fail?.(err);
+    options.complete?.(err);
+}
+
+/**
+ * 用户登录 - 使用 Token 登录 (HarmonyOS 待实现)
+ */
+export function loginWithToken(options: EasemobLoginOptions): void {
+    console.warn('[Easemob HarmonyOS] 暂不支持 HarmonyOS 平台');
+    const err = new EasemobErrorImpl(9010001, '暂不支持 HarmonyOS 平台');
+    options.fail?.(err);
+    options.complete?.(err);
+}
+
+/**
+ * 用户登出 (HarmonyOS 待实现)
+ */
+export function logout(options?: { 
+    unbindToken?: boolean;
+    success?: (res: EasemobResult) => void;
+    fail?: (err: EasemobErrorImpl) => void;
+    complete?: (res: any) => void;
+}): void {
+    console.warn('[Easemob HarmonyOS] 暂不支持 HarmonyOS 平台');
+    const err = new EasemobErrorImpl(9010001, '暂不支持 HarmonyOS 平台');
+    options?.fail?.(err);
+    options?.complete?.(err);
+}
+
+/**
+ * 发送文本消息 (HarmonyOS 待实现)
+ */
+export function sendTextMessage(options: EasemobSendMessageOptions): void {
+    console.warn('[Easemob HarmonyOS] 暂不支持 HarmonyOS 平台');
+    const err = new EasemobErrorImpl(9010001, '暂不支持 HarmonyOS 平台');
+    options.fail?.(err);
+    options.complete?.(err);
+}
+
+/**
+ * 获取当前登录用户 (HarmonyOS 待实现)
+ */
+export function getCurrentUser(): string | null {
+    console.warn('[Easemob HarmonyOS] 暂不支持 HarmonyOS 平台');
+    return null;
+}
+
+/**
+ * 判断是否已登录 (HarmonyOS 待实现)
+ */
+export function isLoggedIn(): boolean {
+    console.warn('[Easemob HarmonyOS] 暂不支持 HarmonyOS 平台');
+    return false;
+}
+
+/**
+ * 判断是否连接到服务器 (HarmonyOS 待实现)
+ */
+export function isConnected(): boolean {
+    console.warn('[Easemob HarmonyOS] 暂不支持 HarmonyOS 平台');
+    return false;
+}
+
+/**
+ * 加载本地会话 (HarmonyOS 待实现)
+ */
+export function loadAllConversations(): void {
+    console.warn('[Easemob HarmonyOS] 暂不支持 HarmonyOS 平台');
+}
+
+/**
+ * 加载本地群组 (HarmonyOS 待实现)
+ */
+export function loadAllGroups(): void {
+    console.warn('[Easemob HarmonyOS] 暂不支持 HarmonyOS 平台');
+}

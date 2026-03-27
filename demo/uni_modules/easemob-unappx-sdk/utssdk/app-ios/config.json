@@ -1,0 +1,6 @@
+{
+  "deploymentTarget": "12",
+  "dependencies-pods": {
+    "HyphenateChat": "4.20.0"
+  }
+}

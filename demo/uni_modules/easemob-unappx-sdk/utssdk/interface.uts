@@ -1,0 +1,244 @@
+/**
+ * interface.uts
+ * 环信即时通讯 SDK UTS 插件接口定义文件
+ */
+
+// ============================================
+// 通用类型定义
+// ============================================
+
+/**
+ * 通用结果
+ */
+export type EasemobResult = {
+    success: boolean;
+    errCode?: number;
+    errMsg?: string;
+}
+
+/**
+ * 聊天类型
+ * 0: 单聊 (Chat)
+ * 1: 群聊 (GroupChat)
+ * 2: 聊天室 (ChatRoom)
+ */
+export type ChatType = 0 | 1 | 2;
+
+// ============================================
+// 初始化相关
+// ============================================
+
+/**
+ * 初始化选项
+ */
+export type EasemobInitOptions = {
+    /** 环信 App Key */
+    appKey: string;
+    /** 是否自动登录，默认 true */
+    autoLogin?: boolean;
+    /** 是否开启调试模式，默认 false */
+    debugMode?: boolean;
+    /** 成功回调 */
+    success?: (res: EasemobInitResult) => void;
+    /** 失败回调 */
+    fail?: (err: EasemobError) => void;
+    /** 完成回调 */
+    complete?: (res: any) => void;
+}
+
+/**
+ * 初始化结果
+ */
+export type EasemobInitResult = {
+    success: boolean;
+    appKey: string;
+}
+
+// ============================================
+// 登录/注册相关
+// ============================================
+
+/**
+ * 登录选项
+ */
+export type EasemobLoginOptions = {
+    /** 用户 ID */
+    userId: string;
+    /** 密码 */
+    password?: string;
+    /** Token（使用 Token 登录时需要） */
+    token?: string;
+    /** 成功回调 */
+    success?: (res: EasemobLoginResult) => void;
+    /** 失败回调 */
+    fail?: (err: EasemobError) => void;
+    /** 完成回调 */
+    complete?: (res: any) => void;
+}
+
+/**
+ * 登录结果
+ */
+export type EasemobLoginResult = {
+    success: boolean;
+    userId?: string;
+}
+
+/**
+ * 注册选项
+ */
+export type EasemobRegisterOptions = {
+    /** 用户 ID */
+    userId: string;
+    /** 密码 */
+    password: string;
+    /** 成功回调 */
+    success?: (res: EasemobResult) => void;
+    /** 失败回调 */
+    fail?: (err: EasemobError) => void;
+    /** 完成回调 */
+    complete?: (res: any) => void;
+}
+
+// ============================================
+// 消息相关
+// ============================================
+
+/**
+ * 发送消息选项
+ */
+export type EasemobSendMessageOptions = {
+    /** 消息内容 */
+    content: string;
+    /** 接收方 ID */
+    to: string;
+    /** 聊天类型：0-单聊，1-群聊，2-聊天室 */
+    chatType?: ChatType;
+    /** 消息扩展 */
+    ext?: Map<string, any>;
+    /** 成功回调 */
+    success?: (res: EasemobMessageResult) => void;
+    /** 失败回调 */
+    fail?: (err: EasemobError) => void;
+    /** 完成回调 */
+    complete?: (res: any) => void;
+}
+
+/**
+ * 发送消息结果
+ */
+export type EasemobMessageResult = {
+    success: boolean;
+    msgId?: string;
+    to?: string;
+    content?: string;
+}
+
+/**
+ * 接收到的消息
+ */
+export type EasemobReceivedMessage = {
+    msgId: string;
+    from: string;
+    to: string;
+    type: number;
+    content?: string;
+    timestamp: number;
+    chatType: ChatType;
+}
+
+// ============================================
+// 连接状态相关
+// ============================================
+
+/**
+ * 连接状态
+ */
+export type EasemobConnectionStatus = {
+    connected: boolean;
+    errorCode?: number;
+}
+
+// ============================================
+// 错误码定义
+// ============================================
+
+/**
+ * 环信错误码
+ * 901xxxx: 通用错误
+ * 902xxxx: 登录相关错误
+ * 903xxxx: 消息相关错误
+ * 904xxxx: 注册相关错误
+ */
+export type EasemobErrorCode = 
+    // 通用错误
+    | 9010001  // 未知错误
+    | 9010002  // 参数错误
+    | 9010003  // 网络错误
+    | 9010004  // SDK 未初始化
+    // 登录相关错误
+    | 9020001  // 登录失败
+    | 9020002  // 登出失败
+    | 9020003  // Token 无效或过期
+    | 9020004  // 用户已存在
+    | 9020005  // 用户不存在
+    | 9020006  // 密码错误
+    // 注册相关错误
+    | 9030001  // 注册失败
+    | 9030002  // 用户名无效
+    | 9030003  // 密码无效
+    // 消息相关错误
+    | 9040001  // 发送消息失败
+    | 9040002  // 消息内容为空
+    | 9040003  // 接收方 ID 为空
+    ;
+
+/**
+ * 环信错误对象
+ */
+export interface EasemobError extends IUniError {
+    errCode: EasemobErrorCode;
+    errSubject: string;
+}
+
+// ============================================
+// 函数类型定义
+// ============================================
+
+/** 初始化函数类型 */
+export type InitChat = (options: EasemobInitOptions) => void;
+
+/** 注册函数类型 */
+export type RegisterUser = (options: EasemobRegisterOptions) => void;
+
+/** 密码登录函数类型 */
+export type LoginWithPassword = (options: EasemobLoginOptions) => void;
+
+/** Token 登录函数类型 */
+export type LoginWithToken = (options: EasemobLoginOptions) => void;
+
+/** 登出函数类型 */
+export type Logout = (options?: { 
+    unbindToken?: boolean;
+    success?: (res: EasemobResult) => void;
+    fail?: (err: EasemobError) => void;
+    complete?: (res: any) => void;
+}) => void;
+
+/** 发送文本消息函数类型 */
+export type SendTextMessage = (options: EasemobSendMessageOptions) => void;
+
+/** 获取当前用户函数类型 */
+export type GetCurrentUser = () => string | null;
+
+/** 判断是否已登录函数类型 */
+export type IsLoggedIn = () => boolean;
+
+/** 判断是否已连接函数类型 */
+export type IsConnected = () => boolean;
+
+/** 加载所有会话函数类型 */
+export type LoadAllConversations = () => void;
+
+/** 加载所有群组函数类型 */
+export type LoadAllGroups = () => void;

@@ -1,0 +1,355 @@
+import { UTSAndroid } from "io.dcloud.uts";
+import { EMOptions, EMClient, EMMessage, EMTextMessageBody, EMCallBack, EMConnectionListener, EMMessageListener } from "com.hyphenate.chat.*";
+import { HyphenateException } from "com.hyphenate.exceptions.HyphenateException";
+import { MutableList } from "java.util.*";
+
+import { 
+    EasemobInitOptions, 
+    EasemobLoginOptions, 
+    EasemobSendMessageOptions,
+    EasemobRegisterOptions,
+    EasemobResult,
+    EasemobInitResult,
+    EasemobLoginResult,
+    EasemobMessageResult,
+    EasemobConnectionStatus
+} from '../interface.uts';
+
+import { EasemobErrorImpl } from '../unierror';
+
+// 存储事件回调
+let connectionListener: EMConnectionListener | null = null;
+let messageListener: EMMessageListener | null = null;
+
+// 连接状态回调实现类
+class ConnectionListener extends EMConnectionListener {
+    onConnected(): void {
+        console.log('[Easemob] 连接成功');
+        // TODO: 可以通过 uni 事件通知前端
+    }
+
+    onDisconnected(errorCode: Int): void {
+        console.log('[Easemob] 连接断开，错误码：', errorCode);
+        // TODO: 可以通过 uni 事件通知前端
+    }
+}
+
+// 消息监听回调实现类
+class MessageListener extends EMMessageListener {
+    onMessageReceived(messages: MutableList<EMMessage>): void {
+        console.log('[Easemob] 收到消息，数量：', messages.size());
+        for (let i = 0; i < messages.size(); i++) {
+            const msg = messages.get(i);
+            const msgBody = msg.getBody();
+            console.log(`[Easemob] 消息ID: ${msg.getMsgId()}, 来自: ${msg.getFrom()}, 类型: ${msg.getType()}`);
+            
+            if (msgBody instanceof EMTextMessageBody) {
+                const textBody = msgBody as EMTextMessageBody;
+                console.log('[Easemob] 文本内容：', textBody.getMessage());
+            }
+        }
+        // TODO: 可以通过 uni 事件通知前端
+    }
+
+    onCmdMessageReceived(messages: MutableList<EMMessage>): void {
+        console.log('[Easemob] 收到透传消息');
+    }
+
+    onMessageRead(messages: MutableList<EMMessage>): void {
+        console.log('[Easemob] 消息已读');
+    }
+
+    onMessageDelivered(messages: MutableList<EMMessage>): void {
+        console.log('[Easemob] 消息已送达');
+    }
+
+    onMessageRecalled(messages: MutableList<EMMessage>): void {
+        console.log('[Easemob] 消息被撤回');
+    }
+}
+
+// 登录回调实现类
+class LoginCallback extends EMCallBack {
+    private success?: (res: EasemobLoginResult) => void;
+    private fail?: (err: EasemobErrorImpl) => void;
+    private complete?: (res: any) => void;
+
+    constructor(
+        success?: (res: EasemobLoginResult) => void,
+        fail?: (err: EasemobErrorImpl) => void,
+        complete?: (res: any) => void
+    ) {
+        super();
+        this.success = success;
+        this.fail = fail;
+        this.complete = complete;
+    }
+
+    override onSuccess(): void {
+        console.log('[Easemob] 登录成功');
+        const res: EasemobLoginResult = {
+            success: true,
+            userId: EMClient.getInstance().getCurrentUser()
+        };
+        this.success?.(res);
+        this.complete?.(res);
+    }
+
+    override onError(code: Int, error: string): void {
+        console.log('[Easemob] 登录失败：', code, error);
+        const err = new EasemobErrorImpl(9020001, `登录失败: ${error} (code: ${code})`);
+        this.fail?.(err);
+        this.complete?.(err);
+    }
+
+    override onProgress(progress: Int, status: string): void {
+        console.log('[Easemob] 登录进度：', progress, status);
+    }
+}
+
+// 登出回调实现类
+class LogoutCallback extends EMCallBack {
+    private success?: (res: EasemobResult) => void;
+    private fail?: (err: EasemobErrorImpl) => void;
+    private complete?: (res: any) => void;
+
+    constructor(
+        success?: (res: EasemobResult) => void,
+        fail?: (err: EasemobErrorImpl) => void,
+        complete?: (res: any) => void
+    ) {
+        super();
+        this.success = success;
+        this.fail = fail;
+        this.complete = complete;
+    }
+
+    override onSuccess(): void {
+        console.log('[Easemob] 登出成功');
+        const res: EasemobResult = { success: true };
+        this.success?.(res);
+        this.complete?.(res);
+    }
+
+    override onError(code: Int, error: string): void {
+        console.log('[Easemob] 登出失败：', code, error);
+        const err = new EasemobErrorImpl(9020002, `登出失败: ${error} (code: ${code})`);
+        this.fail?.(err);
+        this.complete?.(err);
+    }
+
+    override onProgress(progress: Int, status: string): void {
+        console.log('[Easemob] 登出进度：', progress, status);
+    }
+}
+
+// 注册线程类
+class RegisterThread extends Thread {
+    private userId: string;
+    private password: string;
+    private success?: (res: EasemobResult) => void;
+    private fail?: (err: EasemobErrorImpl) => void;
+    private complete?: (res: any) => void;
+
+    constructor(
+        userId: string,
+        password: string,
+        success?: (res: EasemobResult) => void,
+        fail?: (err: EasemobErrorImpl) => void,
+        complete?: (res: any) => void
+    ) {
+        super();
+        this.userId = userId;
+        this.password = password;
+        this.success = success;
+        this.fail = fail;
+        this.complete = complete;
+    }
+
+    override run(): void {
+        try {
+            EMClient.getInstance().createAccount(this.userId, this.password);
+            console.log('[Easemob] 注册成功');
+            const res: EasemobResult = { success: true };
+            this.success?.(res);
+            this.complete?.(res);
+        } catch (e) {
+            const err = e as HyphenateException;
+            console.log('[Easemob] 注册失败：', err.getErrorCode(), err.getDescription());
+            const error = new EasemobErrorImpl(9020003, `注册失败: ${err.getDescription()} (code: ${err.getErrorCode()})`);
+            this.fail?.(error);
+            this.complete?.(error);
+        }
+    }
+}
+
+/**
+ * 初始化环信 SDK
+ */
+export function initChat(options: EasemobInitOptions): void {
+    const emOptions = new EMOptions();
+    emOptions.setAppKey(options.appKey);
+    
+    // 设置自动登录（默认 true）
+    if (options.autoLogin !== null) {
+        emOptions.setAutoLogin(options.autoLogin);
+    }
+    
+    // 设置调试模式
+    if (options.debugMode === true) {
+        EMClient.getInstance().setDebugMode(true);
+    }
+    
+    console.log('[Easemob] 正在初始化 SDK，AppKey：', options.appKey);
+    
+    // 初始化 SDK
+    EMClient.getInstance().init(UTSAndroid.getAppContext(), emOptions);
+    
+    // 添加连接监听
+    connectionListener = new ConnectionListener();
+    EMClient.getInstance().addConnectionListener(connectionListener);
+    
+    // 添加消息监听
+    messageListener = new MessageListener();
+    EMClient.getInstance().chatManager().addMessageListener(messageListener);
+    
+    console.log('[Easemob] SDK 初始化完成');
+    
+    const res: EasemobInitResult = {
+        success: true,
+        appKey: options.appKey
+    };
+    options.success?.(res);
+    options.complete?.(res);
+}
+
+/**
+ * 用户注册（仅用于开发测试，生产环境应在服务端完成）
+ */
+export function registerUser(options: EasemobRegisterOptions): void {
+    console.log('[Easemob] 开始注册用户：', options.userId);
+    new RegisterThread(
+        options.userId,
+        options.password,
+        options.success,
+        options.fail,
+        options.complete
+    ).start();
+}
+
+/**
+ * 用户登录 - 使用密码登录
+ */
+export function loginWithPassword(options: EasemobLoginOptions): void {
+    console.log('[Easemob] 开始登录，用户：', options.userId);
+    EMClient.getInstance().login(
+        options.userId,
+        options.password,
+        new LoginCallback(options.success, options.fail, options.complete)
+    );
+}
+
+/**
+ * 用户登录 - 使用 Token 登录（推荐）
+ */
+export function loginWithToken(options: EasemobLoginOptions): void {
+    console.log('[Easemob] 开始使用 Token 登录，用户：', options.userId);
+    if (options.token == null) {
+        const err = new EasemobErrorImpl(9020004, 'Token 不能为空');
+        options.fail?.(err);
+        options.complete?.(err);
+        return;
+    }
+    EMClient.getInstance().loginWithToken(
+        options.userId,
+        options.token,
+        new LoginCallback(options.success, options.fail, options.complete)
+    );
+}
+
+/**
+ * 用户登出
+ */
+export function logout(options?: { 
+    unbindToken?: boolean;
+    success?: (res: EasemobResult) => void;
+    fail?: (err: EasemobErrorImpl) => void;
+    complete?: (res: any) => void;
+}): void {
+    const unbindToken = options?.unbindToken ?? true;
+    console.log('[Easemob] 开始登出，解绑 Token：', unbindToken);
+    EMClient.getInstance().logout(
+        unbindToken,
+        new LogoutCallback(options?.success, options?.fail, options?.complete)
+    );
+}
+
+/**
+ * 发送文本消息
+ */
+export function sendTextMessage(options: EasemobSendMessageOptions): void {
+    const content = options.content;
+    const to = options.to;
+    const chatType = options.chatType ?? 0; // 默认为单聊
+    
+    console.log('[Easemob] 发送文本消息给：', to, '内容：', content);
+    
+    const message = EMMessage.createTextSendMessage(content, to);
+    message.setChatType(chatType);
+    
+    // 设置消息扩展（如果有）
+    if (options.ext != null) {
+        const extMap = options.ext;
+        extMap.forEach((value, key) => {
+            message.setAttribute(key, value);
+        });
+    }
+    
+    EMClient.getInstance().chatManager().sendMessage(message);
+    
+    const res: EasemobMessageResult = {
+        success: true,
+        msgId: message.getMsgId(),
+        to: to,
+        content: content
+    };
+    options.success?.(res);
+    options.complete?.(res);
+}
+
+/**
+ * 获取当前登录用户
+ */
+export function getCurrentUser(): string | null {
+    return EMClient.getInstance().getCurrentUser();
+}
+
+/**
+ * 判断是否已登录
+ */
+export function isLoggedIn(): boolean {
+    return EMClient.getInstance().isLoggedInBefore();
+}
+
+/**
+ * 判断是否连接到服务器
+ */
+export function isConnected(): boolean {
+    return EMClient.getInstance().isConnected();
+}
+
+/**
+ * 加载本地会话
+ */
+export function loadAllConversations(): void {
+    EMClient.getInstance().chatManager().loadAllConversations();
+    console.log('[Easemob] 本地会话加载完成');
+}
+
+/**
+ * 加载本地群组
+ */
+export function loadAllGroups(): void {
+    EMClient.getInstance().groupManager().loadAllGroups();
+    console.log('[Easemob] 本地群组加载完成');
+}

@@ -1,0 +1,407 @@
+import {
+    EMClient,
+    EMOptions,
+    EMError,
+    EMChatMessage,
+    EMTextMessageBody,
+    EMChatType,
+    EMChatManagerDelegate,
+    EMClientDelegate,
+    EMMessageBodyType,
+    EMCallBack
+} from "HyphenateChat";
+
+import { 
+    EasemobInitOptions, 
+    EasemobLoginOptions, 
+    EasemobSendMessageOptions,
+    EasemobRegisterOptions,
+    EasemobResult,
+    EasemobInitResult,
+    EasemobLoginResult,
+    EasemobMessageResult
+} from '../interface.uts';
+
+import { EasemobErrorImpl } from '../unierror';
+
+/**
+ * 环信 iOS 实现类
+ */
+class EMChat {
+    emClientManager!: EMClient;
+    emOptions!: EMOptions;
+
+    constructor() {
+        this.emClientManager = EMClient.shared();
+    }
+
+    /**
+     * 初始化 SDK
+     */
+    initChat(appkey: string, autoLogin?: boolean, debugMode?: boolean): void {
+        this.emOptions = new EMOptions(appkey = appkey);
+        
+        // 设置自动登录
+        if (autoLogin != null) {
+            this.emOptions.isAutoLogin = autoLogin;
+        }
+        
+        console.log('[Easemob iOS] 正在初始化 SDK，AppKey：', appkey);
+        
+        // 初始化 SDK
+        this.emClientManager.initializeSDK(with = this.emOptions);
+        
+        // 设置调试模式
+        if (debugMode === true) {
+            this.emClientManager.enableConsoleLog = true;
+        }
+        
+        // 添加消息监听
+        this.emClientManager.chatManager?.add(this.messageDelegate, delegateQueue = null);
+        
+        // 添加连接监听
+        this.emClientManager.add(this.connectionDelegate, delegateQueue = null);
+        
+        console.log('[Easemob iOS] SDK 初始化完成');
+    }
+
+    /**
+     * 使用密码登录
+     */
+    login(userId: string, password: string, callback: EMCallBack): void {
+        console.log('[Easemob iOS] 开始登录，用户：', userId);
+        this.emClientManager.login(withUsername = userId, password = password, completion = (aUserName: string, aError: EMError | null): void => {
+            callback.onCompletion(aUserName, aError);
+        });
+    }
+
+    /**
+     * 使用 Token 登录
+     */
+    loginWithToken(userId: string, token: string, callback: EMCallBack): void {
+        console.log('[Easemob iOS] 开始使用 Token 登录，用户：', userId);
+        this.emClientManager.login(withUsername = userId, token = token, completion = (aUserName: string, aError: EMError | null): void => {
+            callback.onCompletion(aUserName, aError);
+        });
+    }
+
+    /**
+     * 注册
+     */
+    register(userId: string, password: string, callback: EMCallBack): void {
+        console.log('[Easemob iOS] 开始注册用户：', userId);
+        this.emClientManager.register(withUsername = userId, password = password, completion = (aUserName: string, aError: EMError | null): void => {
+            callback.onCompletion(aUserName, aError);
+        });
+    }
+
+    /**
+     * 登出
+     */
+    logout(unbindToken: boolean): EMError | null {
+        console.log('[Easemob iOS] 开始登出，解绑 Token：', unbindToken);
+        return this.emClientManager.logout(unbindToken);
+    }
+
+    /**
+     * 发送文本消息
+     */
+    sendTextMessage(content: string, to: string, chatType: EMChatType, ext?: Map<string, any>): string {
+        console.log('[Easemob iOS] 发送文本消息给：', to, '内容：', content);
+        
+        // 消息 Body
+        const body = new EMTextMessageBody(text = content);
+        
+        // 创建消息
+        const message = new EMChatMessage(
+            conversationID = to,
+            from = this.emClientManager.currentUsername ?? '',
+            to = to,
+            body = body,
+            ext = ext
+        );
+        message.chatType = chatType;
+        
+        // 发送消息
+        this.emClientManager.chatManager?.send(
+            message,
+            progress = null,
+            completion = (aMessage: EMChatMessage | null, aError: EMError | null): void => {
+                if (aError == null) {
+                    console.log('[Easemob iOS] 消息发送成功');
+                } else {
+                    console.log('[Easemob iOS] 消息发送失败：', aError);
+                }
+            }
+        );
+        
+        return message.messageId;
+    }
+
+    /**
+     * 获取当前登录用户
+     */
+    getCurrentUser(): string | null {
+        return this.emClientManager.currentUsername;
+    }
+
+    /**
+     * 判断是否已登录
+     */
+    isLoggedIn(): boolean {
+        return this.emClientManager.isLoggedIn;
+    }
+
+    /**
+     * 判断是否连接到服务器
+     */
+    isConnected(): boolean {
+        return this.emClientManager.isConnected;
+    }
+
+    // ============================================
+    // 代理实现
+    // ============================================
+
+    /**
+     * 消息监听代理
+     */
+    private messageDelegate: EMChatManagerDelegate = {
+        messagesDidReceive: (aMessages: EMChatMessage[]): void => {
+            console.log('[Easemob iOS] 收到消息，数量：', aMessages.length);
+            for (const item of aMessages) {
+                console.log(`[Easemob iOS] 消息ID: ${item.messageId}, 来自: ${item.from}`);
+                if (item.body.type == EMMessageBodyType.text) {
+                    const textBody = item.body as EMTextMessageBody;
+                    console.log('[Easemob iOS] 文本内容：', textBody.text);
+                }
+            }
+        },
+        messagesDidRead: (aMessages: EMChatMessage[]): void => {
+            console.log('[Easemob iOS] 消息已读');
+        },
+        messagesDidDeliver: (aMessages: EMChatMessage[]): void => {
+            console.log('[Easemob iOS] 消息已送达');
+        },
+        messagesDidRecall: (aMessages: EMChatMessage[]): void => {
+            console.log('[Easemob iOS] 消息被撤回');
+        }
+    } as EMChatManagerDelegate;
+
+    /**
+     * 连接监听代理
+     */
+    private connectionDelegate: EMClientDelegate = {
+        connectionStateDidChange: (aConnectionState: number): void => {
+            console.log('[Easemob iOS] 连接状态变化：', aConnectionState);
+        },
+        userAccountDidLoginFromOtherDevice: (aDeviceName: string | null): void => {
+            console.log('[Easemob iOS] 账号在其他设备登录：', aDeviceName ?? '');
+        },
+        userAccountDidRemoveFromServer: (): void => {
+            console.log('[Easemob iOS] 账号被服务器移除');
+        },
+        userDidForbidByServer: (): void => {
+            console.log('[Easemob iOS] 账号被服务器禁止');
+        },
+        userAccountDidForbidden: (): void => {
+            console.log('[Easemob iOS] 账号被禁用');
+        },
+        userAccountDidForcedToLogout: (aError: EMError): void => {
+            console.log('[Easemob iOS] 账号被强制登出：', aError);
+        },
+        tokenWillExpire: (aError: EMError): void => {
+            console.log('[Easemob iOS] Token 即将过期：', aError);
+        },
+        tokenDidExpire: (aError: EMError): void => {
+            console.log('[Easemob iOS] Token 已过期：', aError);
+        }
+    } as EMClientDelegate;
+}
+
+// 全局实例
+const EMChatTool: EMChat = new EMChat();
+
+// ============================================
+// 导出函数
+// ============================================
+
+/**
+ * 初始化环信 SDK
+ */
+export function initChat(options: EasemobInitOptions): void {
+    EMChatTool.initChat(
+        options.appKey,
+        options.autoLogin,
+        options.debugMode
+    );
+    
+    const res: EasemobInitResult = {
+        success: true,
+        appKey: options.appKey
+    };
+    options.success?.(res);
+    options.complete?.(res);
+}
+
+/**
+ * 用户注册（仅用于开发测试）
+ */
+export function registerUser(options: EasemobRegisterOptions): void {
+    const callback = new EMCallBack();
+    callback.onCompletion = (aUserName: string, aError: EMError | null): void => {
+        if (aError == null) {
+            console.log('[Easemob iOS] 注册成功');
+            const res: EasemobResult = { success: true };
+            options.success?.(res);
+            options.complete?.(res);
+        } else {
+            console.log('[Easemob iOS] 注册失败：', aError);
+            const err = new EasemobErrorImpl(9030001, `注册失败: ${aError.description} (code: ${aError.code})`);
+            options.fail?.(err);
+            options.complete?.(err);
+        }
+    };
+    EMChatTool.register(options.userId, options.password, callback);
+}
+
+/**
+ * 用户登录 - 使用密码登录
+ */
+export function loginWithPassword(options: EasemobLoginOptions): void {
+    if (options.password == null) {
+        const err = new EasemobErrorImpl(9010002, '密码不能为空');
+        options.fail?.(err);
+        options.complete?.(err);
+        return;
+    }
+    
+    const callback = new EMCallBack();
+    callback.onCompletion = (aUserName: string, aError: EMError | null): void => {
+        if (aError == null) {
+            console.log('[Easemob iOS] 登录成功');
+            const res: EasemobLoginResult = {
+                success: true,
+                userId: aUserName
+            };
+            options.success?.(res);
+            options.complete?.(res);
+        } else {
+            console.log('[Easemob iOS] 登录失败：', aError);
+            const err = new EasemobErrorImpl(9020001, `登录失败: ${aError.description} (code: ${aError.code})`);
+            options.fail?.(err);
+            options.complete?.(err);
+        }
+    };
+    EMChatTool.login(options.userId, options.password, callback);
+}
+
+/**
+ * 用户登录 - 使用 Token 登录（推荐）
+ */
+export function loginWithToken(options: EasemobLoginOptions): void {
+    if (options.token == null) {
+        const err = new EasemobErrorImpl(9010002, 'Token 不能为空');
+        options.fail?.(err);
+        options.complete?.(err);
+        return;
+    }
+    
+    const callback = new EMCallBack();
+    callback.onCompletion = (aUserName: string, aError: EMError | null): void => {
+        if (aError == null) {
+            console.log('[Easemob iOS] 登录成功');
+            const res: EasemobLoginResult = {
+                success: true,
+                userId: aUserName
+            };
+            options.success?.(res);
+            options.complete?.(res);
+        } else {
+            console.log('[Easemob iOS] 登录失败：', aError);
+            const err = new EasemobErrorImpl(9020001, `登录失败: ${aError.description} (code: ${aError.code})`);
+            options.fail?.(err);
+            options.complete?.(err);
+        }
+    };
+    EMChatTool.loginWithToken(options.userId, options.token, callback);
+}
+
+/**
+ * 用户登出
+ */
+export function logout(options?: { 
+    unbindToken?: boolean;
+    success?: (res: EasemobResult) => void;
+    fail?: (err: EasemobErrorImpl) => void;
+    complete?: (res: any) => void;
+}): void {
+    const unbindToken = options?.unbindToken ?? true;
+    const error = EMChatTool.logout(unbindToken);
+    
+    if (error == null) {
+        console.log('[Easemob iOS] 登出成功');
+        const res: EasemobResult = { success: true };
+        options?.success?.(res);
+        options?.complete?.(res);
+    } else {
+        console.log('[Easemob iOS] 登出失败：', error);
+        const err = new EasemobErrorImpl(9020002, `登出失败: ${error.description} (code: ${error.code})`);
+        options?.fail?.(err);
+        options?.complete?.(err);
+    }
+}
+
+/**
+ * 发送文本消息
+ */
+export function sendTextMessage(options: EasemobSendMessageOptions): void {
+    const chatType = options.chatType ?? 0;
+    const emChatType = chatType == 0 ? EMChatType.chat : (chatType == 1 ? EMChatType.groupChat : EMChatType.chatRoom);
+    
+    const msgId = EMChatTool.sendTextMessage(options.content, options.to, emChatType, options.ext);
+    
+    const res: EasemobMessageResult = {
+        success: true,
+        msgId: msgId,
+        to: options.to,
+        content: options.content
+    };
+    options.success?.(res);
+    options.complete?.(res);
+}
+
+/**
+ * 获取当前登录用户
+ */
+export function getCurrentUser(): string | null {
+    return EMChatTool.getCurrentUser();
+}
+
+/**
+ * 判断是否已登录
+ */
+export function isLoggedIn(): boolean {
+    return EMChatTool.isLoggedIn();
+}
+
+/**
+ * 判断是否连接到服务器
+ */
+export function isConnected(): boolean {
+    return EMChatTool.isConnected();
+}
+
+/**
+ * 加载本地会话（iOS 不需要手动加载，保留空实现以兼容 Android）
+ */
+export function loadAllConversations(): void {
+    console.log('[Easemob iOS] 加载本地会话（iOS 自动处理）');
+}
+
+/**
+ * 加载本地群组（iOS 不需要手动加载，保留空实现以兼容 Android）
+ */
+export function loadAllGroups(): void {
+    console.log('[Easemob iOS] 加载本地群组（iOS 自动处理）');
+}
