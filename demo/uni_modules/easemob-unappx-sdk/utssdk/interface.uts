@@ -217,13 +217,16 @@ export type LoginWithPassword = (options: EasemobLoginOptions) => void;
 /** Token 登录函数类型 */
 export type LoginWithToken = (options: EasemobLoginOptions) => void;
 
-/** 登出函数类型 */
-export type Logout = (options: { 
+/** 登出选项 */
+export type LogoutOptions = {
     unbindToken: boolean;
     success: (res: EasemobResult) => void;
     fail: (err: EasemobError) => void;
     complete: (res: any) => void;
-} | null) => void;
+}
+
+/** 登出函数类型 */
+export type Logout = (options: LogoutOptions | null) => void;
 
 /** 发送文本消息函数类型 */
 export type SendTextMessage = (options: EasemobSendMessageOptions) => void;
