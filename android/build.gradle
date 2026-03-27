@@ -6,15 +6,12 @@ buildscript {
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
-        flatDir { dirs('./plugins/') }
     }
     
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.11.1'
+        // Android Gradle 插件 8.12.0 (HBuilderX 4.81+ 要求)
+        classpath 'com.android.tools.build:gradle:8.12.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        // UTS 编译插件（需要下载到 plugins/ 目录）
-        classpath files("plugins/uts-kotlin-gradle-plugin-0.0.1.jar")
-        classpath files("plugins/uts-kotlin-compiler-plugin-0.0.1.jar")
     }
 }
 

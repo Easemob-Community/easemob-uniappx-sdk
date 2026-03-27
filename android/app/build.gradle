@@ -5,7 +5,10 @@ plugins {
 
 android {
     namespace 'com.easemob.uniappx'
-    compileSdk 34
+    
+    // HBuilderX 4.81+ 要求 compileSdk 36 适配 16KB
+    compileSdk 36
+    buildToolsVersion '36.0.0'
 
     defaultConfig {
         applicationId "com.easemob.uniappx"
@@ -38,7 +41,12 @@ android {
         jvmTarget = '17'
     }
     
-    // 支持 UTS 插件
+    // UniApp 配置
+    aaptOptions {
+        additionalParameters '--auto-add-overlay'
+        ignoreAssetsPattern '!.svn:!.git:.*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~'
+    }
+    
     sourceSets {
         main {
             assets.srcDirs = ['src/main/assets']
@@ -48,20 +56,28 @@ android {
 }
 
 dependencies {
-    // UniApp 核心库（从离线 SDK 获取）
-    implementation fileTree(include: ['*.aar'], dir: 'libs')
+    // UniApp 基础库（从离线 SDK 获取）
+    def sdkLibsDir = file('../SDK/libs')
+    if (sdkLibsDir.exists()) {
+        implementation fileTree(dir: '../SDK/libs', include: ['*.aar'])
+    } else {
+        println "警告: 未找到 SDK 目录 ../SDK/libs，请下载 UniApp 离线 SDK"
+    }
     
     // AndroidX
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     
-    // UTS 依赖
+    // Kotlin 协程
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
     implementation 'com.alibaba:fastjson:1.2.83'
     
-    // 环信 SDK 依赖
+    // 环信 SDK
     implementation 'io.hyphenate:hyphenate-chat:4.15.1'
+    
+    // UTS 插件支持
+    implementation fileTree(dir: '../SDK/libs', include: ['utsplugin-release.aar'])
     
     // UTS 插件模块
     implementation project(':uni_modules:easemob-im')
