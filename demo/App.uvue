@@ -1,5 +1,5 @@
 <script lang="uts">
-import { initChat } from '@/uni_modules/easemob-unappx-sdk'
+import { initChat, setDebugMode } from '@/uni_modules/easemob-unappx-sdk'
 
 // #ifdef APP-ANDROID || APP-HARMONY
 let firstBackTime = 0
@@ -10,7 +10,10 @@ export default {
 		console.log('App Launch')
 		
 		// 初始化环信 SDK
-		this.initEasemobSDK()
+		console.log('[App] 开始初始化环信 SDK')
+		initChat('easemob-demo#support')
+		setDebugMode(true)
+		console.log('[App] 环信 SDK 初始化完成')
 	},
 	onShow() {
 		console.log('App Show')
@@ -38,36 +41,6 @@ export default {
 	// #endif
 	onExit() {
 		console.log('App Exit')
-	},
-	methods: {
-		/**
-		 * 初始化环信 SDK
-		 */
-		initEasemobSDK() {
-			console.log('[App] 开始初始化环信 SDK...')
-			
-			initChat({
-				appKey: 'easemob-demo#support',
-				autoLogin: false,
-				debugMode: true,
-				success: (res) => {
-					console.log('[App] 环信 SDK 初始化成功:', JSON.stringify(res))
-					uni.showToast({
-						title: 'SDK 初始化成功',
-						icon: 'success',
-						duration: 2000
-					})
-				},
-				fail: (err) => {
-					console.error('[App] 环信 SDK 初始化失败:', JSON.stringify(err))
-					uni.showToast({
-						title: 'SDK 初始化失败',
-						icon: 'none',
-						duration: 2000
-					})
-				}
-			})
-		}
 	}
 }
 </script>

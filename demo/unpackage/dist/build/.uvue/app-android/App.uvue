@@ -1,7 +1,11 @@
+import { EasemobInitOptions } from "./uni_modules/easemob-unappx-sdk/utssdk/interface";
+import { initChat } from '@/uni_modules/easemob-unappx-sdk';
 let firstBackTime = 0;
 const __sfc__ = defineApp({
     onLaunch() {
         console.log('App Launch');
+        // 初始化环信 SDK
+        this.initEasemobSDK();
     },
     onShow() {
         console.log('App Show');
@@ -29,6 +33,35 @@ const __sfc__ = defineApp({
     onExit() {
         console.log('App Exit');
     },
+    methods: {
+        /**
+         * 初始化环信 SDK
+         */
+        initEasemobSDK() {
+            console.log('[App] 开始初始化环信 SDK...');
+            initChat({
+                appKey: 'easemob-demo#support',
+                autoLogin: false,
+                debugMode: true,
+                success: (res) => {
+                    console.log('[App] 环信 SDK 初始化成功:', JSON.stringify(res));
+                    uni.showToast({
+                        title: 'SDK 初始化成功',
+                        icon: 'success',
+                        duration: 2000
+                    });
+                },
+                fail: (err) => {
+                    console.error('[App] 环信 SDK 初始化失败:', JSON.stringify(err));
+                    uni.showToast({
+                        title: 'SDK 初始化失败',
+                        icon: 'none',
+                        duration: 2000
+                    });
+                }
+            } as EasemobInitOptions);
+        }
+    }
 });
 export default __sfc__;
 const GenAppStyles = [_uM([["uni-row", _pS(_uM([["flexDirection", "row"]]))], ["uni-column", _pS(_uM([["flexDirection", "column"]]))]])];

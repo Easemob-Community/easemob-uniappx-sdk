@@ -11,7 +11,9 @@ import io.dcloud.uts.Map
 import io.dcloud.uts.Set
 import io.dcloud.uts.UTSAndroid
 import kotlin.properties.Delegates
+import uts.sdk.modules.easemobUnappxSdk.EasemobInitOptions
 import io.dcloud.uniapp.extapi.exit as uni_exit
+import uts.sdk.modules.easemobUnappxSdk.initChat
 import io.dcloud.uniapp.extapi.showToast as uni_showToast
 val runBlock1 = run {
     __uniConfig.getAppStyles = fun(): Map<String, Map<String, Map<String, Any>>> {
@@ -23,6 +25,7 @@ open class GenApp : BaseApp {
     constructor(__ins: ComponentInternalInstance) : super(__ins) {
         onLaunch(fun(_: OnLaunchOptions) {
             console.log("App Launch")
+            this.initEasemobSDK()
         }
         , __ins)
         onAppShow(fun(_: OnShowOptions) {
@@ -51,6 +54,19 @@ open class GenApp : BaseApp {
             console.log("App Exit")
         }
         , __ins)
+    }
+    open var initEasemobSDK = ::gen_initEasemobSDK_fn
+    open fun gen_initEasemobSDK_fn() {
+        console.log("[App] 开始初始化环信 SDK...")
+        initChat(EasemobInitOptions(appKey = "easemob-demo#support", autoLogin = false, debugMode = true, success = fun(res){
+            console.log("[App] 环信 SDK 初始化成功:", JSON.stringify(res))
+            uni_showToast(ShowToastOptions(title = "SDK 初始化成功", icon = "success", duration = 2000))
+        }
+        , fail = fun(err){
+            console.error("[App] 环信 SDK 初始化失败:", JSON.stringify(err))
+            uni_showToast(ShowToastOptions(title = "SDK 初始化失败", icon = "none", duration = 2000))
+        }
+        ))
     }
     companion object {
         val styles: Map<String, Map<String, Map<String, Any>>> by lazy {
