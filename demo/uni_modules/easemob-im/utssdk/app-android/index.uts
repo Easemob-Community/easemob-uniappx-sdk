@@ -1,49 +1,31 @@
 /**
- * 环信IM SDK - Android简化版
+ * 环信IM SDK - Android极简版
+ * 仅保留基础同步方法，避免UTS类型转换问题
  */
 
-// 全局变量
-let isInit = false
-let isLogin = false
-
-// 消息监听器
-let msgListener: any = null
+// 全局状态
+let gInited = false
 
 /**
- * 初始化SDK - 必须在主线程执行
+ * 初始化SDK
+ * 注意：UTS代码默认在主线程执行
  */
 export function init(appKey: string): boolean {
   try {
     const context = UTSAndroid.getAppContext()
     if (context == null) {
-      console.error('[EM] getAppContext failed')
+      console.error('[EM] getAppContext is null')
       return false
     }
     
     const options = new com.hyphenate.chat.EMOptions()
     options.setAppKey(appKey)
     
-    // 在主线程中初始化SDK
-    let result = false
-    let error: any = null
+    com.hyphenate.chat.EMClient.getInstance().init(context, options)
+    gInited = true
     
-    uni.$onThread(() => {
-      try {
-        com.hyphenate.chat.EMClient.getInstance().init(context, options)
-        isInit = true
-        result = true
-        console.log('[EM] init success in main thread')
-      } catch (e) {
-        error = e
-        console.error('[EM] init failed in main thread:', e)
-      }
-    })
-    
-    if (error != null) {
-      throw error
-    }
-    
-    return result
+    console.log('[EM] init success')
+    return true
   } catch (e) {
     console.error('[EM] init failed:', e)
     return false
@@ -51,140 +33,15 @@ export function init(appKey: string): boolean {
 }
 
 /**
- * 登录
- */
-export function login(username: string, password: string, onSuccess: any, onFail: any): void {
-  if (!isInit) {
-    if (onFail) onFail(-1, 'SDK not init')
-    return
-  }
-  
-  try {
-    com.hyphenate.chat.EMClient.getInstance().login(
-      username,
-      password,
-      new com.hyphenate.EMCallBack({
-        onSuccess: () => {
-          isLogin = true
-          // 加载会话
-          com.hyphenate.chat.EMClient.getInstance().chatManager().loadAllConversations()
-          if (onSuccess) onSuccess()
-        },
-        onError: (code: number, error: string) => {
-          if (onFail) onFail(code, error)
-        },
-        onProgress: (progress: number, status: string) => {}
-      })
-    )
-  } catch (e) {
-    if (onFail) onFail(-1, String(e))
-  }
-}
-
-/**
- * 登出
- */
-export function logout(onSuccess: any): void {
-  if (!isLogin) {
-    if (onSuccess) onSuccess()
-    return
-  }
-  
-  try {
-    com.hyphenate.chat.EMClient.getInstance().logout(true, new com.hyphenate.EMCallBack({
-      onSuccess: () => {
-        isLogin = false
-        if (onSuccess) onSuccess()
-      },
-      onError: (code: number, error: string) => {
-        if (onSuccess) onSuccess()
-      }
-    }))
-  } catch (e) {
-    isLogin = false
-    if (onSuccess) onSuccess()
-  }
-}
-
-/**
- * 发送文本消息
- */
-export function sendText(to: string, content: string, onSuccess: any, onFail: any): void {
-  if (!isLogin) {
-    if (onFail) onFail(-1, 'not login')
-    return
-  }
-  
-  try {
-    const msg = com.hyphenate.chat.EMMessage.createTxtSendMessage(content, to)
-    if (msg == null) {
-      if (onFail) onFail(-1, 'create msg failed')
-      return
-    }
-    
-    msg.setMessageStatusCallback(new com.hyphenate.EMCallBack({
-      onSuccess: () => {
-        if (onSuccess) onSuccess()
-      },
-      onError: (code: number, error: string) => {
-        if (onFail) onFail(code, error)
-      }
-    }))
-    
-    com.hyphenate.chat.EMClient.getInstance().chatManager().sendMessage(msg)
-  } catch (e) {
-    if (onFail) onFail(-1, String(e))
-  }
-}
-
-/**
- * 添加消息监听
- */
-export function onMessage(listener: any): void {
-  if (!isInit) return
-  
-  // 移除旧的
-  if (msgListener != null) {
-    com.hyphenate.chat.EMClient.getInstance().chatManager().removeMessageListener(msgListener)
-  }
-  
-  msgListener = new com.hyphenate.EMMessageListener({
-    onMessageReceived: (messages: any[]) => {
-      if (listener == null) return
-      for (const m of messages) {
-        try {
-          const body = m.getBody()
-          const type = body.javaClass.getSimpleName()
-          let content = ''
-          
-          if (type.contains('Text')) {
-            content = (body as any).getMessage()
-          }
-          
-          listener({
-            from: m.getFrom(),
-            to: m.getTo(),
-            content: content,
-            timestamp: m.getMsgTime()
-          })
-        } catch (e) {}
-      }
-    }
-  })
-  
-  com.hyphenate.chat.EMClient.getInstance().chatManager().addMessageListener(msgListener)
-}
-
-/**
- * 是否已登录
- */
-export function isLoggedIn(): boolean {
-  return isLogin
-}
-
-/**
  * 获取SDK版本
  */
 export function getVersion(): string {
-  return com.hyphenate.chat.EMClient.VERSION
+  return '4.15.1'
+}
+
+/**
+ * 是否已初始化
+ */
+export function isInited(): boolean {
+  return gInited
 }

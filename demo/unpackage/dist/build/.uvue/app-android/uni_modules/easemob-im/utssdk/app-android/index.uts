@@ -7,7 +7,7 @@ let isLogin = false;
 // 消息监听器
 let msgListener: any = null;
 /**
- * 初始化SDK
+ * 初始化SDK - 必须在主线程执行
  */
 export function init(appKey: string): boolean {
     try {
@@ -18,10 +18,25 @@ export function init(appKey: string): boolean {
         }
         const options = new com.hyphenate.chat.EMOptions();
         options.setAppKey(appKey);
-        com.hyphenate.chat.EMClient.getInstance().init(context, options);
-        isInit = true;
-        console.log('[EM] init success');
-        return true;
+        // 在主线程中初始化SDK
+        let result = false;
+        let error: any = null;
+        uni.$onThread(() => {
+            try {
+                com.hyphenate.chat.EMClient.getInstance().init(context, options);
+                isInit = true;
+                result = true;
+                console.log('[EM] init success in main thread');
+            }
+            catch (e: any) {
+                error = e;
+                console.error('[EM] init failed in main thread:', e);
+            }
+        });
+        if (error != null) {
+            throw error;
+        }
+        return result;
     }
     catch (e: any) {
         console.error('[EM] init failed:', e);

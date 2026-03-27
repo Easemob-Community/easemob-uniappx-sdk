@@ -9,9 +9,9 @@ const __ins = getCurrentInstance()!;
 const _ctx = __ins.proxy as InstanceType<typeof __sfc__>;
 const _cache = __ins.renderCache;
 
-const appKey = ref('')
-const username = ref('')
-const password = ref('')
+const appKey = ref('easemob-demo#support')
+const username = ref('hfp')
+const password = ref('1')
 const target = ref('')
 const content = ref('')
 const logs = ref<string[]>([])
@@ -25,7 +25,7 @@ const addLog = (msg: string) => {
 }
 
 const initSDK = () => {
-  if (!appKey.value) {
+  if (appKey.value.length == 0) {
     addLog('请输入AppKey')
     return
   }
@@ -44,7 +44,7 @@ const initSDK = () => {
 }
 
 const doLogin = () => {
-  if (!username.value || !password.value) {
+  if (username.value.length == 0 || password.value.length == 0) {
     addLog('请输入用户名密码')
     return
   }
@@ -69,7 +69,7 @@ const doLogout = () => {
 }
 
 const sendMsg = () => {
-  if (!target.value || !content.value) {
+  if (target.value.length == 0 || content.value.length == 0) {
     addLog('请输入对方用户名和消息内容')
     return
   }

@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import io.dcloud.uniapp.extapi.`$onThread` as uni__onThread
 var isInit = false
 var isLogin = false
 var msgListener: Any = null
@@ -27,10 +28,25 @@ fun init(appKey: String): Boolean {
         }
         val options = com.hyphenate.chat.EMOptions()
         options.setAppKey(appKey)
-        com.hyphenate.chat.EMClient.getInstance().init(context, options)
-        isInit = true
-        console.log("[EM] init success")
-        return true
+        var result = false
+        var error: Any = null
+        uni__onThread(fun(){
+            try {
+                com.hyphenate.chat.EMClient.getInstance().init(context, options)
+                isInit = true
+                result = true
+                console.log("[EM] init success in main thread")
+            }
+             catch (e: Throwable) {
+                error = e
+                console.error("[EM] init failed in main thread:", e)
+            }
+        }
+        )
+        if (error != null) {
+            throw error
+        }
+        return result
     }
      catch (e: Throwable) {
         console.error("[EM] init failed:", e)
