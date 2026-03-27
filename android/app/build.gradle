@@ -6,9 +6,9 @@ plugins {
 android {
     namespace 'com.easemob.uniappx'
     
-    // HBuilderX 4.81+ 要求 compileSdk 36 适配 16KB
-    compileSdk 36
-    buildToolsVersion '36.0.0'
+    // SDK 5.05 示例配置
+    compileSdk 35
+    buildToolsVersion '35.0.0'
 
     defaultConfig {
         applicationId "com.easemob.uniappx"
@@ -16,32 +16,44 @@ android {
         targetSdk 33
         versionCode 1
         versionName "1.0.0"
+        multiDexEnabled true
         
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a'
         }
     }
 
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-        debug {
-            debuggable true
-        }
     }
     
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '1.8'
     }
     
-    // UniApp 配置
+    // UniApp 必需配置
     aaptOptions {
         additionalParameters '--auto-add-overlay'
         ignoreAssetsPattern '!.svn:!.git:.*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~'
@@ -56,28 +68,30 @@ android {
 }
 
 dependencies {
-    // UniApp 基础库（从离线 SDK 获取）
-    def sdkLibsDir = file('../SDK/libs')
-    if (sdkLibsDir.exists()) {
-        implementation fileTree(dir: '../SDK/libs', include: ['*.aar'])
-    } else {
-        println "警告: 未找到 SDK 目录 ../SDK/libs，请下载 UniApp 离线 SDK"
-    }
+    // UniApp 基础库（必须）
+    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'])
     
     // AndroidX
-    implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.fragment:fragment-ktx:1.6.2'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    
+    // 图片加载
+    implementation 'com.facebook.fresco:fresco:2.5.0'
+    implementation 'com.facebook.fresco:animated-gif:2.5.0'
+    implementation 'com.github.bumptech.glide:glide:4.12.0'
+    
+    // JSON
+    implementation 'com.alibaba:fastjson:1.2.83'
+    implementation 'androidx.webkit:webkit:1.9.0'
     
     // Kotlin 协程
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
-    implementation 'com.alibaba:fastjson:1.2.83'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
     
     // 环信 SDK
     implementation 'io.hyphenate:hyphenate-chat:4.15.1'
-    
-    // UTS 插件支持
-    implementation fileTree(dir: '../SDK/libs', include: ['utsplugin-release.aar'])
     
     // UTS 插件模块
     implementation project(':uni_modules:easemob-im')

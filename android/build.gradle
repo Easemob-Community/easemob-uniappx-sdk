@@ -9,8 +9,8 @@ buildscript {
     }
     
     dependencies {
-        // Android Gradle 插件 8.12.0 (HBuilderX 4.81+ 要求)
-        classpath 'com.android.tools.build:gradle:8.12.0'
+        // SDK 5.05 使用 AGP 兼容版本
+        classpath 'com.android.tools.build:gradle:8.2.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
