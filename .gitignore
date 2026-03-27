@@ -1,0 +1,16 @@
+# 参考代码目录（前辈调研实现）
+uts-em-chat-main/
+
+# 编译输出
+demo/unpackage/
+*.ts.kt
+*.ts.swift
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# 依赖
+node_modules/
