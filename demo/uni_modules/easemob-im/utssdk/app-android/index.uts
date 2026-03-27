@@ -1,6 +1,7 @@
 /**
  * 环信IM SDK - Android实现
  * 适配环信 SDK 4.15.1
+ * EMCallBack 是接口: https://doc.easemob.com/apidoc/android/chat3.0/interfacecom_1_1hyphenate_1_1_e_m_call_back.html
  */
 
 import type { EMLoginSuccess, EMLoginFail, EMSendSuccess, EMSendFail, EMMessageCallback, EMMessage } from '../interface.uts'
@@ -18,12 +19,14 @@ let gSendFail: EMSendFail | null = null
 let gMsgCallback: EMMessageCallback | null = null
 
 /**
- * 登录回调实现
- * EMCallBack 是接口，使用 implements
+ * 登录回调实现 - implements 接口 EMCallBack
+ * 文档: https://doc.easemob.com/apidoc/android/chat3.0/interfacecom_1_1hyphenate_1_1_e_m_call_back.html
  */
 class EMLoginCallBack implements com.hyphenate.EMCallBack {
+  // onSuccess - 接口抽象方法
   onSuccess(): void {
     gLogined = true
+    // 登录成功后加载会话
     com.hyphenate.chat.EMClient.getInstance().chatManager().loadAllConversations()
     if (gLoginSuccess != null) {
       gLoginSuccess()
@@ -32,16 +35,20 @@ class EMLoginCallBack implements com.hyphenate.EMCallBack {
     }
   }
 
-  onError(code: Int, error: string): void {
+  // onError - 接口抽象方法  
+  // 文档: void onError(int code, String error)
+  onError(code: number, error: string): void {
     if (gLoginFail != null) {
-      gLoginFail(code as number, error)
+      gLoginFail(code, error)
       gLoginSuccess = null
       gLoginFail = null
     }
   }
 
-  onProgress(progress: Int, status: string): void {
-    // 暂不处理
+  // onProgress - 接口 default 方法，可选实现
+  // 文档: default void onProgress(int progress, String status)
+  onProgress(progress: number, status: string): void {
+    // 暂不处理进度
   }
 }
 
@@ -57,7 +64,8 @@ class EMLogoutCallBack implements com.hyphenate.EMCallBack {
     }
   }
 
-  onError(code: Int, error: string): void {
+  onError(code: number, error: string): void {
+    // 即使失败也视为登出
     gLogined = false
     if (gLogoutSuccess != null) {
       gLogoutSuccess()
@@ -65,7 +73,7 @@ class EMLogoutCallBack implements com.hyphenate.EMCallBack {
     }
   }
 
-  onProgress(progress: Int, status: string): void {
+  onProgress(progress: number, status: string): void {
     // 暂不处理
   }
 }
@@ -82,31 +90,29 @@ class EMSendCallBack implements com.hyphenate.EMCallBack {
     }
   }
 
-  onError(code: Int, error: string): void {
+  onError(code: number, error: string): void {
     if (gSendFail != null) {
-      gSendFail(code as number, error)
+      gSendFail(code, error)
       gSendSuccess = null
       gSendFail = null
     }
   }
 
-  onProgress(progress: Int, status: string): void {
+  onProgress(progress: number, status: string): void {
     // 暂不处理
   }
 }
 
 /**
- * 消息监听器实现
- * EMMessageListener 是接口，使用 implements
+ * 消息监听器实现 - implements 接口 EMMessageListener
  * 文档: https://doc.easemob.com/apidoc/android/chat3.0/interfacecom_1_1hyphenate_1_1_e_m_message_listener.html
  */
 class EMMessageListenerImpl implements com.hyphenate.EMMessageListener {
-  // 必须实现的方法 - 收到消息
-  onMessageReceived(messages: List<com.hyphenate.chat.EMMessage>): void {
+  // 必须实现: void onMessageReceived(List<EMMessage> messages)
+  onMessageReceived(messages: any[]): void {
     if (gMsgCallback == null) return
 
-    for (let i = 0; i < messages.size; i++) {
-      const msg = messages.get(i)
+    for (const msg of messages) {
       if (msg == null) continue
 
       try {
@@ -131,27 +137,6 @@ class EMMessageListenerImpl implements com.hyphenate.EMMessageListener {
         console.error('[EM] process message error:', e)
       }
     }
-  }
-
-  // default 方法，可选实现
-  onCmdMessageReceived(messages: List<com.hyphenate.chat.EMMessage>): void {
-    // 暂不处理透传消息
-  }
-
-  onMessageRead(messages: List<com.hyphenate.chat.EMMessage>): void {
-    // 暂不处理已读回执
-  }
-
-  onMessageDelivered(messages: List<com.hyphenate.chat.EMMessage>): void {
-    // 暂不处理送达回执
-  }
-
-  onMessageRecalled(messages: List<com.hyphenate.chat.EMMessage>): void {
-    // 暂不处理消息撤回
-  }
-
-  onMessageChanged(message: com.hyphenate.chat.EMMessage, change: any): void {
-    // 暂不处理消息变化
   }
 }
 
