@@ -118,11 +118,11 @@ class LoginEMCallBack extends EMCallBack {
 		super();
 	}
 
-	override onError(params0 : Int, params1 : string) : void {
+	override onError(params0 : number, params1 : string) : void {
 		console.log('[Easemob] login error:', params0, params1);
 	}
 
-	override onProgress(params0 : Int, params1 : string) : void {
+	override onProgress(params0 : number, params1 : string) : void {
 		console.log('[Easemob] login progress:', params0, params1);
 	}
 
@@ -139,7 +139,7 @@ class LogoutEMCallBack extends EMCallBack {
 		super();
 	}
 
-	override onError(params0 : Int, params1 : string) : void {
+	override onError(params0 : number, params1 : string) : void {
 		console.log('[Easemob] logout error:', params0, params1);
 	}
 
@@ -160,7 +160,7 @@ class EMConnectionListenerImpl extends EMConnectionListener {
 		console.log('[Easemob] onConnected');
 	}
 
-	override onDisconnected(params0 : Int) : void {
+	override onDisconnected(params0 : number) : void {
 		console.log('[Easemob] onDisconnected:', params0);
 	}
 }
