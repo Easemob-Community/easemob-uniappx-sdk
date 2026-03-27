@@ -194,13 +194,13 @@ class RegisterThread extends Thread {
 
 // 辅助函数：设置回调
 function setCallbacks(
-    success?: ((res: any) => void),
-    fail?: ((err: any) => void),
-    complete?: ((res: any) => void)
+    success: ((res: any) => void) | null,
+    fail: ((err: any) => void) | null,
+    complete: ((res: any) => void) | null
 ): void {
-    gSuccessCallback = success ?? null;
-    gFailCallback = fail ?? null;
-    gCompleteCallback = complete ?? null;
+    gSuccessCallback = success;
+    gFailCallback = fail;
+    gCompleteCallback = complete;
 }
 
 // 辅助函数：清空回调
@@ -298,17 +298,26 @@ export function loginWithToken(options: EasemobLoginOptions): void {
 }
 
 /**
+ * 用户登出选项
+ */
+export type LogoutOptions = {
+    unbindToken: boolean;
+    success: (res: EasemobResult) => void;
+    fail: (err: any) => void;
+    complete: (res: any) => void;
+}
+
+/**
  * 用户登出
  */
-export function logout(options?: { 
-    unbindToken?: boolean;
-    success?: (res: EasemobResult) => void;
-    fail?: (err: any) => void;
-    complete?: (res: any) => void;
-}): void {
-    const unbindToken = options?.unbindToken ?? true;
+export function logout(options: LogoutOptions | null): void {
+    const unbindToken = options != null && options.unbindToken != null ? options.unbindToken : true;
     console.log('[Easemob] 开始登出，解绑 Token：' + unbindToken);
-    setCallbacks(options?.success, options?.fail, options?.complete);
+    setCallbacks(
+        options != null ? options.success : null,
+        options != null ? options.fail : null,
+        options != null ? options.complete : null
+    );
     EMClient.getInstance().logout(
         unbindToken,
         new LogoutCallback()
@@ -321,7 +330,7 @@ export function logout(options?: {
 export function sendTextMessage(options: EasemobSendMessageOptions): void {
     const content = options.content;
     const to = options.to;
-    const chatType = options.chatType ?? 0;
+    const chatType = options.chatType != null ? options.chatType : 0;
     
     console.log('[Easemob] 发送文本消息给：' + to + ', 内容：' + content);
     
