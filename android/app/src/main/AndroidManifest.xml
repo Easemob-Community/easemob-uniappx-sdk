@@ -34,10 +34,10 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
         
-        <!-- DCloud AppKey (需要从 https://dev.dcloud.net.cn/ 申请) -->
+        <!-- DCloud AppKey -->
         <meta-data
             android:name="dcloud_appkey"
-            android:value="你的AppKey" />
+            android:value="764d7f5bbc75611af5078d7d7c8bacf0" />
         
         <!-- UniApp 主 Activity -->
         <activity
