@@ -1,68 +1,129 @@
 /**
  * 环信IM SDK - Android实现
- * 参考文档: https://doc.dcloud.net.cn/uni-app-x/plugin/uts-for-android.html
+ * 适配环信 SDK 4.15.1
+ * EMCallBack 是接口: https://doc.easemob.com/apidoc/android/chat3.0/interfacecom_1_1hyphenate_1_1_e_m_call_back.html
  */
 
-import { EMLoginSuccess, EMLoginFail, EMSendSuccess, EMSendFail, EMMessageCallback, EMMessage } from '../interface.uts'
+import type { EMLoginSuccess, EMLoginFail, EMSendSuccess, EMSendFail, EMMessageCallback, EMMessage } from '../interface.uts'
 
 // 全局状态
 let gInited = false
 let gLogined = false
-let gMsgListener: com.hyphenate.EMMessageListener | null = null
+
+// 存储回调函数
+let gLoginSuccess: EMLoginSuccess | null = null
+let gLoginFail: EMLoginFail | null = null
+let gLogoutSuccess: (() => void) | null = null
+let gSendSuccess: EMSendSuccess | null = null
+let gSendFail: EMSendFail | null = null
 let gMsgCallback: EMMessageCallback | null = null
 
 /**
- * EMCallBack 实现类
+ * 登录回调实现 - implements 接口 EMCallBack
+ * 文档: https://doc.easemob.com/apidoc/android/chat3.0/interfacecom_1_1hyphenate_1_1_e_m_call_back.html
  */
-class EMCallBackImpl implements com.hyphenate.EMCallBack {
-  private successFn: (() => void) | null
-  private failFn: ((code: number, error: string) => void) | null
-  
-  constructor(success: (() => void) | null, fail: ((code: number, error: string) => void) | null) {
-    this.successFn = success
-    this.failFn = fail
-  }
-  
+class EMLoginCallBack implements com.hyphenate.EMCallBack {
+  // onSuccess - 接口抽象方法
   onSuccess(): void {
-    if (this.successFn != null) {
-      this.successFn()
+    gLogined = true
+    // 登录成功后加载会话
+    com.hyphenate.chat.EMClient.getInstance().chatManager().loadAllConversations()
+    if (gLoginSuccess != null) {
+      gLoginSuccess()
+      gLoginSuccess = null
+      gLoginFail = null
     }
   }
-  
+
+  // onError - 接口抽象方法  
+  // 文档: void onError(int code, String error)
   onError(code: number, error: string): void {
-    if (this.failFn != null) {
-      this.failFn(code, error)
+    if (gLoginFail != null) {
+      gLoginFail(code, error)
+      gLoginSuccess = null
+      gLoginFail = null
     }
   }
-  
+
+  // onProgress - 接口 default 方法，可选实现
+  // 文档: default void onProgress(int progress, String status)
   onProgress(progress: number, status: string): void {
     // 暂不处理进度
   }
 }
 
 /**
- * 消息监听器实现类
+ * 登出回调实现
+ */
+class EMLogoutCallBack implements com.hyphenate.EMCallBack {
+  onSuccess(): void {
+    gLogined = false
+    if (gLogoutSuccess != null) {
+      gLogoutSuccess()
+      gLogoutSuccess = null
+    }
+  }
+
+  onError(code: number, error: string): void {
+    // 即使失败也视为登出
+    gLogined = false
+    if (gLogoutSuccess != null) {
+      gLogoutSuccess()
+      gLogoutSuccess = null
+    }
+  }
+
+  onProgress(progress: number, status: string): void {
+    // 暂不处理
+  }
+}
+
+/**
+ * 发送消息回调实现
+ */
+class EMSendCallBack implements com.hyphenate.EMCallBack {
+  onSuccess(): void {
+    if (gSendSuccess != null) {
+      gSendSuccess()
+      gSendSuccess = null
+      gSendFail = null
+    }
+  }
+
+  onError(code: number, error: string): void {
+    if (gSendFail != null) {
+      gSendFail(code, error)
+      gSendSuccess = null
+      gSendFail = null
+    }
+  }
+
+  onProgress(progress: number, status: string): void {
+    // 暂不处理
+  }
+}
+
+/**
+ * 消息监听器实现 - implements 接口 EMMessageListener
+ * 文档: https://doc.easemob.com/apidoc/android/chat3.0/interfacecom_1_1hyphenate_1_1_e_m_message_listener.html
  */
 class EMMessageListenerImpl implements com.hyphenate.EMMessageListener {
-  private callback: EMMessageCallback | null
-  
-  constructor(callback: EMMessageCallback | null) {
-    this.callback = callback
-  }
-  
-  onMessageReceived(messages: com.hyphenate.chat.EMMessage[]): void {
-    if (this.callback == null) return
-    
+  // 必须实现: void onMessageReceived(List<EMMessage> messages)
+  onMessageReceived(messages: any[]): void {
+    if (gMsgCallback == null) return
+
     for (const msg of messages) {
+      if (msg == null) continue
+
       try {
         const body = msg.getBody()
         let content = ''
-        
-        // 判断消息类型并获取内容
+
+        // 判断是否是文本消息
         if (body instanceof com.hyphenate.chat.EMTextMessageBody) {
           content = (body as com.hyphenate.chat.EMTextMessageBody).getMessage()
         }
-        
+
         const message: EMMessage = {
           messageId: msg.getMsgId(),
           from: msg.getFrom(),
@@ -70,8 +131,8 @@ class EMMessageListenerImpl implements com.hyphenate.EMMessageListener {
           content: content,
           timestamp: msg.getMsgTime()
         }
-        
-        this.callback(message)
+
+        gMsgCallback(message)
       } catch (e) {
         console.error('[EM] process message error:', e)
       }
@@ -79,9 +140,11 @@ class EMMessageListenerImpl implements com.hyphenate.EMMessageListener {
   }
 }
 
+// 全局监听器实例
+let gMsgListener: EMMessageListenerImpl | null = null
+
 /**
  * 初始化SDK
- * uni-app x 默认在主线程执行，无需额外处理
  */
 export function init(appKey: string): boolean {
   try {
@@ -90,13 +153,13 @@ export function init(appKey: string): boolean {
       console.error('[EM] getAppContext is null')
       return false
     }
-    
+
     const options = new com.hyphenate.chat.EMOptions()
     options.setAppKey(appKey)
-    
+
     com.hyphenate.chat.EMClient.getInstance().init(context, options)
     gInited = true
-    
+
     console.log('[EM] init success')
     return true
   } catch (e) {
@@ -107,36 +170,29 @@ export function init(appKey: string): boolean {
 
 /**
  * 登录
- * 使用 @UTSJS.keepAlive 确保回调函数不被自动回收
+ * 文档: https://doc.easemob.com/document/android/quickstart.html
  */
 @UTSJS.keepAlive
 export function login(
-  username: string, 
-  password: string, 
-  onSuccess: EMLoginSuccess, 
+  username: string,
+  password: string,
+  onSuccess: EMLoginSuccess,
   onFail: EMLoginFail
 ): void {
   if (gInited == false) {
     onFail(-1, 'SDK not initialized')
     return
   }
-  
+
   try {
-    const callback = new EMCallBackImpl(
-      () => {
-        gLogined = true
-        // 加载所有会话
-        com.hyphenate.chat.EMClient.getInstance().chatManager().loadAllConversations()
-        onSuccess()
-      },
-      (code: number, error: string) => {
-        onFail(code, error)
-      }
-    )
-    
-    com.hyphenate.chat.EMClient.getInstance().login(username, password, callback)
+    gLoginSuccess = onSuccess
+    gLoginFail = onFail
+    com.hyphenate.chat.EMClient.getInstance().login(username, password, new EMLoginCallBack())
   } catch (e) {
-    onFail(-1, String(e))
+    gLoginSuccess = null
+    gLoginFail = null
+    const errorMsg = e != null ? (e as Error).message : 'unknown error'
+    onFail(-1, errorMsg)
   }
 }
 
@@ -149,18 +205,12 @@ export function logout(onSuccess: () => void): void {
     onSuccess()
     return
   }
-  
+
   try {
-    const callback = new EMCallBackImpl(
-      () => {
-        gLogined = false
-        onSuccess()
-      },
-      null
-    )
-    
-    com.hyphenate.chat.EMClient.getInstance().logout(true, callback)
+    gLogoutSuccess = onSuccess
+    com.hyphenate.chat.EMClient.getInstance().logout(true, new EMLogoutCallBack())
   } catch (e) {
+    gLogoutSuccess = null
     gLogined = false
     onSuccess()
   }
@@ -168,59 +218,56 @@ export function logout(onSuccess: () => void): void {
 
 /**
  * 发送文本消息
+ * 文档: https://doc.easemob.com/apidoc/android/chat3.0/classcom_1_1hyphenate_1_1chat_1_1_e_m_chat_manager.html
  */
 @UTSJS.keepAlive
 export function sendTextMessage(
-  to: string, 
-  content: string, 
-  onSuccess: EMSendSuccess, 
+  to: string,
+  content: string,
+  onSuccess: EMSendSuccess,
   onFail: EMSendFail
 ): void {
   if (gLogined == false) {
     onFail(-1, 'Not logged in')
     return
   }
-  
+
   try {
+    // EMMessage.createTxtSendMessage(content, username)
     const msg = com.hyphenate.chat.EMMessage.createTxtSendMessage(content, to)
     if (msg == null) {
       onFail(-1, 'Create message failed')
       return
     }
-    
-    const callback = new EMCallBackImpl(
-      () => {
-        onSuccess()
-      },
-      (code: number, error: string) => {
-        onFail(code, error)
-      }
-    )
-    
-    msg.setMessageStatusCallback(callback)
+
+    gSendSuccess = onSuccess
+    gSendFail = onFail
+    msg.setMessageStatusCallback(new EMSendCallBack())
     com.hyphenate.chat.EMClient.getInstance().chatManager().sendMessage(msg)
   } catch (e) {
-    onFail(-1, String(e))
+    gSendSuccess = null
+    gSendFail = null
+    const errorMsg = e != null ? (e as Error).message : 'unknown error'
+    onFail(-1, errorMsg)
   }
 }
 
 /**
  * 设置消息监听
- * 方法名以 on 开头，支持回调持续触发
  */
 export function onMessageReceived(callback: EMMessageCallback): void {
   if (gInited == false) return
-  
+
   // 保存回调
   gMsgCallback = callback
-  
+
   // 移除旧监听器
   if (gMsgListener != null) {
     com.hyphenate.chat.EMClient.getInstance().chatManager().removeMessageListener(gMsgListener)
   }
-  
+
   // 创建新监听器
-  gMsgListener = new EMMessageListenerImpl(callback)
+  gMsgListener = new EMMessageListenerImpl()
   com.hyphenate.chat.EMClient.getInstance().chatManager().addMessageListener(gMsgListener)
 }
 

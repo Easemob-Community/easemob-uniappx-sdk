@@ -1,7 +1,7 @@
 /**
  * 环信IM SDK - Android实现
  * 适配环信 SDK 4.15.1
- * EMCallBack 是接口: https://doc.easemob.com/apidoc/android/chat3.0/interfacecom_1_1hyphenate_1_1_e_m_call_back.html
+ * 根据编译错误修正: EMCallBack 和 EMMessageListener 在SDK 4.15.1中是抽象类
  */
 
 import type { EMLoginSuccess, EMLoginFail, EMSendSuccess, EMSendFail, EMMessageCallback, EMMessage } from '../interface.uts'
@@ -19,35 +19,41 @@ let gSendFail: EMSendFail | null = null
 let gMsgCallback: EMMessageCallback | null = null
 
 /**
- * 登录回调实现 - implements 接口 EMCallBack
- * 文档: https://doc.easemob.com/apidoc/android/chat3.0/interfacecom_1_1hyphenate_1_1_e_m_call_back.html
+ * 登录回调实现 - extends 抽象类 EMCallBack
+ * 根据编译错误: EMCallBack 是抽象类，需要用 extends + override
  */
-class EMLoginCallBack implements com.hyphenate.EMCallBack {
-  // onSuccess - 接口抽象方法
-  onSuccess(): void {
+class EMLoginCallBack extends com.hyphenate.EMCallBack {
+  constructor() {
+    super()
+  }
+
+  // onSuccess - 抽象方法，需要 override
+  override onSuccess(): void {
     gLogined = true
     // 登录成功后加载会话
     com.hyphenate.chat.EMClient.getInstance().chatManager().loadAllConversations()
-    if (gLoginSuccess != null) {
-      gLoginSuccess()
-      gLoginSuccess = null
-      gLoginFail = null
+    // 保存到局部变量避免 Smart cast 问题
+    const callback = gLoginSuccess
+    if (callback != null) {
+      callback()
     }
+    gLoginSuccess = null
+    gLoginFail = null
   }
 
-  // onError - 接口抽象方法  
-  // 文档: void onError(int code, String error)
-  onError(code: number, error: string): void {
-    if (gLoginFail != null) {
-      gLoginFail(code, error)
-      gLoginSuccess = null
-      gLoginFail = null
+  // onError - 抽象方法，需要 override
+  // Kotlin 映射签名: fun onError(p0: Int, p1: String!): Unit
+  override onError(code: Int, error: string): void {
+    const callback = gLoginFail
+    if (callback != null) {
+      callback(code as number, error)
     }
+    gLoginSuccess = null
+    gLoginFail = null
   }
 
-  // onProgress - 接口 default 方法，可选实现
-  // 文档: default void onProgress(int progress, String status)
-  onProgress(progress: number, status: string): void {
+  // onProgress - 已经有默认实现，但为了保险也写上
+  override onProgress(progress: Int, status: string): void {
     // 暂不处理进度
   }
 }
@@ -55,25 +61,31 @@ class EMLoginCallBack implements com.hyphenate.EMCallBack {
 /**
  * 登出回调实现
  */
-class EMLogoutCallBack implements com.hyphenate.EMCallBack {
-  onSuccess(): void {
-    gLogined = false
-    if (gLogoutSuccess != null) {
-      gLogoutSuccess()
-      gLogoutSuccess = null
-    }
+class EMLogoutCallBack extends com.hyphenate.EMCallBack {
+  constructor() {
+    super()
   }
 
-  onError(code: number, error: string): void {
+  override onSuccess(): void {
+    gLogined = false
+    const callback = gLogoutSuccess
+    if (callback != null) {
+      callback()
+    }
+    gLogoutSuccess = null
+  }
+
+  override onError(code: Int, error: string): void {
     // 即使失败也视为登出
     gLogined = false
-    if (gLogoutSuccess != null) {
-      gLogoutSuccess()
-      gLogoutSuccess = null
+    const callback = gLogoutSuccess
+    if (callback != null) {
+      callback()
     }
+    gLogoutSuccess = null
   }
 
-  onProgress(progress: number, status: string): void {
+  override onProgress(progress: Int, status: string): void {
     // 暂不处理
   }
 }
@@ -81,38 +93,51 @@ class EMLogoutCallBack implements com.hyphenate.EMCallBack {
 /**
  * 发送消息回调实现
  */
-class EMSendCallBack implements com.hyphenate.EMCallBack {
-  onSuccess(): void {
-    if (gSendSuccess != null) {
-      gSendSuccess()
-      gSendSuccess = null
-      gSendFail = null
-    }
+class EMSendCallBack extends com.hyphenate.EMCallBack {
+  constructor() {
+    super()
   }
 
-  onError(code: number, error: string): void {
-    if (gSendFail != null) {
-      gSendFail(code, error)
-      gSendSuccess = null
-      gSendFail = null
+  override onSuccess(): void {
+    const callback = gSendSuccess
+    if (callback != null) {
+      callback()
     }
+    gSendSuccess = null
+    gSendFail = null
   }
 
-  onProgress(progress: number, status: string): void {
+  override onError(code: Int, error: string): void {
+    const callback = gSendFail
+    if (callback != null) {
+      callback(code as number, error)
+    }
+    gSendSuccess = null
+    gSendFail = null
+  }
+
+  override onProgress(progress: Int, status: string): void {
     // 暂不处理
   }
 }
 
 /**
- * 消息监听器实现 - implements 接口 EMMessageListener
- * 文档: https://doc.easemob.com/apidoc/android/chat3.0/interfacecom_1_1hyphenate_1_1_e_m_message_listener.html
+ * 消息监听器实现 - extends 抽象类 EMMessageListener
+ * 根据编译错误: onMessageReceived 参数类型是 (Mutable)List<EMMessage!>!
  */
-class EMMessageListenerImpl implements com.hyphenate.EMMessageListener {
-  // 必须实现: void onMessageReceived(List<EMMessage> messages)
-  onMessageReceived(messages: any[]): void {
-    if (gMsgCallback == null) return
+class EMMessageListenerImpl extends com.hyphenate.EMMessageListener {
+  constructor() {
+    super()
+  }
 
-    for (const msg of messages) {
+  // 必须实现的抽象方法
+  // Kotlin 映射签名: fun onMessageReceived(p0: (Mutable)List<EMMessage!>!): Unit
+  override onMessageReceived(messages: MutableList<com.hyphenate.chat.EMMessage>): void {
+    const callback = gMsgCallback
+    if (callback == null) return
+
+    for (let i = 0; i < messages.size; i++) {
+      const msg = messages.get(i)
       if (msg == null) continue
 
       try {
@@ -132,7 +157,7 @@ class EMMessageListenerImpl implements com.hyphenate.EMMessageListener {
           timestamp: msg.getMsgTime()
         }
 
-        gMsgCallback(message)
+        callback(message)
       } catch (e) {
         console.error('[EM] process message error:', e)
       }
@@ -170,7 +195,6 @@ export function init(appKey: string): boolean {
 
 /**
  * 登录
- * 文档: https://doc.easemob.com/document/android/quickstart.html
  */
 @UTSJS.keepAlive
 export function login(
@@ -218,7 +242,6 @@ export function logout(onSuccess: () => void): void {
 
 /**
  * 发送文本消息
- * 文档: https://doc.easemob.com/apidoc/android/chat3.0/classcom_1_1hyphenate_1_1chat_1_1_e_m_chat_manager.html
  */
 @UTSJS.keepAlive
 export function sendTextMessage(
@@ -233,7 +256,6 @@ export function sendTextMessage(
   }
 
   try {
-    // EMMessage.createTxtSendMessage(content, username)
     const msg = com.hyphenate.chat.EMMessage.createTxtSendMessage(content, to)
     if (msg == null) {
       onFail(-1, 'Create message failed')
