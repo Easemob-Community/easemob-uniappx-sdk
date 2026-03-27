@@ -1,42 +1,88 @@
 /**
- * 环信IM SDK - Android简化版
+ * 环信IM SDK - Android实现
+ * 参考文档: https://doc.dcloud.net.cn/uni-app-x/plugin/uts-for-android.html
  */
-// 全局变量
-let isInit = false;
-let isLogin = false;
-// 消息监听器
-let msgListener: any = null;
+import { EMLoginSuccess, EMLoginFail, EMSendSuccess, EMSendFail, EMMessageCallback, EMMessage } from '../interface.uts';
+// 全局状态
+let gInited = false;
+let gLogined = false;
+let gMsgListener: com.hyphenate.EMMessageListener | null = null;
+let gMsgCallback: EMMessageCallback | null = null;
 /**
- * 初始化SDK - 必须在主线程执行
+ * EMCallBack 实现类
+ */
+class EMCallBackImpl implements com.hyphenate.EMCallBack {
+    private successFn: (() => void) | null;
+    private failFn: ((code: number, error: string) => void) | null;
+    constructor(success: (() => void) | null, fail: ((code: number, error: string) => void) | null) {
+        this.successFn = success;
+        this.failFn = fail;
+    }
+    onSuccess(): void {
+        if (this.successFn != null) {
+            this.successFn!();
+        }
+    }
+    onError(code: number, error: string): void {
+        if (this.failFn != null) {
+            this.failFn!(code, error);
+        }
+    }
+    onProgress(progress: number, status: string): void {
+        // 暂不处理进度
+    }
+}
+/**
+ * 消息监听器实现类
+ */
+class EMMessageListenerImpl implements com.hyphenate.EMMessageListener {
+    private callback: EMMessageCallback | null;
+    constructor(callback: EMMessageCallback | null) {
+        this.callback = callback;
+    }
+    onMessageReceived(messages: com.hyphenate.chat.EMMessage[]): void {
+        if (this.callback == null)
+            return;
+        for (const msg of messages) {
+            try {
+                const body = msg.getBody();
+                let content = '';
+                // 判断消息类型并获取内容
+                if (body instanceof com.hyphenate.chat.EMTextMessageBody) {
+                    content = (body as com.hyphenate.chat.EMTextMessageBody).getMessage();
+                }
+                const message: EMMessage = {
+                    messageId: msg.getMsgId(),
+                    from: msg.getFrom(),
+                    to: msg.getTo(),
+                    content: content,
+                    timestamp: msg.getMsgTime()
+                };
+                this.callback!(message);
+            }
+            catch (e: any) {
+                console.error('[EM] process message error:', e);
+            }
+        }
+    }
+}
+/**
+ * 初始化SDK
+ * uni-app x 默认在主线程执行，无需额外处理
  */
 export function init(appKey: string): boolean {
     try {
         const context = UTSAndroid.getAppContext();
         if (context == null) {
-            console.error('[EM] getAppContext failed');
+            console.error('[EM] getAppContext is null');
             return false;
         }
         const options = new com.hyphenate.chat.EMOptions();
         options.setAppKey(appKey);
-        // 在主线程中初始化SDK
-        let result = false;
-        let error: any = null;
-        uni.$onThread(() => {
-            try {
-                com.hyphenate.chat.EMClient.getInstance().init(context, options);
-                isInit = true;
-                result = true;
-                console.log('[EM] init success in main thread');
-            }
-            catch (e: any) {
-                error = e;
-                console.error('[EM] init failed in main thread:', e);
-            }
-        });
-        if (error != null) {
-            throw error;
-        }
-        return result;
+        com.hyphenate.chat.EMClient.getInstance().init(context, options);
+        gInited = true;
+        console.log('[EM] init success');
+        return true;
     }
     catch (e: any) {
         console.error('[EM] init failed:', e);
@@ -45,135 +91,115 @@ export function init(appKey: string): boolean {
 }
 /**
  * 登录
+ * 使用 @UTSJS.keepAlive 确保回调函数不被自动回收
  */
-export function login(username: string, password: string, onSuccess: any, onFail: any): void {
-    if (!isInit) {
-        if (onFail)
-            onFail(-1, 'SDK not init');
+@UTSJS.keepAlive
+export function login(username: string, password: string, onSuccess: EMLoginSuccess, onFail: EMLoginFail): void {
+    if (gInited == false) {
+        onFail(-1, 'SDK not initialized');
         return;
     }
     try {
-        com.hyphenate.chat.EMClient.getInstance().login(username, password, new com.hyphenate.EMCallBack({
-            onSuccess: () => {
-                isLogin = true;
-                // 加载会话
-                com.hyphenate.chat.EMClient.getInstance().chatManager().loadAllConversations();
-                if (onSuccess)
-                    onSuccess();
-            },
-            onError: (code: number, error: string) => {
-                if (onFail)
-                    onFail(code, error);
-            },
-            onProgress: (progress: number, status: string) => { }
-        }));
+        const callback = new EMCallBackImpl(() => {
+            gLogined = true;
+            // 加载所有会话
+            com.hyphenate.chat.EMClient.getInstance().chatManager().loadAllConversations();
+            onSuccess();
+        }, (code: number, error: string) => {
+            onFail(code, error);
+        });
+        com.hyphenate.chat.EMClient.getInstance().login(username, password, callback);
     }
     catch (e: any) {
-        if (onFail)
-            onFail(-1, String(e));
+        onFail(-1, String(e));
     }
 }
 /**
  * 登出
  */
-export function logout(onSuccess: any): void {
-    if (!isLogin) {
-        if (onSuccess)
-            onSuccess();
+@UTSJS.keepAlive
+export function logout(onSuccess: () => void): void {
+    if (gLogined == false) {
+        onSuccess();
         return;
     }
     try {
-        com.hyphenate.chat.EMClient.getInstance().logout(true, new com.hyphenate.EMCallBack({
-            onSuccess: () => {
-                isLogin = false;
-                if (onSuccess)
-                    onSuccess();
-            },
-            onError: (code: number, error: string) => {
-                if (onSuccess)
-                    onSuccess();
-            }
-        }));
+        const callback = new EMCallBackImpl(() => {
+            gLogined = false;
+            onSuccess();
+        }, null);
+        com.hyphenate.chat.EMClient.getInstance().logout(true, callback);
     }
     catch (e: any) {
-        isLogin = false;
-        if (onSuccess)
-            onSuccess();
+        gLogined = false;
+        onSuccess();
     }
 }
 /**
  * 发送文本消息
  */
-export function sendText(to: string, content: string, onSuccess: any, onFail: any): void {
-    if (!isLogin) {
-        if (onFail)
-            onFail(-1, 'not login');
+@UTSJS.keepAlive
+export function sendTextMessage(to: string, content: string, onSuccess: EMSendSuccess, onFail: EMSendFail): void {
+    if (gLogined == false) {
+        onFail(-1, 'Not logged in');
         return;
     }
     try {
         const msg = com.hyphenate.chat.EMMessage.createTxtSendMessage(content, to);
         if (msg == null) {
-            if (onFail)
-                onFail(-1, 'create msg failed');
+            onFail(-1, 'Create message failed');
             return;
         }
-        msg.setMessageStatusCallback(new com.hyphenate.EMCallBack({
-            onSuccess: () => {
-                if (onSuccess)
-                    onSuccess();
-            },
-            onError: (code: number, error: string) => {
-                if (onFail)
-                    onFail(code, error);
-            }
-        }));
+        const callback = new EMCallBackImpl(() => {
+            onSuccess();
+        }, (code: number, error: string) => {
+            onFail(code, error);
+        });
+        msg.setMessageStatusCallback(callback);
         com.hyphenate.chat.EMClient.getInstance().chatManager().sendMessage(msg);
     }
     catch (e: any) {
-        if (onFail)
-            onFail(-1, String(e));
+        onFail(-1, String(e));
     }
 }
 /**
- * 添加消息监听
+ * 设置消息监听
+ * 方法名以 on 开头，支持回调持续触发
  */
-export function onMessage(listener: any): void {
-    if (!isInit)
+export function onMessageReceived(callback: EMMessageCallback): void {
+    if (gInited == false)
         return;
-    // 移除旧的
-    if (msgListener != null) {
-        com.hyphenate.chat.EMClient.getInstance().chatManager().removeMessageListener(msgListener);
+    // 保存回调
+    gMsgCallback = callback;
+    // 移除旧监听器
+    if (gMsgListener != null) {
+        com.hyphenate.chat.EMClient.getInstance().chatManager().removeMessageListener(gMsgListener);
     }
-    msgListener = new com.hyphenate.EMMessageListener({
-        onMessageReceived: (messages: any[]) => {
-            if (listener == null)
-                return;
-            for (const m of messages) {
-                try {
-                    const body = m.getBody();
-                    const type = body.javaClass.getSimpleName();
-                    let content = '';
-                    if (type.contains('Text')) {
-                        content = (body as any).getMessage();
-                    }
-                    listener({
-                        from: m.getFrom(),
-                        to: m.getTo(),
-                        content: content,
-                        timestamp: m.getMsgTime()
-                    });
-                }
-                catch (e: any) { }
-            }
-        }
-    });
-    com.hyphenate.chat.EMClient.getInstance().chatManager().addMessageListener(msgListener);
+    // 创建新监听器
+    gMsgListener = new EMMessageListenerImpl(callback);
+    com.hyphenate.chat.EMClient.getInstance().chatManager().addMessageListener(gMsgListener);
+}
+/**
+ * 移除消息监听
+ */
+export function offMessageReceived(): void {
+    if (gMsgListener != null) {
+        com.hyphenate.chat.EMClient.getInstance().chatManager().removeMessageListener(gMsgListener);
+        gMsgListener = null;
+        gMsgCallback = null;
+    }
 }
 /**
  * 是否已登录
  */
 export function isLoggedIn(): boolean {
-    return isLogin;
+    return gLogined;
+}
+/**
+ * 是否已初始化
+ */
+export function isInitialized(): boolean {
+    return gInited;
 }
 /**
  * 获取SDK版本

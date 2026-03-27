@@ -15,168 +15,171 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import io.dcloud.uniapp.extapi.`$onThread` as uni__onThread
-var isInit = false
-var isLogin = false
-var msgListener: Any = null
+typealias EMLoginSuccess = () -> Unit
+typealias EMLoginFail = (code: Number, message: String) -> Unit
+typealias EMSendSuccess = () -> Unit
+typealias EMSendFail = (code: Number, message: String) -> Unit
+typealias EMMessageCallback = (message: EMMessage) -> Unit
+interface EMMessage {
+    var messageId: String
+    var from: String
+    var to: String
+    var content: String
+    var timestamp: Number
+}
+var gInited = false
+var gLogined = false
+var gMsgListener: com.hyphenate.EMMessageListener? = null
+open class EMCallBackImpl : com.hyphenate.EMCallBack {
+    private var successFn: (() -> Unit)?
+    private var failFn: ((code: Number, error: String) -> Unit)?
+    constructor(success: (() -> Unit)?, fail: ((code: Number, error: String) -> Unit)?){
+        this.successFn = success
+        this.failFn = fail
+    }
+    open fun onSuccess(): Unit {
+        if (this.successFn != null) {
+            this.successFn!!()
+        }
+    }
+    open fun onError(code: Number, error: String): Unit {
+        if (this.failFn != null) {
+            this.failFn!!(code, error)
+        }
+    }
+    open fun onProgress(progress: Number, status: String): Unit {}
+}
+open class EMMessageListenerImpl : com.hyphenate.EMMessageListener {
+    private var callback: EMMessageCallback?
+    constructor(callback: EMMessageCallback?){
+        this.callback = callback
+    }
+    open fun onMessageReceived(messages: UTSArray<com.hyphenate.chat.EMMessage>): Unit {
+        if (this.callback == null) {
+            return
+        }
+        for(msg in resolveUTSValueIterator(messages)){
+            try {
+                val body = msg.getBody()
+                var content = ""
+                if (body is com.hyphenate.chat.EMTextMessageBody) {
+                    content = (body as com.hyphenate.chat.EMTextMessageBody).getMessage()
+                }
+                val message = EMMessage(messageId = msg.getMsgId(), from = msg.getFrom(), to = msg.getTo(), content = content, timestamp = msg.getMsgTime())
+                this.callback!!(message)
+            }
+             catch (e: Throwable) {
+                console.error("[EM] process message error:", e)
+            }
+        }
+    }
+}
 fun init(appKey: String): Boolean {
     try {
         val context = UTSAndroid.getAppContext()
         if (context == null) {
-            console.error("[EM] getAppContext failed")
+            console.error("[EM] getAppContext is null")
             return false
         }
         val options = com.hyphenate.chat.EMOptions()
         options.setAppKey(appKey)
-        var result = false
-        var error: Any = null
-        uni__onThread(fun(){
-            try {
-                com.hyphenate.chat.EMClient.getInstance().init(context, options)
-                isInit = true
-                result = true
-                console.log("[EM] init success in main thread")
-            }
-             catch (e: Throwable) {
-                error = e
-                console.error("[EM] init failed in main thread:", e)
-            }
-        }
-        )
-        if (error != null) {
-            throw error
-        }
-        return result
+        com.hyphenate.chat.EMClient.getInstance().init(context, options)
+        gInited = true
+        console.log("[EM] init success")
+        return true
     }
      catch (e: Throwable) {
         console.error("[EM] init failed:", e)
         return false
     }
 }
-fun login(username: String, password: String, onSuccess: Any, onFail: Any): Unit {
-    if (!isInit) {
-        if (onFail) {
-            onFail(-1, "SDK not init")
-        }
+fun login(username: String, password: String, onSuccess: EMLoginSuccess, onFail: EMLoginFail): Unit {
+    if (gInited == false) {
+        onFail(-1, "SDK not initialized")
         return
     }
     try {
-        com.hyphenate.chat.EMClient.getInstance().login(username, password, com.hyphenate.EMCallBack(object : UTSJSONObject() {
-            var onSuccess = fun(){
-                isLogin = true
-                com.hyphenate.chat.EMClient.getInstance().chatManager().loadAllConversations()
-                if (onSuccess) {
-                    onSuccess()
-                }
-            }
-            var onError = fun(code: Number, error: String){
-                if (onFail) {
-                    onFail(code, error)
-                }
-            }
-            var onProgress = fun(progress: Number, status: String){}
-        }))
-    }
-     catch (e: Throwable) {
-        if (onFail) {
-            onFail(-1, String(e))
-        }
-    }
-}
-fun logout(onSuccess: Any): Unit {
-    if (!isLogin) {
-        if (onSuccess) {
+        val callback = EMCallBackImpl(fun(){
+            gLogined = true
+            com.hyphenate.chat.EMClient.getInstance().chatManager().loadAllConversations()
             onSuccess()
         }
+        , fun(code: Number, error: String){
+            onFail(code, error)
+        }
+        )
+        com.hyphenate.chat.EMClient.getInstance().login(username, password, callback)
+    }
+     catch (e: Throwable) {
+        onFail(-1, String(e))
+    }
+}
+fun logout(onSuccess: () -> Unit): Unit {
+    if (gLogined == false) {
+        onSuccess()
         return
     }
     try {
-        com.hyphenate.chat.EMClient.getInstance().logout(true, com.hyphenate.EMCallBack(object : UTSJSONObject() {
-            var onSuccess = fun(){
-                isLogin = false
-                if (onSuccess) {
-                    onSuccess()
-                }
-            }
-            var onError = fun(code: Number, error: String){
-                if (onSuccess) {
-                    onSuccess()
-                }
-            }
-        }))
-    }
-     catch (e: Throwable) {
-        isLogin = false
-        if (onSuccess) {
+        val callback = EMCallBackImpl(fun(){
+            gLogined = false
             onSuccess()
         }
+        , null)
+        com.hyphenate.chat.EMClient.getInstance().logout(true, callback)
+    }
+     catch (e: Throwable) {
+        gLogined = false
+        onSuccess()
     }
 }
-fun sendText(to: String, content: String, onSuccess: Any, onFail: Any): Unit {
-    if (!isLogin) {
-        if (onFail) {
-            onFail(-1, "not login")
-        }
+fun sendTextMessage(to: String, content: String, onSuccess: EMSendSuccess, onFail: EMSendFail): Unit {
+    if (gLogined == false) {
+        onFail(-1, "Not logged in")
         return
     }
     try {
         val msg = com.hyphenate.chat.EMMessage.createTxtSendMessage(content, to)
         if (msg == null) {
-            if (onFail) {
-                onFail(-1, "create msg failed")
-            }
+            onFail(-1, "Create message failed")
             return
         }
-        msg.setMessageStatusCallback(com.hyphenate.EMCallBack(object : UTSJSONObject() {
-            var onSuccess = fun(){
-                if (onSuccess) {
-                    onSuccess()
-                }
-            }
-            var onError = fun(code: Number, error: String){
-                if (onFail) {
-                    onFail(code, error)
-                }
-            }
-        }))
+        val callback = EMCallBackImpl(fun(){
+            onSuccess()
+        }
+        , fun(code: Number, error: String){
+            onFail(code, error)
+        }
+        )
+        msg.setMessageStatusCallback(callback)
         com.hyphenate.chat.EMClient.getInstance().chatManager().sendMessage(msg)
     }
      catch (e: Throwable) {
-        if (onFail) {
-            onFail(-1, String(e))
-        }
+        onFail(-1, String(e))
     }
 }
-fun onMessage(listener: Any): Unit {
-    if (!isInit) {
+fun onMessageReceived(callback: EMMessageCallback): Unit {
+    if (gInited == false) {
         return
     }
-    if (msgListener != null) {
-        com.hyphenate.chat.EMClient.getInstance().chatManager().removeMessageListener(msgListener)
+    callback
+    if (gMsgListener != null) {
+        com.hyphenate.chat.EMClient.getInstance().chatManager().removeMessageListener(gMsgListener)
     }
-    msgListener = com.hyphenate.EMMessageListener(object : UTSJSONObject() {
-        var onMessageReceived = fun(messages: UTSArray<Any>){
-            if (listener == null) {
-                return
-            }
-            for(m in resolveUTSValueIterator(messages)){
-                try {
-                    val body = m.getBody()
-                    val type = body.javaClass.getSimpleName()
-                    var content = ""
-                    if (type.contains("Text")) {
-                        content = (body as Any).getMessage()
-                    }
-                    listener(_uO("from" to m.getFrom(), "to" to m.getTo(), "content" to content, "timestamp" to m.getMsgTime()))
-                }
-                 catch (e: Throwable) {}
-            }
-        }
-    })
-    com.hyphenate.chat.EMClient.getInstance().chatManager().addMessageListener(msgListener)
+    gMsgListener = EMMessageListenerImpl(callback)
+    com.hyphenate.chat.EMClient.getInstance().chatManager().addMessageListener(gMsgListener)
+}
+fun offMessageReceived(): Unit {
+    if (gMsgListener != null) {
+        com.hyphenate.chat.EMClient.getInstance().chatManager().removeMessageListener(gMsgListener)
+        gMsgListener = null
+        null
+    }
 }
 fun isLoggedIn(): Boolean {
-    return isLogin
+    return gLogined
+}
+fun isInitialized(): Boolean {
+    return gInited
 }
 fun getVersion(): String {
     return com.hyphenate.chat.EMClient.VERSION
