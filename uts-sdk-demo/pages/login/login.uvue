@@ -1,0 +1,289 @@
+<template>
+	<view class="container">
+		<view class="login-box">
+			<text class="title">环信 IM 登录</text>
+			
+			<!-- 用户名输入 -->
+			<view class="input-row">
+				<text class="label">用户名</text>
+				<input 
+					class="input" 
+					type="text" 
+					v-model="username" 
+					placeholder="请输入用户名"
+					:disabled="isLoggingIn"
+				/>
+			</view>
+			
+			<!-- 密码输入 -->
+			<view class="input-row">
+				<text class="label">密码</text>
+				<input 
+					class="input" 
+					type="password" 
+					v-model="password" 
+					placeholder="请输入密码"
+					:disabled="isLoggingIn"
+				/>
+			</view>
+			
+			<!-- 登录状态 -->
+			<view class="status-row">
+				<text class="status-label">状态：</text>
+				<text :class="['status-value', isConnected ? 'connected' : 'disconnected']">
+					{{ connectionStatus }}
+				</text>
+			</view>
+			
+			<view class="status-row" v-if="currentUser.length > 0">
+				<text class="status-label">当前用户：</text>
+				<text class="status-value">{{ currentUser }}</text>
+			</view>
+			
+			<!-- 登录按钮 -->
+			<view class="button-row">
+				<button 
+					class="btn btn-primary" 
+					:disabled="isLoggingIn || username.length == 0 || password.length == 0"
+					@click="handleLogin"
+				>
+					{{ isLoggingIn ? '登录中...' : '登录' }}
+				</button>
+			</view>
+			
+			<!-- 登出按钮 -->
+			<view class="button-row">
+				<button 
+					class="btn btn-secondary" 
+					:disabled="!isLoggedIn"
+					@click="handleLogout"
+				>
+					登出
+				</button>
+			</view>
+			
+			<!-- 日志区域 -->
+			<view class="log-area">
+				<text class="log-title">日志：</text>
+				<scroll-view class="log-scroll" scroll-y="true">
+					<text class="log-content">{{ logContent }}</text>
+				</scroll-view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	import { 
+		loginSDK, 
+		logoutSDK, 
+		getCurrentUser, 
+		isLoggedIn as checkIsLoggedIn,
+		isConnected as checkIsConnected
+	} from "@/uni_modules/easemob-uts-sdk"
+
+	// 响应式数据
+	const username = ref('')
+	const password = ref('')
+	const isLoggingIn = ref(false)
+	const isLoggedIn = ref(false)
+	const isConnected = ref(false)
+	const currentUser = ref('')
+	const logContent = ref('')
+
+	// 计算属性：连接状态文本
+	const connectionStatus = computed((): string => {
+		if (isLoggedIn.value) {
+			return '已登录'
+		} else if (isConnected.value) {
+			return '已连接'
+		} else {
+			return '未连接'
+		}
+	})
+
+	// 添加日志
+	function addLog(message: string): void {
+		const time = new Date().toLocaleTimeString()
+		logContent.value = `[${time}] ${message}\n` + logContent.value
+	}
+
+	// 更新状态
+	function updateStatus(): void {
+		currentUser.value = getCurrentUser()
+		isConnected.value = checkIsConnected()
+		isLoggedIn.value = checkIsLoggedIn()
+	}
+
+	// 登录处理
+	function handleLogin(): void {
+		if (username.value.length == 0 || password.value.length == 0) {
+			addLog('错误：用户名和密码不能为空')
+			return
+		}
+		
+		isLoggingIn.value = true
+		addLog(`开始登录：${username.value}`)
+		
+		loginSDK(username.value, password.value, {
+			onSuccess: () => {
+				addLog('登录成功')
+				isLoggingIn.value = false
+				updateStatus()
+			},
+			onError: (code: number, message: string) => {
+				addLog(`登录失败：code=${code}, message=${message}`)
+				isLoggingIn.value = false
+				updateStatus()
+			},
+			onProgress: (code: number, message: string) => {
+				addLog(`登录进度：code=${code}, message=${message}`)
+			}
+		} as UTSJSONObject)
+	}
+
+	// 登出处理
+	function handleLogout(): void {
+		addLog('开始登出...')
+		
+		logoutSDK(true, {
+			onSuccess: () => {
+				addLog('登出成功')
+				updateStatus()
+			},
+			onError: (code: number, message: string) => {
+				addLog(`登出失败：code=${code}, message=${message}`)
+				updateStatus()
+			}
+		} as UTSJSONObject)
+	}
+
+	// 页面加载时更新状态
+	onLoad(() => {
+		addLog('登录页面加载')
+		updateStatus()
+	})
+</script>
+
+<style>
+	.container {
+		flex: 1;
+		background-color: #f5f5f5;
+		padding: 20px;
+	}
+
+	.login-box {
+		background-color: #ffffff;
+		border-radius: 10px;
+		padding: 20px;
+	}
+
+	.title {
+		font-size: 24px;
+		font-weight: bold;
+		text-align: center;
+		margin-bottom: 30px;
+		color: #333333;
+	}
+
+	.input-row {
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 15px;
+	}
+
+	.label {
+		width: 70px;
+		font-size: 16px;
+		color: #333333;
+	}
+
+	.input {
+		flex: 1;
+		height: 45px;
+		border-width: 1px;
+		border-color: #dddddd;
+		border-radius: 5px;
+		padding-left: 10px;
+		padding-right: 10px;
+		font-size: 16px;
+	}
+
+	.status-row {
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 10px;
+	}
+
+	.status-label {
+		font-size: 14px;
+		color: #666666;
+	}
+
+	.status-value {
+		font-size: 14px;
+		color: #333333;
+	}
+
+	.status-value.connected {
+		color: #07c160;
+	}
+
+	.status-value.disconnected {
+		color: #fa5151;
+	}
+
+	.button-row {
+		margin-top: 15px;
+	}
+
+	.btn {
+		height: 45px;
+		border-radius: 5px;
+		font-size: 16px;
+	}
+
+	.btn-primary {
+		background-color: #07c160;
+		color: #ffffff;
+	}
+
+	.btn-primary:disabled {
+		background-color: #9ed9ad;
+		color: #ffffff;
+	}
+
+	.btn-secondary {
+		background-color: #ffffff;
+		border-width: 1px;
+		border-color: #07c160;
+		color: #07c160;
+	}
+
+	.btn-secondary:disabled {
+		border-color: #9ed9ad;
+		color: #9ed9ad;
+	}
+
+	.log-area {
+		margin-top: 20px;
+	}
+
+	.log-title {
+		font-size: 14px;
+		color: #666666;
+		margin-bottom: 10px;
+	}
+
+	.log-scroll {
+		height: 150px;
+		background-color: #f9f9f9;
+		border-radius: 5px;
+		padding: 10px;
+	}
+
+	.log-content {
+		font-size: 12px;
+		color: #666666;
+	}
+</style>

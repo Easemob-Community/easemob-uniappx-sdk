@@ -18,3 +18,16 @@ export interface EMConnectionListener {
   onOfflineMessageSyncStart?: () => void;
   onOfflineMessageSyncFinish?: () => void;
 }
+
+// 登录回调
+export interface EMLoginCallback {
+  onSuccess?: () => void;
+  onError?: (code: number, message: string) => void;
+  onProgress?: (code: number, message: string) => void;
+}
+
+// 登出回调
+export interface EMLogoutCallback {
+  onSuccess?: () => void;
+  onError?: (code: number, message: string) => void;
+}

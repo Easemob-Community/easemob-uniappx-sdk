@@ -1,15 +1,30 @@
 <template>
-	<view>
+	<view class="container">
 		<image class="logo" src="/static/logo.png"></image>
 		<text class="title">{{title}}</text>
+		
+		<view class="button-area">
+			<button class="btn" type="primary" @click="goToLogin">前往登录</button>
+		</view>
 	</view>
 </template>
 
 <script setup lang="uts">
 	const title = ref('Hello')
+	
+	function goToLogin(): void {
+		uni.navigateTo({
+			url: '/pages/login/login'
+		})
+	}
 </script>
 
 <style>
+	.container {
+		flex: 1;
+		align-items: center;
+	}
+
 	.logo {
 		height: 100px;
 		width: 100px;
@@ -20,5 +35,14 @@
 		font-size: 18px;
 		color: #8f8f94;
 		text-align: center;
+	}
+
+	.button-area {
+		margin-top: 30px;
+		width: 200px;
+	}
+
+	.btn {
+		width: 100%;
 	}
 </style>

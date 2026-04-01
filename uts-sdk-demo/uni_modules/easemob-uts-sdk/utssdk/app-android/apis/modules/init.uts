@@ -2,7 +2,7 @@ import EMOptions from "com.hyphenate.chat.EMOptions";
 import EMClient from "com.hyphenate.chat.EMClient";
 
 
-export function initEMClient(appkey : string) : void {
+export function initEMClient(appkey: string): void {
 	const options = new EMOptions();
 	// 设置环信AppKey
 	options.setAppKey(appkey);

@@ -7,6 +7,16 @@ import {
   addConnectionListenerImpl, 
   removeConnectionListenerImpl
 } from './apis/connection.uts';
+import {
+  loginEMClient,
+  loginWithToken as loginWithTokenImpl,
+  loginWithAgoraToken as loginWithAgoraTokenImpl,
+  logoutSync as logoutSyncImpl,
+  logoutEMClient
+} from './apis/modules/login.uts';
+
+// 直接从 login.uts 导出状态查询函数
+export { getCurrentUser, isLoggedInBefore, isConnected, isLoggedIn } from './apis/modules/login.uts';
 
 /**
  * 初始化 SDK
@@ -35,4 +45,52 @@ export function addConnectionListener(listener: UTSJSONObject): () => void {
  */
 export function removeConnectionListener(listenerId: string): void {
   removeConnectionListenerImpl(listenerId);
+}
+
+/**
+ * 登录 SDK（使用用户名密码）
+ * @param userId 用户ID
+ * @param password 密码
+ * @param callback 登录回调
+ */
+export function loginSDK(userId: string, password: string, callback: UTSJSONObject): void {
+  loginEMClient(userId, password, callback);
+}
+
+/**
+ * 使用 Token 登录
+ * @param username 用户ID
+ * @param token Token
+ * @param callback 登录回调
+ */
+export function loginSDKWithToken(username: string, token: string, callback: UTSJSONObject): void {
+  loginWithTokenImpl(username, token, callback);
+}
+
+/**
+ * 使用 Agora Token 登录
+ * @param username 用户ID
+ * @param agoraToken Agora Token
+ * @param callback 登录回调
+ */
+export function loginSDKWithAgoraToken(username: string, agoraToken: string, callback: UTSJSONObject): void {
+  loginWithAgoraTokenImpl(username, agoraToken, callback);
+}
+
+/**
+ * 同步登出 SDK
+ * @param unbindToken 是否解绑 Token
+ * @return 错误码
+ */
+export function logoutSDKSync(unbindToken: boolean): number {
+  return logoutSyncImpl(unbindToken);
+}
+
+/**
+ * 异步登出 SDK
+ * @param unbindToken 是否解绑 Token
+ * @param callback 登出回调（传空对象表示无回调）
+ */
+export function logoutSDK(unbindToken: boolean, callback: UTSJSONObject = {} as UTSJSONObject): void {
+  logoutEMClient(unbindToken, callback);
 }

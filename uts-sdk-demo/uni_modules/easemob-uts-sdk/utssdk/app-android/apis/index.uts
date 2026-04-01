@@ -8,3 +8,6 @@ export * from './connection.uts';
 
 // 初始化模块
 export * from './modules/init.uts';
+
+// 登录模块
+export * from './modules/login.uts';

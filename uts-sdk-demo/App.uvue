@@ -1,5 +1,4 @@
 <script setup lang="uts">
-	import { initChat, loginEM, logoutEM, sendTextMessage, createUser } from "./uni_modules/em-chat"
 	import { initSDK, addConnectionListener } from "./uni_modules/easemob-uts-sdk"
 	// #ifdef APP-ANDROID || APP-HARMONY
 	let firstBackTime = 0
@@ -7,8 +6,6 @@
 
 	onLaunch(() => {
 		console.log('App Launch')
-		// initChat('easemob-demo#support')
-		// loginEM('hfp','1')
 		
 		// 初始化 SDK
 		initSDK({ appKey: 'easemob-demo#support' })

@@ -4,5 +4,18 @@
 
 export * from './interface.uts';
 // #ifdef APP-ANDROID
-export { initSDK, addConnectionListener, removeConnectionListener } from './app-android/index.uts';
+export { 
+  initSDK, 
+  addConnectionListener, 
+  removeConnectionListener,
+  loginSDK,
+  loginSDKWithToken,
+  loginSDKWithAgoraToken,
+  logoutSDK,
+  logoutSDKSync,
+  getCurrentUser,
+  isLoggedInBefore,
+  isConnected,
+  isLoggedIn
+} from './app-android/index.uts';
 // #endif
