@@ -1,0 +1,60 @@
+def configJsonFile = file("${rootDir}/config.json")
+def jsonParser = new groovy.json.JsonSlurper()
+def configJson = jsonParser.parseText(configJsonFile.text)
+
+// 定义一个函数来转义JSON字符串
+def escapeJsonString(String jsonString) {
+    return jsonString.replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+}
+
+gradle.allprojects {
+    def readJson = { String key, boolean escape = true ->
+        if (configJson[key] == null) return null
+        def str = groovy.json.JsonOutput.toJson(configJson[key])
+        if (escape) return escapeJsonString(str)
+        return str
+    }
+
+    ext.minSdkVersion = configJson['minSdkVersion'] ?: 21
+    ext.targetSdkVersion = configJson['targetSdkVersion'] ?: 35
+    ext.compileSdkVersion = configJson['compileSdkVersion'] ?: 36
+    ext.versionCode = configJson['versionCode'] ?: 100
+    ext.versionName = configJson['versionName'] ?: '1.0.0'
+    ext.appNamespace = configJson['packageName'] ?: 'com.example.uniappx_native_package'
+    ext.uniAppId = configJson['appId']
+    ext.abiFilters = configJson['abiFilters'] ?: ['arm64-v8a']
+    ext.channels = configJson['channels'] ?: []
+
+    def signingConfig = configJson['signingConfig'] ?: [:]
+    ext.keyAlias = signingConfig['keyAlias'] ?: 'key0'
+    ext.keyPassword = signingConfig['keyPassword'] ?: '123456'
+    ext.storeFile = signingConfig['storeFile'] ?: 'test.jks'
+    ext.storePassword = signingConfig['storePassword'] ?: '123456'
+
+    ext.buildFeatures = configJson['buildFeatures'] ?: []
+    ext.composeCompilerVersion = configJson['composeCompilerVersion'] ?: '1.5.1'
+
+    ext.getUniXComponents = {
+        return readJson('components') ?: '[]'
+    }
+    ext.getUniXProviders = {
+        return readJson('providers') ?: '[]'
+    }
+    ext.getUniXEasyCom = {
+        return readJson('easycom') ?: '[]'
+    }
+    ext.getUniXHooks = {
+        return (readJson('hooksClassArray', false)  ?: '[]').replace('[', '{').replace(']', '}')
+    }
+    ext.getUniXDependencies = {
+        return configJson['dependencies']
+    }
+    ext.getAppManifestPlaceholders = {
+        return configJson['manifestPlaceholders'] ?: [:]
+    }
+
+    ext.projectPlugins = configJson["project"]?["plugins"] ?: []
+    ext.projectDependencies = configJson["project"]?["dependencies"] ?: []
+
+}

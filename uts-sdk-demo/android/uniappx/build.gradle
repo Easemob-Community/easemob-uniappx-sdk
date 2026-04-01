@@ -1,0 +1,45 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.jetbrains.kotlin.android)
+    id 'io.dcloud.uts.kotlin'
+}
+
+apply from: "${rootDir}/unix.gradle"
+apply from: "${rootDir}/module.gradle"
+
+android {
+    namespace 'com.example.uniappx'
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        minSdk rootProject.ext.minSdkVersion
+        manifestPlaceholders = ["UNI_APPID": rootProject.ext.uniAppId]
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    aaptOptions {
+        additionalParameters '--auto-add-overlay'
+        ignoreAssetsPattern '!.svn:!.git:.*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+importModules()
+
+dependencies {
+    compileOnly fileTree(include: ['*.aar', '*.jar'], dir: './libs')
+    compileOnly fileTree(include: ['*.aar', '*.jar'], dir: '../pluginsLibs')
+}

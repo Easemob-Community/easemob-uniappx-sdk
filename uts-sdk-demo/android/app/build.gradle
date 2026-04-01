@@ -1,0 +1,144 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
+}
+
+apply from: "${rootDir}/unix.gradle"
+apply from: "${rootDir}/module.gradle"
+
+projectPlugins.each {
+    apply plugin: it
+}
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    namespace rootProject.ext.appNamespace
+    defaultConfig {
+        minSdk rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdkVersion
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
+        multiDexEnabled true
+
+        buildConfigField "String[]", "UTSHooksClassArray", "${getUniXHooks()}"
+        buildConfigField "String", "UTSRegisterComponents", "\"${getUniXComponents()}\""
+        buildConfigField "String", "UTSRegisterProviders", "\"${getUniXProviders()}\""
+        buildConfigField "String", "UTSEasyCom", "\"${getUniXEasyCom()}\""
+
+
+        vectorDrawables {
+            useSupportLibrary true
+        }
+
+        ndk {
+            setAbiFilters(rootProject.ext.abiFilters)
+        }
+
+        manifestPlaceholders = ["appid"       : rootProject.ext.uniAppId,
+                                "adid"        : "",
+                                "DCLOUD_DEBUG": "true"] + rootProject.ext.getAppManifestPlaceholders()
+    }
+
+    signingConfigs {
+        config {
+            keyAlias rootProject.ext.keyAlias
+            keyPassword rootProject.ext.keyPassword
+            storeFile file("${rootProject.ext.storeFile}")
+            storePassword rootProject.ext.storePassword
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.config
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            signingConfig signingConfigs.config
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        buildConfig true
+        if ("aidl" in rootProject.ext.buildFeatures) {
+            aidl true
+        }
+        if ("viewBinding" in rootProject.ext.buildFeatures) {
+            viewBinding true
+        }
+        if ("dataBinding" in rootProject.ext.buildFeatures) {
+            dataBinding true
+        }
+        if ("compose" in rootProject.ext.buildFeatures) {
+            compose true
+        }
+    }
+    if ("compose" in rootProject.ext.buildFeatures) {
+        composeOptions {
+            kotlinCompilerExtensionVersion rootProject.ext.composeCompilerVersion
+        }
+    }
+    packaging {
+        resources.excludes.add('/META-INF/{AL2.0,LGPL2.1}')
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    aaptOptions {
+        additionalParameters '--auto-add-overlay'
+        ignoreAssetsPattern '!.svn:!.git:.*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~'
+    }
+
+    if (rootProject.ext.channels.size() > 0) {
+        flavorDimensions = ["channel"]
+        productFlavors {
+            for (channel in rootProject.ext.channels) {
+                "${channel}" {
+                    dimension "channel"
+                    manifestPlaceholders += ["channel": channel]
+                }
+            }
+        }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_11
+    }
+}
+
+importModules()
+
+dependencies {
+    implementation fileTree(include: ['*.aar', '*.jar'], dir: '../uniappx/libs')
+    implementation fileTree(include: ['*.aar', '*.jar'], dir: '../pluginsLibs')
+    debugImplementation fileTree(dir: 'debugLibs', include: ['*.aar', '*.jar'], exclude: [])
+    debugImplementation libs.leakcanary.android
+
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.lifecycle.runtime.ktx
+//    implementation libs.androidx.activity.compose
+//    implementation platform(libs.androidx.compose.bom)
+//    implementation libs.androidx.ui
+//    implementation libs.androidx.ui.graphics
+//    implementation libs.androidx.ui.tooling.preview
+//    implementation libs.androidx.material3
+
+    implementation project(':uniappx')
+}

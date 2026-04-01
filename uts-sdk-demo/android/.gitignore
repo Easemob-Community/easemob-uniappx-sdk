@@ -1,0 +1,13 @@
+*.iml
+.gradle
+.idea
+.DS_Store
+/build
+/gradle-build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+delete-tag.sh
+push-tag.sh
+push.sh

@@ -1,0 +1,118 @@
+pluginManagement {
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+        maven { url 'https://developer.huawei.com/repo/' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+
+        // 读取config.json文件
+        def configJsonFile = file("${rootDir}/config.json")
+        def jsonParser = new groovy.json.JsonSlurper()
+        def configJson = jsonParser.parseText(configJsonFile.text)
+
+        // 从config.json中获取mavenRepos
+        def mavenRepos = configJson['mavenRepos'] ?: []
+
+        mavenRepos.forEach { repo ->
+            if (repo instanceof Map) {
+                maven {
+                    setUrl(repo.url)
+                    if (repo.credentials != null) {
+                        credentials {
+                            username repo.credentials.username
+                            password repo.credentials.password
+                        }
+                    }
+                    if (repo.url?.toString()?.startsWith('http://')) {
+                        allowInsecureProtocol true
+                    }
+                }
+            } else if (repo instanceof String) {
+                maven {
+                    setUrl(repo)
+                    if (repo?.toString()?.startsWith('http://')) {
+                        allowInsecureProtocol true
+                    }
+                }
+            }
+        }
+    }
+}
+// 读取config.json文件
+def configJsonFile = file("${rootDir}/config.json")
+def jsonParser = new groovy.json.JsonSlurper()
+def configJson = jsonParser.parseText(configJsonFile.text)
+
+// 从config.json中获取mavenRepos
+def mavenRepos = configJson['mavenRepos'] ?: []
+def utsMavenRepos = configJson["project"]?["repositories"] ?: []
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        flatDir { dirs('./plugins/') }
+        maven { url = uri("https://jitpack.io") }
+        google()
+        mavenCentral()
+        maven { url 'https://developer.huawei.com/repo/' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        mavenRepos.forEach { repo ->
+            if (repo instanceof Map) {
+                maven {
+                    setUrl(repo.url)
+                    if (repo.credentials != null) {
+                        credentials {
+                            username repo.credentials.username
+                            password repo.credentials.password
+                        }
+                    }
+                    if (repo.url?.toString()?.startsWith('http://')) {
+                        allowInsecureProtocol true
+                    }
+                }
+            } else if (repo instanceof String) {
+                maven {
+                    setUrl(repo)
+                    if (repo?.toString()?.startsWith('http://')) {
+                        allowInsecureProtocol true
+                    }
+                }
+            }
+        }
+        utsMavenRepos.forEach { str ->
+            // maven { url '...' } 或 maven { url "..." }
+            def matcher = str =~ /maven\s*\{\s*url\s*['"]\s*(.*?)\s*['"]\s*\}/
+            if (matcher.find()) {
+                def url = matcher.group(1)
+                maven {
+                    setUrl(url)
+                    if (url?.toString()?.startsWith('http://')) {
+                        allowInsecureProtocol true
+                    }
+                }
+            }
+        }
+    }
+}
+
+apply from: "${rootDir}/module.gradle"
+
+rootProject.name = "unix-android"
+include ':app'
+include ':uniappx'
+
+for (String s in utsModules) {
+    include ":$s"
+}
+
+for (String s in nativeModules) {
+    include ":$s"
+    project(":$s").projectDir = new File(settingsDir, "../nativemodules/$s/android")
+}

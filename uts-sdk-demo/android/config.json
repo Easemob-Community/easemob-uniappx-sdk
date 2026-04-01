@@ -1,0 +1,28 @@
+{
+  "abiFilters": [
+    "arm64-v8a"
+  ],
+  "appId": "__UNI__1F192F2",
+  "appName": "uts-sdk-demo",
+  "applicationAttrs": [],
+  "buildFeatures": [],
+  "compileSdkVersion": 36,
+  "components": [],
+  "composeCompilerVersion": "1.5.1",
+  "dependencies": [
+    "io.hyphenate:hyphenate-chat:3.9.4",
+    "io.hyphenate:hyphenate-chat:4.20.0"
+  ],
+  "easycom": [],
+  "hooksClassArray": [],
+  "manifestPlaceholders": {},
+  "mavenRepos": [],
+  "metaData": [],
+  "minSdkVersion": 21,
+  "packageName": "uts.sdk.demo",
+  "providers": [],
+  "signingConfig": {},
+  "targetSdkVersion": 35,
+  "versionCode": 100,
+  "versionName": "1.0.0"
+}

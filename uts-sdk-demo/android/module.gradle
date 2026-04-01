@@ -1,0 +1,22 @@
+def moduleJsonFile = file("${rootDir}/module.json")
+def jsonParser = new groovy.json.JsonSlurper()
+def moduleJson = jsonParser.parseText(moduleJsonFile.text)
+def utsModules = moduleJson['modules'] ?: []
+def nativeModules = moduleJson['nativeModules'] ?: []
+def modules = utsModules + nativeModules
+
+ext.utsModules = utsModules
+ext.nativeModules = nativeModules
+
+ext.importModules = {
+    def isApp = project.name == "app"
+    dependencies {
+        for (String s in modules) {
+            if (isApp) {
+                implementation project(":${s}")
+            } else {
+                compileOnly project(":${s}")
+            }
+        }
+    }
+}
