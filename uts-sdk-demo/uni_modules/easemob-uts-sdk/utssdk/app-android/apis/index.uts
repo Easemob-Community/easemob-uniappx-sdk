@@ -1,0 +1,13 @@
+/**
+ * Android API 子模块统一导出
+ * 可按功能拆分为多个文件
+ */
+
+// TODO: 按功能拆分模块
+// export * from './init.uts';      // 初始化相关
+// export * from './user.uts';      // 用户相关
+// export * from './chat.uts';      // 消息相关
+// export * from './conversation.uts';  // 会话相关
+// export * from './group.uts';     // 群组相关
+
+export * from './modules/init.uts';

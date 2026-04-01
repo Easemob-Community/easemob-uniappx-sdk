@@ -1,0 +1,7 @@
+/**
+ * iOS 平台实现入口（占位）
+ */
+
+export const EMClient = {
+  // TODO: iOS 实现
+};

@@ -1,0 +1,163 @@
+import {
+	UTSAndroid
+} from "io.dcloud.uts";
+import Application from 'android.app.Application'
+import EMOptions from "com.hyphenate.chat.EMOptions";
+import EMClient from "com.hyphenate.chat.EMClient";
+import EMCallBack from 'com.hyphenate.EMCallBack';
+import EMConnectionListener from 'com.hyphenate.EMConnectionListener';
+import EMMessage from 'com.hyphenate.chat.EMMessage';
+import EMMessageListener from 'com.hyphenate.EMMessageListener';
+import EMTextMessageBody from 'com.hyphenate.chat.EMTextMessageBody';
+import HyphenateException from 'com.hyphenate.exceptions.HyphenateException';
+
+/**
+ * 初始化SDK
+ */
+export function initChat(appkey : string) : void {
+	const options = new EMOptions();
+	// 设置环信AppKey
+	options.setAppKey(appkey);
+	// 关闭自动登录
+	options.setAutoLogin(false);
+	console.log(options.getAppKey(), 'getappkey')
+	EMClient.getInstance().init(UTSAndroid.getAppContext(), options)
+	EMClient.getInstance().addConnectionListener(new ConnectioonListener());
+	EMClient.getInstance().chatManager().addMessageListener(new MessageListener());
+}
+
+/**
+ * 注册
+ */
+export function createUser(userId : string, password : string) : void {
+	console.log(userId, password, 'createUser params')
+	new CreateAccountThread(userId, password).start();
+}
+
+/**
+ * 登录
+ */
+export function loginEM(userId : string, password : string) : void {
+	console.log(userId, password, 'login params')
+	EMClient.getInstance().login(userId, password, new LoginEMCallBack())
+}
+
+/**
+ * 登出
+ */
+export function logoutEM() {
+	EMClient.getInstance().logout(true, new LogoutEMCallBack());
+}
+
+/**
+ * 发送文本消息
+ */
+export function sendTextMessage(msg : string, to : string) {
+	const message = EMMessage.createTxtSendMessage(msg, to)
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * EM Login回调实现类
+ */
+class LoginEMCallBack extends EMCallBack {
+	constructor() {
+		super();
+	}
+
+	override onError(params0 : Int, params1 : string) : void {
+		console.log('login error', params0, params1)
+	}
+
+	override onProgress(params0 : Int, params1 : string) : void {
+		console.log('login progress', params0, params1)
+	}
+
+	override onSuccess() : void {
+		console.log('login success')
+	}
+
+}
+
+/**
+ * EM Logout 回调实现类
+ */
+
+class LogoutEMCallBack extends EMCallBack {
+	constructor() {
+		super();
+	}
+
+	override onError(params0 : Int, params1 : string) : void {
+		console.log('logout error', params0, params1)
+	}
+
+	override onSuccess() : void {
+		console.log('logout success')
+	}
+
+}
+
+/**
+ * EM 连接状态 回调实现类
+ */
+
+class ConnectioonListener extends EMConnectionListener {
+	constructor() {
+		super();
+	}
+
+	override onConnected() : void {
+		console.log('onConnected 连接成功')
+	}
+
+	override onDisconnected(params0 : Int) : void {
+		console.log('onDisconnected 连接断开', params0)
+	}
+}
+
+/**
+ * EM 消息 回调实现类
+ */
+
+class MessageListener extends EMMessageListener {
+	constructor() {
+		super();
+	}
+
+	override onMessageReceived(messages : MutableList<EMMessage>) : void {
+		console.log('onMessageReceived 收到消息')
+		messages.map((msg : EMMessage) => {
+			const type = msg.getType();
+			const msgBody = msg.getBody();
+			console.log(`msgId: ${msg.getMsgId()},msgFrom:${msg.getFrom()},type:${type}`)
+			if (msgBody instanceof EMTextMessageBody) {
+				console.log(`Text Message`, msgBody.getMessage())
+			}
+		})
+	}
+
+}
+/**
+ * 子进程
+ */
+class CreateAccountThread extends Thread {
+	userId : string
+	password : string
+	constructor(userId : string, password : string) {
+		super();
+		this.userId = userId;
+		this.password = password;
+	}
+
+	override run() {
+		// 同步方法。
+		try {
+			EMClient.getInstance().createAccount(this.userId, this.password);
+			console.log('注册成功');
+		} catch (e) {
+			const err = e as HyphenateException
+			console.log(err.getErrorCode(), err.getDescription(), '注册失败')
+		}
+	}
+}

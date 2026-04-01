@@ -1,0 +1,6 @@
+{
+	"dependencies": [
+		"io.hyphenate:hyphenate-chat:4.20.0"
+	],
+	"minSdkVersion": "21"
+}

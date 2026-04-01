@@ -1,0 +1,15 @@
+/**
+ * Android 平台实现入口
+ */
+
+import { initEMClient } from './apis/index.uts';
+
+/**
+ * 初始化 SDK
+ */
+export function initSDK(config: UTSJSONObject): Promise<void> {
+  initEMClient(config["appKey"] as string);
+  return Promise.resolve();
+}
+
+

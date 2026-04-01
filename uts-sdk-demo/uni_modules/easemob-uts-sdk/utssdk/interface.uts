@@ -1,0 +1,9 @@
+/**
+ * 类型定义（按需扩展）
+ */
+
+// 初始化配置
+export interface EMInitConfig {
+  appKey: string;
+  autoLogin?: boolean;
+}

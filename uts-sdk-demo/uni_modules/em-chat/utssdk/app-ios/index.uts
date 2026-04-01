@@ -1,0 +1,147 @@
+import {
+	EMClient,
+	EMOptions,
+	EMError,
+	EMChatMessage,
+	EMTextMessageBody,
+	EMChatType,
+	EMChatManagerDelegate,
+	EMClientDelegate,
+	EMMessageBodyType,
+} from "HyphenateChat";
+
+
+/**
+ * Message事件
+ */
+
+class ChatMessageDelegate implements EMChatManagerDelegate {
+	messagesDidReceive(aMessages : EMChatMessage[]) : void {
+		console.log('onMessageReceived 收到消息')
+		aMessages.forEach((item : EMChatMessage) => {
+			console.log(`msgId: ${item.messageId},msgFrom:${item.from}`)
+			if (item.body.type == EMMessageBodyType.text) {
+				console.log((item.body as EMTextMessageBody).text, '文本消息');
+			}
+		})
+	}
+}
+
+let messageDelegate : ChatMessageDelegate = new ChatMessageDelegate();
+
+
+class EMChat {
+	emClientManager! : EMClient
+	emOptions! : EMOptions
+	constructor() {
+		this.emClientManager = EMClient.shared();
+	}
+
+	initChat(appkey : string) {
+		this.emOptions = new EMOptions(appkey = appkey);
+		console.log(appkey, 'getappkey')
+		// 初始化SDK
+		this.emClientManager.initializeSDK(with = this.emOptions)
+		// 添加消息delegate事件
+		this.emClientManager.chatManager?.add(messageDelegate, delegateQueue = null)
+	}
+
+	login(userId : string, password : string) {
+		console.log(userId, password, 'login params')
+		this.emClientManager.login(
+			withUsername = userId,
+			password = password,
+			completion = (aUserName : string, aError : EMError | null) : void => {
+				if (aError === null) {
+					console.log('login success');
+					return;
+				}
+				console.log('login error', aError)
+			}
+		)
+
+	}
+
+	register(userId : string, password : string) {
+		console.log(userId, password, 'createUser params')
+		this.emClientManager.register(
+			withUsername = userId,
+			password = password,
+			completion = (aUserName : string, aError : EMError | null) : void => {
+				if (aError === null) {
+					console.log('注册成功');
+					return;
+				}
+				console.log('注册失败', aError)
+			}
+		);
+	}
+}
+
+
+
+const EMChatTool : EMChat = new EMChat()
+
+
+/**
+ * 初始化
+ */
+export function initChat(appkey : string) : void {
+	EMChatTool.initChat(appkey);
+}
+
+/**
+ * 注册
+ */
+export function createUser(userId : string, password : string) : void {
+	EMChatTool.register(userId, password)
+}
+
+
+/**
+ * 登录
+ */
+export function loginEM(userId : string, password : string) : void {
+	EMChatTool.login(userId, password)
+}
+
+/**
+ * 发送文本消息
+ */
+export function sendTextMessage(msg : string, to : string) {
+
+	// 消息扩展
+	const ext = new Map<string, string>();
+	ext.set('key', 'value')
+	// 消息Body
+	const body = new EMTextMessageBody(text = msg);
+	const message = new EMChatMessage(
+		conversationID = to,
+		from = 'sttest',
+		to = to,
+		body = body,
+		ext = ext
+	);
+	message.chatType = EMChatType.chat;
+	EMChatTool.emClientManager.chatManager?.send(
+		message,
+		progress = null,
+		completion = (aMessage, aError : EMError | null) : void => {
+			if (aError === null) {
+				console.log('send message success', aMessage);
+				return;
+			}
+			console.log('send message failed', aError)
+		}
+	)
+}
+
+/**
+ * 登出
+ */
+export function logoutEM() {
+	const res : EMError | null = EMChatTool.emClientManager.logout(false);
+	if (res == null) {
+		console.log('logout success')
+	}
+}
