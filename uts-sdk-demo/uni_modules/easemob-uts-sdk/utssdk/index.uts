@@ -4,5 +4,5 @@
 
 export * from './interface.uts';
 // #ifdef APP-ANDROID
-export { initSDK } from './app-android/index.uts';
+export { initSDK, addConnectionListener, removeConnectionListener } from './app-android/index.uts';
 // #endif

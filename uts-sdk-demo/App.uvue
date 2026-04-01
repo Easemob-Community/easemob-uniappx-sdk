@@ -1,6 +1,6 @@
 <script setup lang="uts">
-	 import { initChat, loginEM, logoutEM, sendTextMessage, createUser } from "./uni_modules/em-chat"
-	 import { initSDK } from "./uni_modules/easemob-uts-sdk"
+	import { initChat, loginEM, logoutEM, sendTextMessage, createUser } from "./uni_modules/em-chat"
+	import { initSDK, addConnectionListener } from "./uni_modules/easemob-uts-sdk"
 	// #ifdef APP-ANDROID || APP-HARMONY
 	let firstBackTime = 0
 	// #endif
@@ -9,7 +9,37 @@
 		console.log('App Launch')
 		// initChat('easemob-demo#support')
 		// loginEM('hfp','1')
+		
+		// 初始化 SDK
 		initSDK({ appKey: 'easemob-demo#support' })
+		
+		// 设置完 appKey 后第一时间挂载连接监听
+		const unsubscribe = addConnectionListener({
+			onConnected: () => {
+				console.log('[EMConnection] 已连接到服务器')
+			},
+			onDisconnected: (errorCode: number) => {
+				console.log('[EMConnection] 连接断开, errorCode:', errorCode)
+			},
+			onLogout: (errorCode: number) => {
+				console.log('[EMConnection] 被登出, errorCode:', errorCode)
+			},
+			onTokenWillExpire: () => {
+				console.log('[EMConnection] Token 即将过期')
+			},
+			onTokenExpired: () => {
+				console.log('[EMConnection] Token 已过期')
+			},
+			onOfflineMessageSyncStart: () => {
+				console.log('[EMConnection] 开始同步离线消息')
+			},
+			onOfflineMessageSyncFinish: () => {
+				console.log('[EMConnection] 离线消息同步完成')
+			}
+		})
+		
+		// 保存取消订阅函数，在需要时调用（如应用退出）
+		// unsubscribe()
 	})
 
 	onAppShow(() => {

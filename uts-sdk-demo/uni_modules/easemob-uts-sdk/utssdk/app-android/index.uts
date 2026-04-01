@@ -3,6 +3,10 @@
  */
 
 import { initEMClient } from './apis/index.uts';
+import { 
+  addConnectionListenerImpl, 
+  removeConnectionListenerImpl
+} from './apis/connection.uts';
 
 /**
  * 初始化 SDK
@@ -12,4 +16,23 @@ export function initSDK(config: UTSJSONObject): Promise<void> {
   return Promise.resolve();
 }
 
+/**
+ * 添加连接状态监听
+ * @param listener 监听器回调
+ * @returns 取消订阅函数
+ */
+export function addConnectionListener(listener: UTSJSONObject): () => void {
+  const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+  addConnectionListenerImpl(id, listener);
+  
+  // 返回取消订阅函数
+  return () => removeConnectionListenerImpl(id);
+}
 
+/**
+ * 移除连接状态监听
+ * @param listenerId 监听器 ID
+ */
+export function removeConnectionListener(listenerId: string): void {
+  removeConnectionListenerImpl(listenerId);
+}

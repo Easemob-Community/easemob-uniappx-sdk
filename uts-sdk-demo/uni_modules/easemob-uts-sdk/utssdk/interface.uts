@@ -7,3 +7,14 @@ export interface EMInitConfig {
   appKey: string;
   autoLogin?: boolean;
 }
+
+// 连接状态监听器（符合前端习惯）
+export interface EMConnectionListener {
+  onConnected?: () => void;
+  onDisconnected?: (errorCode: number) => void;
+  onLogout?: (errorCode: number) => void;
+  onTokenWillExpire?: () => void;
+  onTokenExpired?: () => void;
+  onOfflineMessageSyncStart?: () => void;
+  onOfflineMessageSyncFinish?: () => void;
+}
