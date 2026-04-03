@@ -136,9 +136,24 @@
 		addLog(`消息内容: ${content}`)
 		
 		sendTextMessage(content, to, chatType.value, {
-			onSuccess: () => {
+			onSuccess: (messageInfo: UTSJSONObject) => {
 				console.log('[MessagePage] 消息发送成功回调触发')
-				addLog('消息发送成功')
+				if (messageInfo != null) {
+					// 使用 UTSJSONObject 的 get 方法访问属性
+					const msgId = messageInfo.getString('msgId') ?? 'unknown'
+					const msgType = messageInfo.getString('type') ?? 'unknown'
+					const chatTypeStr = messageInfo.getString('chatType') ?? 'unknown'
+					const timestamp = messageInfo.getNumber('timestamp') ?? 0
+					console.log('[MessagePage] 消息ID:', msgId)
+					console.log('[MessagePage] 消息类型:', msgType)
+					console.log('[MessagePage] 聊天类型:', chatTypeStr)
+					console.log('[MessagePage] 时间戳:', timestamp)
+					addLog('消息发送成功, ID: ' + msgId)
+					addLog('消息类型: ' + msgType + ', 聊天类型: ' + chatTypeStr)
+				} else {
+					console.log('[MessagePage] messageInfo为null或undefined')
+					addLog('消息发送成功(无详情)')
+				}
 				// 清空输入
 				messageContent.value = ''
 			},
@@ -174,9 +189,17 @@
 					
 					// 发送图片消息
 					sendImageMessage(imagePath, sendOriginalImage.value, targetId.value.trim(), chatType.value, {
-						onSuccess: () => {
+						onSuccess: (messageInfo: UTSJSONObject) => {
 							console.log('[MessagePage] 图片发送成功回调触发')
-							addLog('图片发送成功')
+							// 使用 UTSJSONObject 的 get 方法访问属性
+							const msgId = messageInfo.getString('msgId') ?? 'unknown'
+							const msgType = messageInfo.getString('type') ?? 'unknown'
+							const chatTypeStr = messageInfo.getString('chatType') ?? 'unknown'
+							console.log('[MessagePage] 图片消息ID:', msgId)
+							console.log('[MessagePage] 消息类型:', msgType)
+							console.log('[MessagePage] 聊天类型:', chatTypeStr)
+							addLog('图片发送成功, ID: ' + msgId)
+							addLog('消息类型: ' + msgType + ', 聊天类型: ' + chatTypeStr)
 						},
 						onError: (code: number, message: string) => {
 							console.log(`[MessagePage] 图片发送失败回调触发: code=${code}, message=${message}`)

@@ -7,25 +7,25 @@
     "code": "100"
   },
   "uni-app-x": {
-    "compilerVersion": "5.05"
-  },
-  "app": {
-    "distribute": {
-      "icons": {
-        "android": {
-          "hdpi": "",
-          "xhdpi": "",
-          "xxhdpi": "",
-          "xxxhdpi": ""
-        }
-      }
-    }
+    "compilerVersion": "5.06"
   },
   "app-android": {
     "distribute": {
       "modules": {
+        "Camera": {},
+        "Gallery": {},
+        "uni-prompt": {},
         "uni-exit": {},
-        "uni-prompt": {}
+        "uni-media": {}
+      },
+      "icons": {
+        "hdpi": "",
+        "xhdpi": "",
+        "xxhdpi": "",
+        "xxxhdpi": ""
+      },
+      "splashScreens": {
+        "default": {}
       }
     }
   }

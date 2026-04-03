@@ -1,7 +1,6 @@
 {
   "modules": [
-    "easemob-uts-sdk",
-    "em-chat"
+    "easemob-uts-sdk"
   ],
   "nativeModules": []
 }

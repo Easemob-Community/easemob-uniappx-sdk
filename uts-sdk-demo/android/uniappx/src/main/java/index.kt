@@ -12,6 +12,10 @@ import io.dcloud.uts.Set
 import io.dcloud.uts.UTSAndroid
 import kotlin.properties.Delegates
 import io.dcloud.uniapp.extapi.exit as uni_exit
+import uts.sdk.modules.easemobUtsSdk.initSDK
+import uts.sdk.modules.easemobUtsSdk.addConnectionListener
+import uts.sdk.modules.easemobUtsSdk.addMessageListener
+import uts.sdk.modules.easemobUtsSdk.Message
 import io.dcloud.uniapp.extapi.showToast as uni_showToast
 val runBlock1 = run {
     __uniConfig.getAppStyles = fun(): Map<String, Map<String, Map<String, Any>>> {
@@ -33,6 +37,55 @@ open class GenApp : BaseApp {
             var firstBackTime: Number = 0
             onLaunch(fun(_options){
                 console.log("App Launch")
+                initSDK(_uO("appKey" to "easemob-demo#support"))
+                val unsubscribe = addConnectionListener(_uO("onConnected" to fun(){
+                    console.log("[EMConnection] 已连接到服务器")
+                }
+                , "onDisconnected" to fun(errorCode: Number){
+                    console.log("[EMConnection] 连接断开, errorCode:", errorCode)
+                }
+                , "onLogout" to fun(errorCode: Number){
+                    console.log("[EMConnection] 被登出, errorCode:", errorCode)
+                }
+                , "onTokenWillExpire" to fun(){
+                    console.log("[EMConnection] Token 即将过期")
+                }
+                , "onTokenExpired" to fun(){
+                    console.log("[EMConnection] Token 已过期")
+                }
+                , "onOfflineMessageSyncStart" to fun(){
+                    console.log("[EMConnection] 开始同步离线消息")
+                }
+                , "onOfflineMessageSyncFinish" to fun(){
+                    console.log("[EMConnection] 离线消息同步完成")
+                }
+                ))
+                val unsubscribeMessage = addMessageListener(_uO("onMessageReceived" to fun(messages: UTSArray<Message>){
+                    console.log("[EMMessage] 收到消息, 数量:", messages.length)
+                    messages.forEach(fun(msg: Message){
+                        console.log("[EMMessage] 来自: " + msg.from + ", 类型: " + msg.body.type)
+                        if (msg.body.type === "txt") {
+                            console.log("[EMMessage] 文本内容:", msg.body.message ?: "")
+                        }
+                    }
+                    )
+                }
+                , "onCmdMessageReceived" to fun(messages: UTSArray<Message>){
+                    console.log("[EMMessage] 收到命令消息, 数量:", messages.length)
+                }
+                , "onMessageRead" to fun(messages: UTSArray<Message>){
+                    console.log("[EMMessage] 消息已读, 数量:", messages.length)
+                }
+                , "onMessageDelivered" to fun(messages: UTSArray<Message>){
+                    console.log("[EMMessage] 消息已送达, 数量:", messages.length)
+                }
+                , "onMessageRecalled" to fun(messages: UTSArray<Message>){
+                    console.log("[EMMessage] 消息被撤回, 数量:", messages.length)
+                }
+                , "onMessageChanged" to fun(message: Message, change: Any){
+                    console.log("[EMMessage] 消息变更, msgId:", message.msgId)
+                }
+                ))
             }
             )
             onAppShow(fun(_options){
@@ -96,6 +149,26 @@ val GenPagesIndexIndexClass = CreateVueComponent(GenPagesIndexIndex::class.java,
     return GenPagesIndexIndex(instance, renderer)
 }
 )
+val GenPagesLoginLoginClass = CreateVueComponent(GenPagesLoginLogin::class.java, fun(): VueComponentOptions {
+    return VueComponentOptions(type = "page", name = "", inheritAttrs = GenPagesLoginLogin.inheritAttrs, inject = GenPagesLoginLogin.inject, props = GenPagesLoginLogin.props, propsNeedCastKeys = GenPagesLoginLogin.propsNeedCastKeys, emits = GenPagesLoginLogin.emits, components = GenPagesLoginLogin.components, styles = GenPagesLoginLogin.styles, setup = fun(props: ComponentPublicInstance): Any? {
+        return GenPagesLoginLogin.setup(props as GenPagesLoginLogin)
+    }
+    )
+}
+, fun(instance, renderer): GenPagesLoginLogin {
+    return GenPagesLoginLogin(instance, renderer)
+}
+)
+val GenPagesMessageMessageClass = CreateVueComponent(GenPagesMessageMessage::class.java, fun(): VueComponentOptions {
+    return VueComponentOptions(type = "page", name = "", inheritAttrs = GenPagesMessageMessage.inheritAttrs, inject = GenPagesMessageMessage.inject, props = GenPagesMessageMessage.props, propsNeedCastKeys = GenPagesMessageMessage.propsNeedCastKeys, emits = GenPagesMessageMessage.emits, components = GenPagesMessageMessage.components, styles = GenPagesMessageMessage.styles, setup = fun(props: ComponentPublicInstance): Any? {
+        return GenPagesMessageMessage.setup(props as GenPagesMessageMessage)
+    }
+    )
+}
+, fun(instance, renderer): GenPagesMessageMessage {
+    return GenPagesMessageMessage(instance, renderer)
+}
+)
 fun createApp(): UTSJSONObject {
     val app = createSSRApp(GenAppClass)
     return _uO("app" to app)
@@ -110,11 +183,13 @@ open class UniAppConfig : io.dcloud.uniapp.appframe.AppConfig {
     override var appid: String = "__UNI__1F192F2"
     override var versionName: String = "1.0.0"
     override var versionCode: String = "100"
-    override var uniCompilerVersion: String = "5.05"
+    override var uniCompilerVersion: String = "5.06"
     constructor() : super() {}
 }
 fun definePageRoutes() {
     __uniRoutes.push(UniPageRoute(path = "pages/index/index", component = GenPagesIndexIndexClass, meta = UniPageMeta(isQuit = true), style = _uM("navigationBarTitleText" to "uni-app x")))
+    __uniRoutes.push(UniPageRoute(path = "pages/login/login", component = GenPagesLoginLoginClass, meta = UniPageMeta(isQuit = false), style = _uM("navigationBarTitleText" to "登录")))
+    __uniRoutes.push(UniPageRoute(path = "pages/message/message", component = GenPagesMessageMessageClass, meta = UniPageMeta(isQuit = false), style = _uM("navigationBarTitleText" to "发送消息")))
 }
 val __uniLaunchPage: Map<String, Any?> = _uM("url" to "pages/index/index", "style" to _uM("navigationBarTitleText" to "uni-app x"))
 fun defineAppConfig() {

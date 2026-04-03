@@ -10,10 +10,15 @@
   "components": [],
   "composeCompilerVersion": "1.5.1",
   "dependencies": [
-    "io.hyphenate:hyphenate-chat:3.9.4",
+    "androidx.activity:activity-ktx:1.9.2",
     "io.hyphenate:hyphenate-chat:4.20.0"
   ],
-  "easycom": [],
+  "easycom": [
+    {
+      "class": "uts.sdk.modules.DCloudUniActionSheet.UniActionSheetExtApiPagesRegister",
+      "method": "register"
+    }
+  ],
   "hooksClassArray": [],
   "manifestPlaceholders": {},
   "mavenRepos": [],

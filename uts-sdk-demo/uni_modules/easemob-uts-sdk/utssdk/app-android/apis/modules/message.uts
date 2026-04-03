@@ -26,14 +26,30 @@ function generateCallbackId(): string {
 }
 
 /**
+ * 消息信息接口 - 前端友好的消息结构
+ * 对应 Kotlin 层的 MessageInfo 数据类
+ */
+export interface MessageInfo {
+	msgId: string;
+	from: string;
+	to: string;
+	type: string;
+	chatType: string;
+	timestamp: number;
+}
+
+/**
  * 消息发送回调实现类
+ * 支持在成功回调中返回前端友好的 MessageInfo 对象
  */
 class MessageSendCallBack extends EMCallBack {
 	private callbackId: string;
+	private message: EMMessage | null = null;
 
-	constructor(callbackId: string) {
+	constructor(callbackId: string, message: EMMessage | null = null) {
 		super();
 		this.callbackId = callbackId;
+		this.message = message;
 	}
 
 	override onError(code: Int, message: string): void {
@@ -62,20 +78,39 @@ class MessageSendCallBack extends EMCallBack {
 		const callback = messageCallbacks.get(this.callbackId);
 		if (callback != null) {
 			const onSuccess = callback["onSuccess"];
-			if (onSuccess != null) {
-				(onSuccess as () => void)();
+			const msg = this.message;
+			if (onSuccess != null && msg != null) {
+				// 构造 UTSJSONObject 对象
+				const messageInfo = new UTSJSONObject();
+				messageInfo['msgId'] = msg.getMsgId();
+				messageInfo['from'] = msg.getFrom();
+				messageInfo['to'] = msg.getTo();
+				messageInfo['type'] = msg.getType().name;
+				const chatType = msg.getChatType();
+				if (chatType == EMMessageChatType.GroupChat) {
+					messageInfo['chatType'] = 'group';
+				} else if (chatType == EMMessageChatType.ChatRoom) {
+					messageInfo['chatType'] = 'chatroom';
+				} else {
+					messageInfo['chatType'] = 'single';
+				}
+				messageInfo['timestamp'] = msg.getMsgTime();
+				(onSuccess as (messageInfo: UTSJSONObject) => void)(messageInfo);
 			}
 			messageCallbacks.delete(this.callbackId);
 		}
-		console.log('[EMMessage] 消息发送成功');
+		const msg = this.message;
+		console.log('[EMMessage] 消息发送成功, ID:', msg != null ? msg.getMsgId() : 'unknown');
 	}
 }
 
 /**
  * 设置消息回调（通过Kotlin辅助类）
+ * 使用 MessageHelper.setMessageStatusCallback 设置回调
+ * 在回调中构造前端友好的 MessageInfo 对象
  */
 function setMessageCallback(message: EMMessage, callbackId: string): void {
-	const callback = new MessageSendCallBack(callbackId);
+	const callback = new MessageSendCallBack(callbackId, message);
 	MessageHelper.setMessageStatusCallback(message, callback);
 }
 
