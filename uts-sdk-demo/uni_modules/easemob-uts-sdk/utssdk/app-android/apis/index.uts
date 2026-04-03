@@ -3,8 +3,11 @@
  * 可按功能拆分为多个文件
  */
 
-// 连接状态监听
+// 连接状态监听（对外 API）
 export * from './connection.uts';
+
+// 消息监听（对外 API）
+export * from './message.uts';
 
 // 初始化模块
 export * from './modules/init.uts';

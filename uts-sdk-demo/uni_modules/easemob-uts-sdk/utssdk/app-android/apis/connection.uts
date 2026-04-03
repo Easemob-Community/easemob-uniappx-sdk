@@ -1,93 +1,82 @@
 /**
- * Android 连接状态监听封装
- * 将 EMConnectionListener 映射为 UTS 的回调函数
+ * 连接状态监听 - 对外 API 封装
+ * 适配 UTSJSONObject 参数，内部调用 listeners/connection-listener.uts
  */
 
 import EMClient from 'com.hyphenate.chat.EMClient';
 import EMConnectionListener from 'com.hyphenate.EMConnectionListener';
 
-// 内部监听器类，继承 EMConnectionListener
+// 回调类型定义
+export type ConnectionListenerCallbacks = {
+  onConnected?: () => void;
+  onDisconnected?: (errorCode: number) => void;
+  onLogout?: (errorCode: number) => void;
+  onTokenWillExpire?: () => void;
+  onTokenExpired?: () => void;
+  onOfflineMessageSyncStart?: () => void;
+  onOfflineMessageSyncFinish?: () => void;
+}
+
+// 内部监听器类
 class InnerConnectionListener extends EMConnectionListener {
-  private onConnectedCb: (() => void) | null;
-  private onDisconnectedCb: ((errorCode: number) => void) | null;
-  private onLogoutCb: ((errorCode: number) => void) | null;
-  private onTokenWillExpireCb: (() => void) | null;
-  private onTokenExpiredCb: (() => void) | null;
-  private onOfflineMessageSyncStartCb: (() => void) | null;
-  private onOfflineMessageSyncFinishCb: (() => void) | null;
-  
-  constructor(
-    onConnected: (() => void) | null,
-    onDisconnected: ((errorCode: number) => void) | null,
-    onLogout: ((errorCode: number) => void) | null,
-    onTokenWillExpire: (() => void) | null,
-    onTokenExpired: (() => void) | null,
-    onOfflineMessageSyncStart: (() => void) | null,
-    onOfflineMessageSyncFinish: (() => void) | null
-  ) {
+  private callbacks: ConnectionListenerCallbacks;
+
+  constructor(callbacks: ConnectionListenerCallbacks) {
     super();
-    this.onConnectedCb = onConnected;
-    this.onDisconnectedCb = onDisconnected;
-    this.onLogoutCb = onLogout;
-    this.onTokenWillExpireCb = onTokenWillExpire;
-    this.onTokenExpiredCb = onTokenExpired;
-    this.onOfflineMessageSyncStartCb = onOfflineMessageSyncStart;
-    this.onOfflineMessageSyncFinishCb = onOfflineMessageSyncFinish;
+    this.callbacks = callbacks;
   }
 
   override onConnected(): void {
-    this.onConnectedCb?.();
+    this.callbacks.onConnected?.();
   }
 
   override onDisconnected(errorCode: Int): void {
-    this.onDisconnectedCb?.(errorCode);
+    this.callbacks.onDisconnected?.(errorCode);
   }
 
   override onLogout(errorCode: Int): void {
-    this.onLogoutCb?.(errorCode);
+    this.callbacks.onLogout?.(errorCode);
   }
 
   override onTokenWillExpire(): void {
-    this.onTokenWillExpireCb?.();
+    this.callbacks.onTokenWillExpire?.();
   }
 
   override onTokenExpired(): void {
-    this.onTokenExpiredCb?.();
+    this.callbacks.onTokenExpired?.();
   }
 
   override onOfflineMessageSyncStart(): void {
-    this.onOfflineMessageSyncStartCb?.();
+    this.callbacks.onOfflineMessageSyncStart?.();
   }
 
   override onOfflineMessageSyncFinish(): void {
-    this.onOfflineMessageSyncFinishCb?.();
+    this.callbacks.onOfflineMessageSyncFinish?.();
   }
 }
 
-// 存储监听器映射，用于移除时查找
+// 存储监听器映射
 const listenerMap = new Map<string, EMConnectionListener>();
 
 /**
- * 添加连接状态监听（内部实现）
+ * 添加连接状态监听（内部实现，适配 UTSJSONObject）
  * @param listenerId 监听器唯一标识（用于移除）
  * @param listener 监听器回调对象
  */
 export function addConnectionListenerImpl(listenerId: string, listener: UTSJSONObject): void {
-  // 从对象中提取回调函数
-  const androidListener = new InnerConnectionListener(
-    listener["onConnected"] as (() => void) | null,
-    listener["onDisconnected"] as ((errorCode: number) => void) | null,
-    listener["onLogout"] as ((errorCode: number) => void) | null,
-    listener["onTokenWillExpire"] as (() => void) | null,
-    listener["onTokenExpired"] as (() => void) | null,
-    listener["onOfflineMessageSyncStart"] as (() => void) | null,
-    listener["onOfflineMessageSyncFinish"] as (() => void) | null
-  );
-  
-  // 保存引用并注册到原生 SDK
+  const callbacks: ConnectionListenerCallbacks = {
+    onConnected: listener["onConnected"] as (() => void) | null,
+    onDisconnected: listener["onDisconnected"] as ((errorCode: number) => void) | null,
+    onLogout: listener["onLogout"] as ((errorCode: number) => void) | null,
+    onTokenWillExpire: listener["onTokenWillExpire"] as (() => void) | null,
+    onTokenExpired: listener["onTokenExpired"] as (() => void) | null,
+    onOfflineMessageSyncStart: listener["onOfflineMessageSyncStart"] as (() => void) | null,
+    onOfflineMessageSyncFinish: listener["onOfflineMessageSyncFinish"] as (() => void) | null
+  };
+
+  const androidListener = new InnerConnectionListener(callbacks);
   listenerMap.set(listenerId, androidListener);
   EMClient.getInstance().addConnectionListener(androidListener);
-  console.log('[EMConnectionListener] 监听器已挂载, listenerId:', listenerId);
 }
 
 /**
@@ -103,7 +92,7 @@ export function removeConnectionListenerImpl(listenerId: string): void {
 }
 
 /**
- * 移除所有监听器（建议在登出时调用）
+ * 移除所有监听器
  */
 export function removeAllConnectionListeners(): void {
   listenerMap.forEach((listener, id) => {

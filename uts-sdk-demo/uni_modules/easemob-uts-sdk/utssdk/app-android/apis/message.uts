@@ -1,0 +1,73 @@
+/**
+ * 消息监听 - 对外 API 封装
+ * 适配 UTSJSONObject 参数，内部调用 modules/listeners/message-listener.uts
+ */
+
+import {
+	addMessageListenerImpl as addMsgListenerInternal,
+	removeMessageListenerImpl as removeMsgListenerInternal,
+	removeAllMessageListeners,
+	MessageListenerCallbacks,
+	Message,
+	MessageType,
+	MessageTypeValues,
+	MessageBody,
+	GroupReadAck,
+	RecallMessageInfo,
+	MessageReactionChange,
+	MessagePinInfo
+} from './modules/listeners/message-listener.uts';
+
+// 重新导出类型
+export {
+	removeAllMessageListeners,
+	MessageListenerCallbacks,
+	Message,
+	MessageType,
+	MessageTypeValues,
+	MessageBody,
+	GroupReadAck,
+	RecallMessageInfo,
+	MessageReactionChange,
+	MessagePinInfo
+};
+
+/**
+ * 添加消息监听
+ * @param listenerId 监听器唯一标识（用于移除）
+ * @param listener 监听器回调对象（UTSJSONObject）
+ */
+export function addMessageListenerImpl(listenerId : string, listener : UTSJSONObject) : void {
+	const callbacks : MessageListenerCallbacks = {
+		onMessageReceived: listener["onMessageReceived"] as ((messages : Message[]) => void) | null,
+		onStreamMessageReceived: listener["onStreamMessageReceived"] as ((messages : Message[]) => void) | null,
+		onCmdMessageReceived: listener["onCmdMessageReceived"] as ((messages : Message[]) => void) | null,
+		onMessageRead: listener["onMessageRead"] as ((messages : Message[]) => void) | null,
+		onGroupMessageRead: listener["onGroupMessageRead"] as ((groupReadAcks : GroupReadAck[]) => void) | null,
+		onReadAckForGroupMessageUpdated: listener["onReadAckForGroupMessageUpdated"] as (() => void) | null,
+		onMessageDelivered: listener["onMessageDelivered"] as ((messages : Message[]) => void) | null,
+		onMessageRecalled: listener["onMessageRecalled"] as ((messages : Message[]) => void) | null,
+		onMessageRecalledWithExt: listener["onMessageRecalledWithExt"] as ((recallMessageInfo : RecallMessageInfo[]) => void) | null,
+		onMessageChanged: listener["onMessageChanged"] as ((message : Message, change : any) => void) | null,
+		onReactionChanged: listener["onReactionChanged"] as ((messageReactionChangeList : MessageReactionChange[]) => void) | null,
+		onMessageContentChanged: listener["onMessageContentChanged"] as ((messageModified : Message, operatorId : string, operationTime : Long) => void) | null,
+		onMessagePinChanged: listener["onMessagePinChanged"] as ((messageId : string, conversationId : string, pinOperation : number, pinInfo : MessagePinInfo) => void) | null
+	};
+
+	addMsgListenerInternal(listenerId, callbacks);
+}
+
+/**
+ * 移除消息监听
+ * @param listenerId 监听器唯一标识
+ */
+export function removeMessageListenerImpl(listenerId : string) : void {
+	removeMsgListenerInternal(listenerId);
+}
+
+/**
+ * 移除所有消息监听器
+ */
+export function clearAllMessageListeners() : void {
+	removeAllMessageListeners();
+}

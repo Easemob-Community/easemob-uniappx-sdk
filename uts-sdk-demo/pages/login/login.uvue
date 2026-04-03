@@ -69,6 +69,18 @@
 					<text class="log-content">{{ logContent }}</text>
 				</scroll-view>
 			</view>
+					
+			<!-- 消息列表 -->
+			<view class="message-area">
+				<text class="message-title">收到消息：</text>
+				<scroll-view class="message-scroll" scroll-y="true">
+					<view v-for="(msg, index) in messageList" :key="index" class="message-item">
+						<text class="message-from">{{ msg.from }}</text>
+						<text class="message-type">[{{ msg.body.type }}]</text>
+						<text class="message-content" v-if="msg.body.type === 'txt'">{{ msg.body.message }}</text>
+					</view>
+				</scroll-view>
+			</view>
 		</view>
 	</view>
 </template>
@@ -79,7 +91,9 @@
 		logoutSDK, 
 		getCurrentUser, 
 		isLoggedIn as checkIsLoggedIn,
-		isConnected as checkIsConnected
+		isConnected as checkIsConnected,
+		addMessageListener,
+		Message
 	} from "@/uni_modules/easemob-uts-sdk"
 
 	// 响应式数据
@@ -90,6 +104,8 @@
 	const isConnected = ref(false)
 	const currentUser = ref('')
 	const logContent = ref('')
+	const messageList = ref([] as Message[])
+	let unsubscribeMessage : (() => void) | null = null
 
 	// 计算属性：连接状态文本
 	const connectionStatus = computed((): string => {
@@ -162,6 +178,30 @@
 	onLoad(() => {
 		addLog('登录页面加载')
 		updateStatus()
+		
+		// 添加消息监听
+		unsubscribeMessage = addMessageListener({
+			onMessageReceived: (messages : Message[]) => {
+				messages.forEach((msg : Message) => {
+					addLog(`收到消息: 来自=${msg.from}, 类型=${msg.body.type}`)
+					if (msg.body.type === 'txt') {
+						addLog(`内容: ${msg.body.message ?? ''}`)
+					}
+					// 添加到消息列表
+					messageList.value.unshift(msg)
+					// 最多保留50条
+					if (messageList.value.length > 50) {
+						messageList.value.pop()
+					}
+				})
+			}
+		})
+	})
+
+	// 页面卸载时移除监听
+	onUnload(() => {
+		unsubscribeMessage?.invoke()
+		unsubscribeMessage = null
 	})
 </script>
 
@@ -285,5 +325,49 @@
 	.log-content {
 		font-size: 12px;
 		color: #666666;
+	}
+
+	.message-area {
+		margin-top: 20px;
+	}
+
+	.message-title {
+		font-size: 14px;
+		color: #666666;
+		margin-bottom: 10px;
+	}
+
+	.message-scroll {
+		height: 200px;
+		background-color: #f9f9f9;
+		border-radius: 5px;
+		padding: 10px;
+	}
+
+	.message-item {
+		flex-direction: row;
+		align-items: flex-start;
+		margin-bottom: 8px;
+		flex-wrap: wrap;
+	}
+
+	.message-from {
+		font-size: 12px;
+		color: #07c160;
+		font-weight: bold;
+		margin-right: 8px;
+	}
+
+	.message-type {
+		font-size: 12px;
+		color: #999999;
+		margin-right: 8px;
+	}
+
+	.message-content {
+		font-size: 12px;
+		color: #333333;
+		width: 100%;
+		margin-top: 4px;
 	}
 </style>

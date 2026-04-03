@@ -1,5 +1,5 @@
 <script setup lang="uts">
-	import { initSDK, addConnectionListener } from "./uni_modules/easemob-uts-sdk"
+	import { initSDK, addConnectionListener, addMessageListener, Message } from "./uni_modules/easemob-uts-sdk"
 	// #ifdef APP-ANDROID || APP-HARMONY
 	let firstBackTime = 0
 	// #endif
@@ -35,8 +35,37 @@
 			}
 		})
 		
+		// 挂载消息监听
+		const unsubscribeMessage = addMessageListener({
+			onMessageReceived: (messages : Message[]) => {
+				console.log('[EMMessage] 收到消息, 数量:', messages.length)
+				messages.forEach((msg : Message) => {
+					console.log(`[EMMessage] 来自: ${msg.from}, 类型: ${msg.body.type}`)
+					if (msg.body.type === 'txt') {
+						console.log('[EMMessage] 文本内容:', msg.body.message ?? '')
+					}
+				})
+			},
+			onCmdMessageReceived: (messages : Message[]) => {
+				console.log('[EMMessage] 收到命令消息, 数量:', messages.length)
+			},
+			onMessageRead: (messages : Message[]) => {
+				console.log('[EMMessage] 消息已读, 数量:', messages.length)
+			},
+			onMessageDelivered: (messages : Message[]) => {
+				console.log('[EMMessage] 消息已送达, 数量:', messages.length)
+			},
+			onMessageRecalled: (messages : Message[]) => {
+				console.log('[EMMessage] 消息被撤回, 数量:', messages.length)
+			},
+			onMessageChanged: (message : Message, change : any) => {
+				console.log('[EMMessage] 消息变更, msgId:', message.msgId)
+			}
+		})
+
 		// 保存取消订阅函数，在需要时调用（如应用退出）
 		// unsubscribe()
+		// unsubscribeMessage()
 	})
 
 	onAppShow(() => {

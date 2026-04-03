@@ -6,8 +6,10 @@ export * from './interface.uts';
 // #ifdef APP-ANDROID
 export { 
   initSDK, 
-  addConnectionListener, 
+  addConnectionListener,
   removeConnectionListener,
+  removeAllConnectionListeners,
+  ConnectionListenerCallbacks,
   loginSDK,
   loginSDKWithToken,
   loginSDKWithAgoraToken,

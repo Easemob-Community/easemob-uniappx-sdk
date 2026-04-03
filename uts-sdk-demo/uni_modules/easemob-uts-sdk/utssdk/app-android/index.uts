@@ -2,11 +2,15 @@
  * Android 平台实现入口
  */
 
-import { initEMClient } from './apis/index.uts';
-import { 
-  addConnectionListenerImpl, 
-  removeConnectionListenerImpl
+import { initEMClient } from './apis/modules/init.uts';
+import {
+  addConnectionListenerImpl as addConnListenerImpl,
+  removeConnectionListenerImpl as removeConnListenerImpl
 } from './apis/connection.uts';
+import {
+  addMessageListenerImpl as addMsgListenerImpl,
+  removeMessageListenerImpl as removeMsgListenerImpl
+} from './apis/message.uts';
 import {
   loginEMClient,
   loginWithToken as loginWithTokenImpl,
@@ -33,10 +37,10 @@ export function initSDK(config: UTSJSONObject): Promise<void> {
  */
 export function addConnectionListener(listener: UTSJSONObject): () => void {
   const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
-  addConnectionListenerImpl(id, listener);
+  addConnListenerImpl(id, listener);
   
   // 返回取消订阅函数
-  return () => removeConnectionListenerImpl(id);
+  return () => removeConnListenerImpl(id);
 }
 
 /**
@@ -44,8 +48,27 @@ export function addConnectionListener(listener: UTSJSONObject): () => void {
  * @param listenerId 监听器 ID
  */
 export function removeConnectionListener(listenerId: string): void {
-  removeConnectionListenerImpl(listenerId);
+  removeConnListenerImpl(listenerId);
 }
+
+/**
+ * 订阅消息监听
+ * @param listener 监听器回调
+ * @returns 取消订阅函数
+ */
+export function addMessageListener(listener: UTSJSONObject): () => void {
+  const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+  addMsgListenerImpl(id, listener);
+
+  // 返回取消订阅函数
+  return () => removeMsgListenerImpl(id);
+}
+
+// 导出连接监听相关类型和函数
+export { removeAllConnectionListeners, ConnectionListenerCallbacks } from './apis/connection.uts';
+
+// 导出消息监听相关类型和函数
+export { removeAllMessageListeners, MessageListenerCallbacks, Message, MessageType, MessageTypeValues } from './apis/message.uts';
 
 /**
  * 登录 SDK（使用用户名密码）
