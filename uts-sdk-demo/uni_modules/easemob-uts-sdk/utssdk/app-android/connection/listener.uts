@@ -1,6 +1,5 @@
 /**
- * 连接状态监听 - 对外 API 封装
- * 适配 UTSJSONObject 参数，内部调用 listeners/connection-listener.uts
+ * 连接状态监听
  */
 
 import EMClient from 'com.hyphenate.chat.EMClient';
@@ -59,7 +58,7 @@ class InnerConnectionListener extends EMConnectionListener {
 const listenerMap = new Map<string, EMConnectionListener>();
 
 /**
- * 添加连接状态监听（内部实现，适配 UTSJSONObject）
+ * 添加连接状态监听（内部实现）
  * @param listenerId 监听器唯一标识（用于移除）
  * @param listener 监听器回调对象
  */

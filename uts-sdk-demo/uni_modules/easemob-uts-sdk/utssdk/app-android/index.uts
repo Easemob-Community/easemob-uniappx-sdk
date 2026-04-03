@@ -2,14 +2,36 @@
  * Android 平台实现入口
  */
 
-import { initEMClient } from './apis/modules/init.uts';
+import Uri from 'android.net.Uri';
+
+// 核心模块
+import { initEMClient } from './core/init.uts';
+
+// 连接模块
 import {
   addConnectionListenerImpl as addConnListenerImpl,
-  removeConnectionListenerImpl as removeConnListenerImpl
-} from './apis/connection.uts';
+  removeConnectionListenerImpl as removeConnListenerImpl,
+  removeAllConnectionListeners,
+  ConnectionListenerCallbacks
+} from './connection/listener.uts';
+
+// 消息模块
 import {
   addMessageListenerImpl as addMsgListenerImpl,
   removeMessageListenerImpl as removeMsgListenerImpl,
+  removeAllMessageListeners,
+  MessageListenerCallbacks,
+  Message,
+  MessageType,
+  MessageTypeValues,
+  MessageBody,
+  GroupReadAck,
+  RecallMessageInfo,
+  MessageReactionChange,
+  MessagePinInfo
+} from './message/listener.uts';
+
+import {
   sendTextMessageImpl,
   sendImageMessageImpl,
   sendImageMessageWithUriImpl,
@@ -25,18 +47,40 @@ import {
   sendFileMessageWithUriImpl,
   sendCmdMessageImpl,
   sendCustomMessageImpl,
-  sendCombinedMessageImpl
-} from './apis/message.uts';
+  sendCombinedMessageImpl,
+  downloadAttachmentImpl,
+  downloadThumbnailImpl
+} from './message/sender.uts';
+
+// 认证模块
 import {
   loginEMClient,
   loginWithToken as loginWithTokenImpl,
   loginWithAgoraToken as loginWithAgoraTokenImpl,
   logoutSync as logoutSyncImpl,
-  logoutEMClient
-} from './apis/modules/login.uts';
+  logoutEMClient,
+  getCurrentUser,
+  isLoggedInBefore,
+  isConnected,
+  isLoggedIn
+} from './auth/login.uts';
 
-// 直接从 login.uts 导出状态查询函数
-export { getCurrentUser, isLoggedInBefore, isConnected, isLoggedIn } from './apis/modules/login.uts';
+// ==================== 导出类型 ====================
+
+export {
+  ConnectionListenerCallbacks,
+  MessageListenerCallbacks,
+  Message,
+  MessageType,
+  MessageTypeValues,
+  MessageBody,
+  GroupReadAck,
+  RecallMessageInfo,
+  MessageReactionChange,
+  MessagePinInfo
+};
+
+// ==================== 初始化 ====================
 
 /**
  * 初始化 SDK
@@ -46,51 +90,54 @@ export function initSDK(config: UTSJSONObject): Promise<void> {
   return Promise.resolve();
 }
 
+// ==================== 连接监听 ====================
+
 /**
  * 添加连接状态监听
- * @param listener 监听器回调
- * @returns 取消订阅函数
  */
 export function addConnectionListener(listener: UTSJSONObject): () => void {
   const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
   addConnListenerImpl(id, listener);
-  
-  // 返回取消订阅函数
   return () => removeConnListenerImpl(id);
 }
 
 /**
  * 移除连接状态监听
- * @param listenerId 监听器 ID
  */
 export function removeConnectionListener(listenerId: string): void {
   removeConnListenerImpl(listenerId);
 }
 
+// ==================== 消息监听 ====================
+
 /**
  * 订阅消息监听
- * @param listener 监听器回调
- * @returns 取消订阅函数
  */
 export function addMessageListener(listener: UTSJSONObject): () => void {
   const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
-  addMsgListenerImpl(id, listener);
-
-  // 返回取消订阅函数
+  const callbacks: MessageListenerCallbacks = {
+    onMessageReceived: listener["onMessageReceived"] as ((messages: Message[]) => void) | null,
+    onStreamMessageReceived: listener["onStreamMessageReceived"] as ((messages: Message[]) => void) | null,
+    onCmdMessageReceived: listener["onCmdMessageReceived"] as ((messages: Message[]) => void) | null,
+    onMessageRead: listener["onMessageRead"] as ((messages: Message[]) => void) | null,
+    onGroupMessageRead: listener["onGroupMessageRead"] as ((groupReadAcks: GroupReadAck[]) => void) | null,
+    onReadAckForGroupMessageUpdated: listener["onReadAckForGroupMessageUpdated"] as (() => void) | null,
+    onMessageDelivered: listener["onMessageDelivered"] as ((messages: Message[]) => void) | null,
+    onMessageRecalled: listener["onMessageRecalled"] as ((messages: Message[]) => void) | null,
+    onMessageRecalledWithExt: listener["onMessageRecalledWithExt"] as ((recallMessageInfo: RecallMessageInfo[]) => void) | null,
+    onMessageChanged: listener["onMessageChanged"] as ((message: Message, change: any) => void) | null,
+    onReactionChanged: listener["onReactionChanged"] as ((messageReactionChangeList: MessageReactionChange[]) => void) | null,
+    onMessageContentChanged: listener["onMessageContentChanged"] as ((messageModified: Message, operatorId: string, operationTime: Long) => void) | null,
+    onMessagePinChanged: listener["onMessagePinChanged"] as ((messageId: string, conversationId: string, pinOperation: number, pinInfo: MessagePinInfo) => void) | null
+  };
+  addMsgListenerImpl(id, callbacks);
   return () => removeMsgListenerImpl(id);
 }
 
-// 导出连接监听相关类型和函数
-export { removeAllConnectionListeners, ConnectionListenerCallbacks } from './apis/connection.uts';
-
-// 导出消息监听相关类型和函数
-export { removeAllMessageListeners, MessageListenerCallbacks, Message, MessageType, MessageTypeValues } from './apis/message.uts';
+// ==================== 登录/登出 ====================
 
 /**
  * 登录 SDK（使用用户名密码）
- * @param userId 用户ID
- * @param password 密码
- * @param callback 登录回调
  */
 export function loginSDK(userId: string, password: string, callback: UTSJSONObject): void {
   loginEMClient(userId, password, callback);
@@ -98,9 +145,6 @@ export function loginSDK(userId: string, password: string, callback: UTSJSONObje
 
 /**
  * 使用 Token 登录
- * @param username 用户ID
- * @param token Token
- * @param callback 登录回调
  */
 export function loginSDKWithToken(username: string, token: string, callback: UTSJSONObject): void {
   loginWithTokenImpl(username, token, callback);
@@ -108,9 +152,6 @@ export function loginSDKWithToken(username: string, token: string, callback: UTS
 
 /**
  * 使用 Agora Token 登录
- * @param username 用户ID
- * @param agoraToken Agora Token
- * @param callback 登录回调
  */
 export function loginSDKWithAgoraToken(username: string, agoraToken: string, callback: UTSJSONObject): void {
   loginWithAgoraTokenImpl(username, agoraToken, callback);
@@ -118,8 +159,6 @@ export function loginSDKWithAgoraToken(username: string, agoraToken: string, cal
 
 /**
  * 同步登出 SDK
- * @param unbindToken 是否解绑 Token
- * @return 错误码
  */
 export function logoutSDKSync(unbindToken: boolean): number {
   return logoutSyncImpl(unbindToken);
@@ -127,22 +166,18 @@ export function logoutSDKSync(unbindToken: boolean): number {
 
 /**
  * 异步登出 SDK
- * @param unbindToken 是否解绑 Token
- * @param callback 登出回调（传空对象表示无回调）
  */
 export function logoutSDK(unbindToken: boolean, callback: UTSJSONObject = {} as UTSJSONObject): void {
   logoutEMClient(unbindToken, callback);
 }
 
+// 导出状态查询函数
+export { getCurrentUser, isLoggedInBefore, isConnected, isLoggedIn };
+
 // ==================== 消息发送API ====================
 
 /**
  * 发送文本消息
- * @param content 文本内容
- * @param to 接收方（用户ID、群组ID或聊天室ID）
- * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
- * @param callback 发送回调 { onSuccess, onError, onProgress }
- * @param ext 扩展属性（可选）
  */
 export function sendTextMessage(content: string, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
   sendTextMessageImpl(content, to, chatType, callback, ext);
@@ -150,22 +185,20 @@ export function sendTextMessage(content: string, to: string, chatType: string, c
 
 /**
  * 发送图片消息（使用文件路径）
- * @param filePath 图片文件路径
- * @param sendOriginalImage 是否发送原图
- * @param to 接收方
- * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
- * @param callback 发送回调
- * @param ext 扩展属性（可选）
  */
 export function sendImageMessage(filePath: string, sendOriginalImage: boolean, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
   sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback, ext);
 }
 
 /**
+ * 发送图片消息（使用Uri）
+ */
+export function sendImageMessageWithUri(imageUri: Uri, sendOriginalImage: boolean, to: string, callback: UTSJSONObject): void {
+  sendImageMessageWithUriImpl(imageUri, sendOriginalImage, to, callback);
+}
+
+/**
  * 发送GIF图片消息
- * @param gifFilePath GIF图片文件路径
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendGifImageMessage(gifFilePath: string, to: string, callback: UTSJSONObject): void {
   sendGifImageMessageImpl(gifFilePath, to, callback);
@@ -173,35 +206,41 @@ export function sendGifImageMessage(gifFilePath: string, to: string, callback: U
 
 /**
  * 发送语音消息（使用文件路径）
- * @param filePath 语音文件路径
- * @param timeLength 语音时长（秒）
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendVoiceMessage(filePath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
   sendVoiceMessageImpl(filePath, timeLength, to, callback);
 }
 
 /**
+ * 发送语音消息（使用Uri）
+ */
+export function sendVoiceMessageWithUri(fileUri: Uri, timeLength: Int, to: string, callback: UTSJSONObject): void {
+  sendVoiceMessageWithUriImpl(fileUri, timeLength, to, callback);
+}
+
+/**
  * 发送视频消息（使用文件路径）
- * @param videoFilePath 视频文件路径
- * @param imageThumbPath 视频缩略图路径
- * @param timeLength 视频时长（秒）
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendVideoMessage(videoFilePath: string, imageThumbPath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
   sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, callback);
 }
 
 /**
+ * 发送视频消息（使用Uri）
+ */
+export function sendVideoMessageWithUri(videoUri: Uri, imageThumbPath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
+  sendVideoMessageWithUriImpl(videoUri, imageThumbPath, timeLength, to, callback);
+}
+
+/**
+ * 发送视频消息（视频和缩略图都使用Uri）
+ */
+export function sendVideoMessageWithUris(videoUri: Uri, thumbUri: Uri, timeLength: Int, to: string, callback: UTSJSONObject): void {
+  sendVideoMessageWithUrisImpl(videoUri, thumbUri, timeLength, to, callback);
+}
+
+/**
  * 发送位置消息
- * @param latitude 纬度
- * @param longitude 经度
- * @param locationAddress 位置地址描述
- * @param buildingName 建筑物名称
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendLocationMessage(latitude: Double, longitude: Double, locationAddress: string, buildingName: string, to: string, callback: UTSJSONObject): void {
   sendLocationMessageImpl(latitude, longitude, locationAddress, buildingName, to, callback);
@@ -209,11 +248,6 @@ export function sendLocationMessage(latitude: Double, longitude: Double, locatio
 
 /**
  * 发送位置消息（不含建筑物名称）
- * @param latitude 纬度
- * @param longitude 经度
- * @param locationAddress 位置地址描述
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendLocationMessageSimple(latitude: Double, longitude: Double, locationAddress: string, to: string, callback: UTSJSONObject): void {
   sendLocationMessageSimpleImpl(latitude, longitude, locationAddress, to, callback);
@@ -221,20 +255,20 @@ export function sendLocationMessageSimple(latitude: Double, longitude: Double, l
 
 /**
  * 发送文件消息（使用文件路径）
- * @param filePath 文件路径
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendFileMessage(filePath: string, to: string, callback: UTSJSONObject): void {
   sendFileMessageImpl(filePath, to, callback);
 }
 
 /**
+ * 发送文件消息（使用Uri）
+ */
+export function sendFileMessageWithUri(fileUri: Uri, to: string, callback: UTSJSONObject): void {
+  sendFileMessageWithUriImpl(fileUri, to, callback);
+}
+
+/**
  * 发送透传（命令）消息
- * @param action 命令动作
- * @param to 接收方
- * @param callback 发送回调
- * @param ext 扩展属性（可选）
  */
 export function sendCmdMessage(action: string, to: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
   sendCmdMessageImpl(action, to, callback, ext);
@@ -242,12 +276,6 @@ export function sendCmdMessage(action: string, to: string, callback: UTSJSONObje
 
 /**
  * 发送自定义消息
- * @param event 自定义事件名称
- * @param params 自定义参数（JSON对象）
- * @param to 接收方
- * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
- * @param callback 发送回调
- * @param ext 扩展属性（可选）
  */
 export function sendCustomMessage(event: string, params: UTSJSONObject, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
   sendCustomMessageImpl(event, params, to, chatType, callback, ext);
@@ -255,13 +283,21 @@ export function sendCustomMessage(event: string, params: UTSJSONObject, to: stri
 
 /**
  * 发送合并转发消息
- * @param title 合并消息标题
- * @param summary 合并消息概要
- * @param compatibleText 兼容信息
- * @param messageIdList 消息ID列表（最多300个）
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendCombinedMessage(title: string, summary: string, compatibleText: string, messageIdList: string[], to: string, callback: UTSJSONObject): void {
   sendCombinedMessageImpl(title, summary, compatibleText, messageIdList, to, callback);
+}
+
+/**
+ * 下载消息附件
+ */
+export function downloadAttachment(message: Message, callback: UTSJSONObject): void {
+  downloadAttachmentImpl(message, callback);
+}
+
+/**
+ * 下载消息缩略图
+ */
+export function downloadThumbnail(message: Message, callback: UTSJSONObject): void {
+  downloadThumbnailImpl(message, callback);
 }

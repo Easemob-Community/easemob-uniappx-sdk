@@ -1,3 +1,7 @@
+/**
+ * 认证模块 - 登录/登出
+ */
+
 import EMClient from "com.hyphenate.chat.EMClient";
 import EMCallBack from 'com.hyphenate.EMCallBack';
 
@@ -6,9 +10,6 @@ const loginCallbacks: Map<string, UTSJSONObject> = new Map();
 
 /**
  * 使用用户名和密码登录
- * @param userId 用户ID
- * @param password 密码
- * @param callback 登录回调
  */
 export function loginEMClient(
   userId: string, 
@@ -23,9 +24,6 @@ export function loginEMClient(
 
 /**
  * 使用 Token 登录
- * @param username 用户ID
- * @param token Token
- * @param callback 登录回调
  */
 export function loginWithToken(
   username: string, 
@@ -40,9 +38,6 @@ export function loginWithToken(
 
 /**
  * 使用 Agora Token 登录
- * @param username 用户ID
- * @param agoraToken Agora Token
- * @param callback 登录回调
  */
 export function loginWithAgoraToken(
   username: string, 
@@ -57,8 +52,6 @@ export function loginWithAgoraToken(
 
 /**
  * 同步登出
- * @param unbindToken 是否解绑 Token
- * @return 错误码
  */
 export function logoutSync(unbindToken: boolean): number {
   return EMClient.getInstance().logout(unbindToken);
@@ -66,8 +59,6 @@ export function logoutSync(unbindToken: boolean): number {
 
 /**
  * 异步登出
- * @param unbindToken 是否解绑 Token
- * @param callback 登出回调（传空对象表示无回调）
  */
 export function logoutEMClient(unbindToken: boolean, callback: UTSJSONObject): void {
   EMClient.getInstance().logout(unbindToken, new LogoutCallBack(callback));
@@ -75,7 +66,6 @@ export function logoutEMClient(unbindToken: boolean, callback: UTSJSONObject): v
 
 /**
  * 获取当前登录用户
- * @return 当前用户ID，未登录返回空字符串
  */
 export function getCurrentUser(): string {
   const user = EMClient.getInstance().getCurrentUser();
@@ -84,7 +74,6 @@ export function getCurrentUser(): string {
 
 /**
  * 是否之前登录过
- * @return true 表示之前登录过
  */
 export function isLoggedInBefore(): boolean {
   return EMClient.getInstance().isLoggedInBefore();
@@ -92,7 +81,6 @@ export function isLoggedInBefore(): boolean {
 
 /**
  * 是否已连接
- * @return true 表示已连接
  */
 export function isConnected(): boolean {
   return EMClient.getInstance().isConnected();
@@ -100,7 +88,6 @@ export function isConnected(): boolean {
 
 /**
  * 是否已登录
- * @return true 表示已登录
  */
 export function isLoggedIn(): boolean {
   return EMClient.getInstance().isLoggedIn();

@@ -1,7 +1,5 @@
 /**
- * 消息发送 - 内部实现
- * 封装不同类型的消息发送API
- * 使用Kotlin混编解决synchronized方法调用问题
+ * 消息发送
  */
 
 import EMClient from 'com.hyphenate.chat.EMClient';
@@ -10,9 +8,9 @@ import EMCallBack from 'com.hyphenate.EMCallBack';
 import EMCmdMessageBody from 'com.hyphenate.chat.EMCmdMessageBody';
 import EMMessageChatType from 'com.hyphenate.chat.EMMessage.ChatType';
 import Uri from 'android.net.Uri';
-import { Message } from './listeners/message-listener.uts';
+import { Message } from './listener.uts';
 
-// 导入Kotlin辅助类（用于解决synchronized方法调用问题）
+// 导入Kotlin辅助类
 import { MessageHelper, setMessageExtFromJson, getMessageExtAsJson, createCustomMessageBody } from 'uts.sdk.modules.easemobUtsSdk';
 
 // 消息发送回调映射表
@@ -26,8 +24,7 @@ function generateCallbackId(): string {
 }
 
 /**
- * 消息信息接口 - 前端友好的消息结构
- * 对应 Kotlin 层的 MessageInfo 数据类
+ * 消息信息接口
  */
 export interface MessageInfo {
 	msgId: string;
@@ -40,7 +37,6 @@ export interface MessageInfo {
 
 /**
  * 消息发送回调实现类
- * 支持在成功回调中返回前端友好的 MessageInfo 对象
  */
 class MessageSendCallBack extends EMCallBack {
 	private callbackId: string;
@@ -80,7 +76,6 @@ class MessageSendCallBack extends EMCallBack {
 			const onSuccess = callback["onSuccess"];
 			const msg = this.message;
 			if (onSuccess != null && msg != null) {
-				// 构造 UTSJSONObject 对象
 				const messageInfo = new UTSJSONObject();
 				messageInfo['msgId'] = msg.getMsgId();
 				messageInfo['from'] = msg.getFrom();
@@ -95,7 +90,6 @@ class MessageSendCallBack extends EMCallBack {
 					messageInfo['chatType'] = 'single';
 				}
 				messageInfo['timestamp'] = msg.getMsgTime();
-				// 获取扩展属性
 				messageInfo['ext'] = getMessageExt(msg);
 				(onSuccess as (messageInfo: UTSJSONObject) => void)(messageInfo);
 			}
@@ -107,9 +101,7 @@ class MessageSendCallBack extends EMCallBack {
 }
 
 /**
- * 设置消息回调（通过Kotlin辅助类）
- * 使用 MessageHelper.setMessageStatusCallback 设置回调
- * 在回调中构造前端友好的 MessageInfo 对象
+ * 设置消息回调
  */
 function setMessageCallback(message: EMMessage, callbackId: string): void {
 	const callback = new MessageSendCallBack(callbackId, message);
@@ -131,22 +123,17 @@ function setEMMessageChatType(message: EMMessage, chatType: string): void {
 
 /**
  * 设置消息扩展属性
- * @param message 消息对象
- * @param ext 扩展属性对象
  */
 function setMessageExt(message: EMMessage, ext: UTSJSONObject | null): void {
 	if (ext == null) {
 		return;
 	}
-	// 使用 Kotlin 顶层函数设置扩展属性
 	const extJson = JSON.stringify(ext);
 	setMessageExtFromJson(message, extJson);
 }
 
 /**
  * 获取消息扩展属性
- * @param message 消息对象
- * @returns 扩展属性对象
  */
 function getMessageExt(message: EMMessage): UTSJSONObject {
 	try {
@@ -162,11 +149,6 @@ function getMessageExt(message: EMMessage): UTSJSONObject {
 
 /**
  * 发送文本消息
- * @param content 文本内容
- * @param to 接收方（用户ID、群组ID或聊天室ID）
- * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
- * @param callback 发送回调
- * @param ext 扩展属性（可选）
  */
 export function sendTextMessageImpl(content: string, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
 	const callbackId = generateCallbackId();
@@ -181,12 +163,6 @@ export function sendTextMessageImpl(content: string, to: string, chatType: strin
 
 /**
  * 发送图片消息（使用文件路径）
- * @param filePath 图片文件路径
- * @param sendOriginalImage 是否发送原图
- * @param to 接收方
- * @param chatType 聊天类型
- * @param callback 发送回调
- * @param ext 扩展属性（可选）
  */
 export function sendImageMessageImpl(filePath: string, sendOriginalImage: boolean, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
 	const callbackId = generateCallbackId();
@@ -201,10 +177,6 @@ export function sendImageMessageImpl(filePath: string, sendOriginalImage: boolea
 
 /**
  * 发送图片消息（使用Uri）
- * @param imageUri 图片Uri
- * @param sendOriginalImage 是否发送原图
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendImageMessageWithUriImpl(imageUri: Uri, sendOriginalImage: boolean, to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
@@ -217,9 +189,6 @@ export function sendImageMessageWithUriImpl(imageUri: Uri, sendOriginalImage: bo
 
 /**
  * 发送GIF图片消息
- * @param gifFilePath GIF图片文件路径
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendGifImageMessageImpl(gifFilePath: string, to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
@@ -232,10 +201,6 @@ export function sendGifImageMessageImpl(gifFilePath: string, to: string, callbac
 
 /**
  * 发送语音消息（使用文件路径）
- * @param filePath 语音文件路径
- * @param timeLength 语音时长（秒）
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendVoiceMessageImpl(filePath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
@@ -248,10 +213,6 @@ export function sendVoiceMessageImpl(filePath: string, timeLength: Int, to: stri
 
 /**
  * 发送语音消息（使用Uri）
- * @param fileUri 语音文件Uri
- * @param timeLength 语音时长（秒）
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendVoiceMessageWithUriImpl(fileUri: Uri, timeLength: Int, to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
@@ -264,11 +225,6 @@ export function sendVoiceMessageWithUriImpl(fileUri: Uri, timeLength: Int, to: s
 
 /**
  * 发送视频消息（使用文件路径）
- * @param videoFilePath 视频文件路径
- * @param imageThumbPath 视频缩略图路径
- * @param timeLength 视频时长（秒）
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendVideoMessageImpl(videoFilePath: string, imageThumbPath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
@@ -281,11 +237,6 @@ export function sendVideoMessageImpl(videoFilePath: string, imageThumbPath: stri
 
 /**
  * 发送视频消息（使用Uri）
- * @param videoUri 视频文件Uri
- * @param imageThumbPath 视频缩略图路径
- * @param timeLength 视频时长（秒）
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendVideoMessageWithUriImpl(videoUri: Uri, imageThumbPath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
@@ -298,11 +249,6 @@ export function sendVideoMessageWithUriImpl(videoUri: Uri, imageThumbPath: strin
 
 /**
  * 发送视频消息（视频和缩略图都使用Uri）
- * @param videoUri 视频文件Uri
- * @param thumbUri 缩略图Uri
- * @param timeLength 视频时长（秒）
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendVideoMessageWithUrisImpl(videoUri: Uri, thumbUri: Uri, timeLength: Int, to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
@@ -315,12 +261,6 @@ export function sendVideoMessageWithUrisImpl(videoUri: Uri, thumbUri: Uri, timeL
 
 /**
  * 发送位置消息
- * @param latitude 纬度
- * @param longitude 经度
- * @param locationAddress 位置地址描述
- * @param buildingName 建筑物名称（可选）
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendLocationMessageImpl(latitude: Double, longitude: Double, locationAddress: string, buildingName: string, to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
@@ -333,11 +273,6 @@ export function sendLocationMessageImpl(latitude: Double, longitude: Double, loc
 
 /**
  * 发送位置消息（不含建筑物名称）
- * @param latitude 纬度
- * @param longitude 经度
- * @param locationAddress 位置地址描述
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendLocationMessageSimpleImpl(latitude: Double, longitude: Double, locationAddress: string, to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
@@ -350,9 +285,6 @@ export function sendLocationMessageSimpleImpl(latitude: Double, longitude: Doubl
 
 /**
  * 发送文件消息（使用文件路径）
- * @param filePath 文件路径
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendFileMessageImpl(filePath: string, to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
@@ -365,9 +297,6 @@ export function sendFileMessageImpl(filePath: string, to: string, callback: UTSJ
 
 /**
  * 发送文件消息（使用Uri）
- * @param fileUri 文件Uri
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendFileMessageWithUriImpl(fileUri: Uri, to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
@@ -380,16 +309,11 @@ export function sendFileMessageWithUriImpl(fileUri: Uri, to: string, callback: U
 
 /**
  * 发送透传（命令）消息
- * @param action 命令动作
- * @param to 接收方
- * @param callback 发送回调
- * @param ext 扩展属性（可选）
  */
 export function sendCmdMessageImpl(action: string, to: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
 	const callbackId = generateCallbackId();
 	messageCallbacks.set(callbackId, callback);
 
-	// 创建透传消息需要使用createSendMessage然后设置body
 	const message = EMMessage.createSendMessage(EMMessage.Type.CMD);
 	message.setTo(to);
 	const body = new EMCmdMessageBody(action);
@@ -401,22 +325,14 @@ export function sendCmdMessageImpl(action: string, to: string, callback: UTSJSON
 
 /**
  * 发送自定义消息
- * @param event 自定义事件名称
- * @param params 自定义参数（JSON对象）
- * @param to 接收方
- * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
- * @param callback 发送回调
- * @param ext 扩展属性（可选）
  */
 export function sendCustomMessageImpl(event: string, params: UTSJSONObject, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
 	const callbackId = generateCallbackId();
 	messageCallbacks.set(callbackId, callback);
 
-	// 创建自定义消息
 	const message = EMMessage.createSendMessage(EMMessage.Type.CUSTOM);
 	message.setTo(to);
 
-	// 使用Kotlin辅助函数创建自定义消息体
 	const paramsJson = JSON.stringify(params);
 	const customBody = createCustomMessageBody(event, paramsJson);
 
@@ -429,18 +345,11 @@ export function sendCustomMessageImpl(event: string, params: UTSJSONObject, to: 
 
 /**
  * 发送合并转发消息
- * @param title 合并消息标题
- * @param summary 合并消息概要
- * @param compatibleText 兼容信息
- * @param messageIdList 消息ID列表（最多300个）
- * @param to 接收方
- * @param callback 发送回调
  */
 export function sendCombinedMessageImpl(title: string, summary: string, compatibleText: string, messageIdList: string[], to: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
 	messageCallbacks.set(callbackId, callback);
 
-	// 转换数组为Java List
 	const msgIdList = new java.util.ArrayList<string>();
 	for (let i = 0; i < messageIdList.length; i++) {
 		msgIdList.add(messageIdList[i]);
@@ -453,11 +362,8 @@ export function sendCombinedMessageImpl(title: string, summary: string, compatib
 
 /**
  * 下载消息附件
- * @param message 消息对象
- * @param callback 下载回调
  */
 export function downloadAttachmentImpl(message: Message, callback: UTSJSONObject): void {
-	// 根据msgId获取原始EMMessage
 	const emMessage = EMClient.getInstance().chatManager().getMessage(message.msgId);
 	if (emMessage != null) {
 		const callbackId = generateCallbackId();
@@ -469,8 +375,6 @@ export function downloadAttachmentImpl(message: Message, callback: UTSJSONObject
 
 /**
  * 下载消息缩略图
- * @param message 消息对象
- * @param callback 下载回调
  */
 export function downloadThumbnailImpl(message: Message, callback: UTSJSONObject): void {
 	const emMessage = EMClient.getInstance().chatManager().getMessage(message.msgId);

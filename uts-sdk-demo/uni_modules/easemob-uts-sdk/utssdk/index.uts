@@ -3,13 +3,32 @@
  */
 
 export * from './interface.uts';
+
 // #ifdef APP-ANDROID
 export { 
-  initSDK, 
+  // 初始化
+  initSDK,
+  
+  // 连接监听
   addConnectionListener,
   removeConnectionListener,
   removeAllConnectionListeners,
   ConnectionListenerCallbacks,
+  
+  // 消息监听
+  addMessageListener,
+  removeAllMessageListeners,
+  MessageListenerCallbacks,
+  Message,
+  MessageType,
+  MessageTypeValues,
+  MessageBody,
+  GroupReadAck,
+  RecallMessageInfo,
+  MessageReactionChange,
+  MessagePinInfo,
+  
+  // 登录/登出
   loginSDK,
   loginSDKWithToken,
   loginSDKWithAgoraToken,
@@ -18,6 +37,28 @@ export {
   getCurrentUser,
   isLoggedInBefore,
   isConnected,
-  isLoggedIn
+  isLoggedIn,
+  
+  // 消息发送
+  sendTextMessage,
+  sendImageMessage,
+  sendImageMessageWithUri,
+  sendGifImageMessage,
+  sendVoiceMessage,
+  sendVoiceMessageWithUri,
+  sendVideoMessage,
+  sendVideoMessageWithUri,
+  sendVideoMessageWithUris,
+  sendLocationMessage,
+  sendLocationMessageSimple,
+  sendFileMessage,
+  sendFileMessageWithUri,
+  sendCmdMessage,
+  sendCustomMessage,
+  sendCombinedMessage,
+  
+  // 下载
+  downloadAttachment,
+  downloadThumbnail
 } from './app-android/index.uts';
 // #endif
