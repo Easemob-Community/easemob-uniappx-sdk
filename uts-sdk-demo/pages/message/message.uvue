@@ -108,6 +108,30 @@
 				</view>
 			</view>
 			
+			<!-- 第四段半：视频测试 -->
+			<view class="section">
+				<text class="section-title">发送视频</text>
+				<text class="video-hint">支持从相册选择或拍摄视频，自动获取视频时长</text>
+				
+				<!-- 视频按钮 -->
+				<view class="video-btn-group">
+					<view 
+						class="btn btn-video" 
+						hover-class="btn-video-hover"
+						@click="handleChooseVideo('album')"
+					>
+						<text class="btn-text">从相册选择</text>
+					</view>
+					<view 
+						class="btn btn-video" 
+						hover-class="btn-video-hover"
+						@click="handleChooseVideo('camera')"
+					>
+						<text class="btn-text">拍摄视频</text>
+					</view>
+				</view>
+			</view>
+			
 			<!-- 第五段：CMD消息测试 -->
 			<view class="section">
 				<text class="section-title">发送CMD消息</text>
@@ -174,7 +198,7 @@
 </template>
 
 <script setup lang="uts">
-	import { sendTextMessage, sendImageMessage, sendCmdMessage, sendCustomMessage } from "@/uni_modules/easemob-uts-sdk"
+	import { sendTextMessage, sendImageMessage, sendVideoMessage, sendCmdMessage, sendCustomMessage } from "@/uni_modules/easemob-uts-sdk"
 	
 	// 响应式数据
 	const targetId = ref('')
@@ -184,6 +208,7 @@
 	const sendOriginalImage = ref(false) // 是否发送原图
 	const extFieldInput = ref('{"customKey": "customValue"}') // 扩展字段输入
 	const useExtField = ref(false) // 是否启用扩展字段
+	const videoThumbPath = ref('') // 视频缩略图路径（可选）
 	
 	// 计算属性：是否可以发送
 	const canSend = computed((): boolean => {
@@ -310,6 +335,61 @@
 			},
 			fail: (err) => {
 				addLog(`选择图片失败`)
+			}
+		})
+	}
+	
+	// 选择并发送视频
+	function handleChooseVideo(sourceType: string): void {
+		if (targetId.value.length == 0) {
+			addLog('错误：请先输入目标ID')
+			return
+		}
+		
+		addLog(`正在打开${sourceType === 'camera' ? '摄像机' : '相册'}...`)
+		
+		uni.chooseVideo({
+			sourceType: [sourceType] as string[],
+			maxDuration: 60,
+			camera: 'back',
+			success: (res) => {
+				const videoPath = res.tempFilePath
+				const durationFloat = res.duration
+				// 将 Float 转换为 Int（视频时长秒数取整）
+				const duration = Math.floor(durationFloat as number) as Int
+				
+				if (videoPath != null) {
+					addLog(`已选择视频: ${videoPath}`)
+					addLog(`视频时长: ${duration}秒`)
+					
+					// 发送视频消息
+					// sendVideoMessage 参数: videoFilePath, imageThumbPath, timeLength, to, chatType, callback
+					// imageThumbPath 可以为空字符串，SDK 会自动生成缩略图
+					sendVideoMessage(videoPath, videoThumbPath.value, duration, targetId.value.trim(), chatType.value, {
+						onSuccess: (messageInfo: UTSJSONObject) => {
+							console.log('[MessagePage] 视频发送成功回调触发')
+							const msgId = messageInfo.getString('msgId') ?? 'unknown'
+							const msgType = messageInfo.getString('type') ?? 'unknown'
+							const chatTypeStr = messageInfo.getString('chatType') ?? 'unknown'
+							console.log('[MessagePage] 视频消息ID:', msgId)
+							console.log('[MessagePage] 消息类型:', msgType)
+							console.log('[MessagePage] 聊天类型:', chatTypeStr)
+							addLog('视频发送成功, ID: ' + msgId)
+							addLog('消息类型: ' + msgType + ', 聊天类型: ' + chatTypeStr)
+						},
+						onError: (code: number, message: string) => {
+							console.log(`[MessagePage] 视频发送失败回调触发: code=${code}, message=${message}`)
+							addLog(`视频发送失败: code=${code}, message=${message}`)
+						},
+						onProgress: (progress: number, status: string) => {
+							console.log(`[MessagePage] 视频发送进度回调触发: progress=${progress}`)
+							addLog(`视频上传进度: ${progress}%`)
+						}
+					} as UTSJSONObject)
+				}
+			},
+			fail: (err) => {
+				addLog(`选择视频失败`)
 			}
 		})
 	}
@@ -596,6 +676,32 @@
 	
 	.btn-image-hover {
 		background-color: #4a5a80;
+	}
+	
+	/* 视频测试样式 */
+	.video-hint {
+		font-size: 13px;
+		color: #999999;
+		margin-bottom: 15px;
+	}
+	
+	.video-btn-group {
+		flex-direction: row;
+		justify-content: space-between;
+	}
+	
+	.btn-video {
+		flex: 1;
+		background-color: #10aeff;
+		margin-right: 10px;
+	}
+	
+	.btn-video:last-child {
+		margin-right: 0;
+	}
+	
+	.btn-video-hover {
+		background-color: #0d9be6;
 	}
 	
 	.log-section {

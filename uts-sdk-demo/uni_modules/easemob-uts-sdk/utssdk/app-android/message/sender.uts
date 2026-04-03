@@ -226,11 +226,12 @@ export function sendVoiceMessageWithUriImpl(fileUri: Uri, timeLength: Int, to: s
 /**
  * 发送视频消息（使用文件路径）
  */
-export function sendVideoMessageImpl(videoFilePath: string, imageThumbPath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
+export function sendVideoMessageImpl(videoFilePath: string, imageThumbPath: string, timeLength: Int, to: string, chatType: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
 	messageCallbacks.set(callbackId, callback);
 
 	const message = EMMessage.createVideoSendMessage(videoFilePath, imageThumbPath, timeLength, to);
+	setEMMessageChatType(message, chatType);
 	setMessageCallback(message, callbackId);
 	EMClient.getInstance().chatManager().sendMessage(message);
 }
@@ -238,11 +239,12 @@ export function sendVideoMessageImpl(videoFilePath: string, imageThumbPath: stri
 /**
  * 发送视频消息（使用Uri）
  */
-export function sendVideoMessageWithUriImpl(videoUri: Uri, imageThumbPath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
+export function sendVideoMessageWithUriImpl(videoUri: Uri, imageThumbPath: string, timeLength: Int, to: string, chatType: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
 	messageCallbacks.set(callbackId, callback);
 
 	const message = EMMessage.createVideoSendMessage(videoUri, imageThumbPath, timeLength, to);
+	setEMMessageChatType(message, chatType);
 	setMessageCallback(message, callbackId);
 	EMClient.getInstance().chatManager().sendMessage(message);
 }
@@ -250,11 +252,12 @@ export function sendVideoMessageWithUriImpl(videoUri: Uri, imageThumbPath: strin
 /**
  * 发送视频消息（视频和缩略图都使用Uri）
  */
-export function sendVideoMessageWithUrisImpl(videoUri: Uri, thumbUri: Uri, timeLength: Int, to: string, callback: UTSJSONObject): void {
+export function sendVideoMessageWithUrisImpl(videoUri: Uri, thumbUri: Uri, timeLength: Int, to: string, chatType: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
 	messageCallbacks.set(callbackId, callback);
 
 	const message = EMMessage.createVideoSendMessage(videoUri, thumbUri, timeLength, to);
+	setEMMessageChatType(message, chatType);
 	setMessageCallback(message, callbackId);
 	EMClient.getInstance().chatManager().sendMessage(message);
 }

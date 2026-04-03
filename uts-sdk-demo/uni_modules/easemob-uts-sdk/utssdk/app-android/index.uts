@@ -221,22 +221,22 @@ export function sendVoiceMessageWithUri(fileUri: Uri, timeLength: Int, to: strin
 /**
  * 发送视频消息（使用文件路径）
  */
-export function sendVideoMessage(videoFilePath: string, imageThumbPath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
-  sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, callback);
+export function sendVideoMessage(videoFilePath: string, imageThumbPath: string, timeLength: Int, to: string, chatType: string, callback: UTSJSONObject): void {
+  sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, chatType, callback);
 }
 
 /**
  * 发送视频消息（使用Uri）
  */
-export function sendVideoMessageWithUri(videoUri: Uri, imageThumbPath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
-  sendVideoMessageWithUriImpl(videoUri, imageThumbPath, timeLength, to, callback);
+export function sendVideoMessageWithUri(videoUri: Uri, imageThumbPath: string, timeLength: Int, to: string, chatType: string, callback: UTSJSONObject): void {
+  sendVideoMessageWithUriImpl(videoUri, imageThumbPath, timeLength, to, chatType, callback);
 }
 
 /**
  * 发送视频消息（视频和缩略图都使用Uri）
  */
-export function sendVideoMessageWithUris(videoUri: Uri, thumbUri: Uri, timeLength: Int, to: string, callback: UTSJSONObject): void {
-  sendVideoMessageWithUrisImpl(videoUri, thumbUri, timeLength, to, callback);
+export function sendVideoMessageWithUris(videoUri: Uri, thumbUri: Uri, timeLength: Int, to: string, chatType: string, callback: UTSJSONObject): void {
+  sendVideoMessageWithUrisImpl(videoUri, thumbUri, timeLength, to, chatType, callback);
 }
 
 /**
