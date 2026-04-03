@@ -30,16 +30,25 @@
 ### UTS 插件目录结构
 
 ```
-uni_modules/easemob-im/
+uni_modules/easemob-uts-sdk/
 ├── package.json                # 插件配置信息
 ├── utssdk/
-│   ├── interface.uts           # 接口定义（核心）
-│   ├── unierror.uts            # 错误码定义
+│   ├── interface.uts           # 接口定义
 │   ├── index.uts               # 跨平台入口（条件编译）
 │   ├── app-android/
-│   │   ├── index.uts           # Android 实现
+│   │   ├── index.uts           # Android 平台入口（导出所有API）
+│   │   ├── MessageHelper.kt    # Kotlin 辅助类
 │   │   ├── config.json         # Android 依赖配置
-│   │   └── AndroidManifest.xml # Android 权限配置
+│   │   ├── AndroidManifest.xml # Android 权限配置
+│   │   ├── connection/         # 连接模块
+│   │   │   └── listener.uts    # 连接状态监听
+│   │   ├── message/            # 消息模块
+│   │   │   ├── listener.uts    # 消息监听实现
+│   │   │   └── sender.uts      # 消息发送实现
+│   │   ├── auth/               # 认证模块
+│   │   │   └── login.uts       # 登录/登出实现
+│   │   └── core/               # 核心模块
+│   │       └── init.uts        # SDK 初始化
 │   └── app-ios/
 │       ├── index.uts           # iOS 实现
 │       └── config.json         # iOS 依赖配置
@@ -50,10 +59,24 @@ uni_modules/easemob-im/
 | 文件 | 职责 | 修改频率 |
 |-----|------|---------|
 | interface.uts | 定义对外 API 接口、类型 | 低（架构变更时） |
-| unierror.uts | 定义错误码 | 低 |
-| index.uts | 跨平台入口，条件编译分发 | 低 |
-| app-android/index.uts | Android 桥接实现 | 中 |
+| index.uts | 跨平台入口，条件编译分发，导出所有API | 低 |
+| app-android/index.uts | Android 平台入口，导出所有公开API | 中 |
+| connection/listener.uts | 连接状态监听实现 | 低 |
+| message/listener.uts | 消息监听实现 | 中 |
+| message/sender.uts | 消息发送实现 | 中 |
+| auth/login.uts | 登录/登出实现 | 低 |
+| core/init.uts | SDK 初始化 | 低 |
+| MessageHelper.kt | Kotlin 辅助类（解决UTS调用限制） | 中 |
 | app-ios/index.uts | iOS 桥接实现 | 中 |
+
+### 模块划分说明
+
+| 模块 | 目录 | 功能 |
+|-----|------|------|
+| 核心模块 | core/ | SDK初始化 |
+| 连接模块 | connection/ | 连接状态监听 |
+| 消息模块 | message/ | 消息收发、监听 |
+| 认证模块 | auth/ | 登录、登出、用户状态 |
 
 ## 开发流程
 

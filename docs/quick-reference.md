@@ -152,14 +152,19 @@ interface EMConversation {
 ## 文件路径
 
 ```
-uni_modules/easemob-im/
+uni_modules/easemob-uts-sdk/
 ├── utssdk/
-│   ├── interface.uts      # API定义
-│   ├── index.uts          # 入口
+│   ├── interface.uts          # API定义
+│   ├── index.uts              # 入口（导出所有API）
 │   ├── app-android/
-│   │   └── index.uts      # Android实现
+│   │   ├── index.uts          # Android入口
+│   │   ├── MessageHelper.kt   # Kotlin辅助类
+│   │   ├── connection/        # 连接模块
+│   │   ├── message/           # 消息模块
+│   │   ├── auth/              # 认证模块
+│   │   └── core/              # 核心模块
 │   └── app-ios/
-│       └── index.uts      # iOS实现
+│       └── index.uts          # iOS实现
 ```
 
 ## 依赖版本
