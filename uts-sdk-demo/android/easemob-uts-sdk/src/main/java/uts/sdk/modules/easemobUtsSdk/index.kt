@@ -34,6 +34,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import com.hyphenate.chat.EMMessage.ChatType as EMMessageChatType
 import uts.sdk.modules.easemobUtsSdk.MessageHelper
+import org.json.JSONObject
+import org.json.JSONArray
 fun initEMClient(appkey: String): Unit {
     val options = EMOptions()
     options.setAppKey(appkey)

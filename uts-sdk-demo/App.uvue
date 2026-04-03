@@ -44,10 +44,27 @@
 					if (msg.body.type === 'txt') {
 						console.log('[EMMessage] 文本内容:', msg.body.message ?? '')
 					}
+					// 遍历打印扩展字段
+					const ext = msg.ext
+					const extJson = JSON.stringify(ext)
+					if (extJson != '{}' && extJson.length > 2) {
+						console.log('[EMMessage] 扩展字段:', extJson)
+					} else {
+						console.log('[EMMessage] 无扩展字段')
+					}
 				})
 			},
 			onCmdMessageReceived: (messages : Message[]) => {
 				console.log('[EMMessage] 收到命令消息, 数量:', messages.length)
+				messages.forEach((msg : Message) => {
+					console.log(`[EMMessage] CMD来自: ${msg.from}, action: ${msg.body.action ?? ''}`)
+					// 遍历打印扩展字段
+					const ext = msg.ext
+					const extJson = JSON.stringify(ext)
+					if (extJson != '{}' && extJson.length > 2) {
+						console.log('[EMMessage] CMD扩展字段:', extJson)
+					}
+				})
 			},
 			onMessageRead: (messages : Message[]) => {
 				console.log('[EMMessage] 消息已读, 数量:', messages.length)

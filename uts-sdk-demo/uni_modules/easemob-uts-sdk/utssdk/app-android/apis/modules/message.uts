@@ -13,7 +13,7 @@ import Uri from 'android.net.Uri';
 import { Message } from './listeners/message-listener.uts';
 
 // 导入Kotlin辅助类（用于解决synchronized方法调用问题）
-import { MessageHelper } from 'uts.sdk.modules.easemobUtsSdk';
+import { MessageHelper, setMessageExtFromJson, getMessageExtAsJson } from 'uts.sdk.modules.easemobUtsSdk';
 
 // 消息发送回调映射表
 const messageCallbacks: Map<string, UTSJSONObject> = new Map();
@@ -95,6 +95,8 @@ class MessageSendCallBack extends EMCallBack {
 					messageInfo['chatType'] = 'single';
 				}
 				messageInfo['timestamp'] = msg.getMsgTime();
+				// 获取扩展属性
+				messageInfo['ext'] = getMessageExt(msg);
 				(onSuccess as (messageInfo: UTSJSONObject) => void)(messageInfo);
 			}
 			messageCallbacks.delete(this.callbackId);
@@ -128,18 +130,51 @@ function setEMMessageChatType(message: EMMessage, chatType: string): void {
 }
 
 /**
+ * 设置消息扩展属性
+ * @param message 消息对象
+ * @param ext 扩展属性对象
+ */
+function setMessageExt(message: EMMessage, ext: UTSJSONObject | null): void {
+	if (ext == null) {
+		return;
+	}
+	// 使用 Kotlin 顶层函数设置扩展属性
+	const extJson = JSON.stringify(ext);
+	setMessageExtFromJson(message, extJson);
+}
+
+/**
+ * 获取消息扩展属性
+ * @param message 消息对象
+ * @returns 扩展属性对象
+ */
+function getMessageExt(message: EMMessage): UTSJSONObject {
+	try {
+		const extJson = getMessageExtAsJson(message);
+		if (extJson != null && extJson.length > 2) {
+			return JSON.parse(extJson) as UTSJSONObject;
+		}
+	} catch (e) {
+		console.log('[EMMessage] 获取扩展属性失败:', e);
+	}
+	return new UTSJSONObject();
+}
+
+/**
  * 发送文本消息
  * @param content 文本内容
  * @param to 接收方（用户ID、群组ID或聊天室ID）
  * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
  * @param callback 发送回调
+ * @param ext 扩展属性（可选）
  */
-export function sendTextMessageImpl(content: string, to: string, chatType: string, callback: UTSJSONObject): void {
+export function sendTextMessageImpl(content: string, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
 	const callbackId = generateCallbackId();
 	messageCallbacks.set(callbackId, callback);
 
 	const message = EMMessage.createTxtSendMessage(content, to);
 	setEMMessageChatType(message, chatType);
+	setMessageExt(message, ext);
 	setMessageCallback(message, callbackId);
 	EMClient.getInstance().chatManager().sendMessage(message);
 }
@@ -151,13 +186,15 @@ export function sendTextMessageImpl(content: string, to: string, chatType: strin
  * @param to 接收方
  * @param chatType 聊天类型
  * @param callback 发送回调
+ * @param ext 扩展属性（可选）
  */
-export function sendImageMessageImpl(filePath: string, sendOriginalImage: boolean, to: string, chatType: string, callback: UTSJSONObject): void {
+export function sendImageMessageImpl(filePath: string, sendOriginalImage: boolean, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
 	const callbackId = generateCallbackId();
 	messageCallbacks.set(callbackId, callback);
 
 	const message = EMMessage.createImageSendMessage(filePath, sendOriginalImage, to);
 	setEMMessageChatType(message, chatType);
+	setMessageExt(message, ext);
 	setMessageCallback(message, callbackId);
 	EMClient.getInstance().chatManager().sendMessage(message);
 }
@@ -346,8 +383,9 @@ export function sendFileMessageWithUriImpl(fileUri: Uri, to: string, callback: U
  * @param action 命令动作
  * @param to 接收方
  * @param callback 发送回调
+ * @param ext 扩展属性（可选）
  */
-export function sendCmdMessageImpl(action: string, to: string, callback: UTSJSONObject): void {
+export function sendCmdMessageImpl(action: string, to: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
 	const callbackId = generateCallbackId();
 	messageCallbacks.set(callbackId, callback);
 
@@ -356,6 +394,7 @@ export function sendCmdMessageImpl(action: string, to: string, callback: UTSJSON
 	message.setTo(to);
 	const body = new EMCmdMessageBody(action);
 	message.addBody(body);
+	setMessageExt(message, ext);
 	setMessageCallback(message, callbackId);
 	EMClient.getInstance().chatManager().sendMessage(message);
 }

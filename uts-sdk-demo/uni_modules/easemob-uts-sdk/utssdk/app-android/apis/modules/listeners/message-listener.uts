@@ -18,6 +18,9 @@ import EMRecallMessageInfo from 'com.hyphenate.chat.EMRecallMessageInfo';
 import EMMessageReactionChange from 'com.hyphenate.chat.EMMessageReactionChange';
 import EMMessagePinInfo from 'com.hyphenate.chat.EMMessagePinInfo';
 
+// 导入Kotlin辅助类
+import { MessageHelper, getMessageExtAsJson } from 'uts.sdk.modules.easemobUtsSdk';
+
 // 消息体类型
 export type MessageType = 'txt' | 'img' | 'video' | 'location' | 'voice' | 'file' | 'cmd' | 'custom';
 
@@ -67,6 +70,7 @@ export type Message = {
 	localTime : number;
 	serverTime : number;
 	body : MessageBody;
+	ext : UTSJSONObject;
 }
 
 // 群组已读回执数据结构
@@ -118,6 +122,21 @@ export type MessageListenerCallbacks = {
 	onReactionChanged ?: (messageReactionChangeList : MessageReactionChange[]) => void;
 	onMessageContentChanged ?: (messageModified : Message, operatorId : string, operationTime : Long) => void;
 	onMessagePinChanged ?: (messageId : string, conversationId : string, pinOperation : number, pinInfo : MessagePinInfo) => void;
+}
+
+/**
+ * 从 EMMessage 获取扩展属性
+ */
+function getMessageExtFromEMMessage(msg : EMMessage) : UTSJSONObject {
+	try {
+		const extJson = getMessageExtAsJson(msg);
+		if (extJson != null && extJson.length > 2) {
+			return JSON.parse(extJson) as UTSJSONObject;
+		}
+	} catch (e) {
+		console.log('[EMMessage] 获取扩展属性失败:', e);
+	}
+	return new UTSJSONObject();
 }
 
 /**
@@ -198,7 +217,8 @@ function convertEMMessage(msg : EMMessage) : Message {
 		isDelivered: msg.isDelivered(),
 		localTime: msg.localTime(),
 		serverTime: msg.getMsgTime(),
-		body: messageBody
+		body: messageBody,
+		ext: getMessageExtFromEMMessage(msg)
 	};
 }
 

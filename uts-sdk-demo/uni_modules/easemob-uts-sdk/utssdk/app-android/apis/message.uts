@@ -103,9 +103,10 @@ export function clearAllMessageListeners() : void {
  * @param to 接收方（用户ID、群组ID或聊天室ID）
  * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
  * @param callback 发送回调 { onSuccess, onError, onProgress }
+ * @param ext 扩展属性（可选）
  */
-export function sendTextMessageImpl(content: string, to: string, chatType: string, callback: UTSJSONObject): void {
-	sendTextMsgInternal(content, to, chatType, callback);
+export function sendTextMessageImpl(content: string, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+	sendTextMsgInternal(content, to, chatType, callback, ext);
 }
 
 /**
@@ -115,9 +116,10 @@ export function sendTextMessageImpl(content: string, to: string, chatType: strin
  * @param to 接收方
  * @param chatType 聊天类型
  * @param callback 发送回调
+ * @param ext 扩展属性（可选）
  */
-export function sendImageMessageImpl(filePath: string, sendOriginalImage: boolean, to: string, chatType: string, callback: UTSJSONObject): void {
-	sendImageMsgInternal(filePath, sendOriginalImage, to, chatType, callback);
+export function sendImageMessageImpl(filePath: string, sendOriginalImage: boolean, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+	sendImageMsgInternal(filePath, sendOriginalImage, to, chatType, callback, ext);
 }
 
 /**
@@ -199,9 +201,13 @@ export function sendFileMessageWithUriImpl(fileUri: Uri, to: string, callback: U
 
 /**
  * 发送透传（命令）消息
+ * @param action 命令动作
+ * @param to 接收方
+ * @param callback 发送回调
+ * @param ext 扩展属性（可选）
  */
-export function sendCmdMessageImpl(action: string, to: string, callback: UTSJSONObject): void {
-	sendCmdMsgInternal(action, to, callback);
+export function sendCmdMessageImpl(action: string, to: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+	sendCmdMsgInternal(action, to, callback, ext);
 }
 
 /**

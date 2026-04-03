@@ -141,9 +141,10 @@ export function logoutSDK(unbindToken: boolean, callback: UTSJSONObject = {} as 
  * @param to 接收方（用户ID、群组ID或聊天室ID）
  * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
  * @param callback 发送回调 { onSuccess, onError, onProgress }
+ * @param ext 扩展属性（可选）
  */
-export function sendTextMessage(content: string, to: string, chatType: string, callback: UTSJSONObject): void {
-  sendTextMessageImpl(content, to, chatType, callback);
+export function sendTextMessage(content: string, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+  sendTextMessageImpl(content, to, chatType, callback, ext);
 }
 
 /**
@@ -153,9 +154,10 @@ export function sendTextMessage(content: string, to: string, chatType: string, c
  * @param to 接收方
  * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
  * @param callback 发送回调
+ * @param ext 扩展属性（可选）
  */
-export function sendImageMessage(filePath: string, sendOriginalImage: boolean, to: string, chatType: string, callback: UTSJSONObject): void {
-  sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback);
+export function sendImageMessage(filePath: string, sendOriginalImage: boolean, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+  sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback, ext);
 }
 
 /**
@@ -231,9 +233,10 @@ export function sendFileMessage(filePath: string, to: string, callback: UTSJSONO
  * @param action 命令动作
  * @param to 接收方
  * @param callback 发送回调
+ * @param ext 扩展属性（可选）
  */
-export function sendCmdMessage(action: string, to: string, callback: UTSJSONObject): void {
-  sendCmdMessageImpl(action, to, callback);
+export function sendCmdMessage(action: string, to: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+  sendCmdMessageImpl(action, to, callback, ext);
 }
 
 /**

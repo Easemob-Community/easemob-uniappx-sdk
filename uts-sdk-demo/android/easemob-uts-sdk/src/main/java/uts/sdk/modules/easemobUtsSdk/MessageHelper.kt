@@ -3,6 +3,8 @@ package uts.sdk.modules.easemobUtsSdk
 import com.hyphenate.chat.EMMessage
 import com.hyphenate.EMCallBack
 import android.util.Log
+import org.json.JSONObject
+import org.json.JSONArray
 
 /**
  * 消息发送辅助类
@@ -52,4 +54,53 @@ object MessageHelper {
             }
         })
     }
+}
+
+/**
+ * 设置消息扩展属性
+ * @param message 消息对象
+ * @param extJson 扩展属性JSON字符串
+ */
+fun setMessageExtFromJson(message: EMMessage, extJson: String) {
+    if (extJson.isEmpty()) return
+    try {
+        val jsonObject = JSONObject(extJson)
+        val keys = jsonObject.keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            val value = jsonObject.get(key)
+            when (value) {
+                is String -> message.setAttribute(key, value)
+                is Int -> message.setAttribute(key, value)
+                is Long -> message.setAttribute(key, value)
+                is Float -> message.setAttribute(key, value)
+                is Double -> message.setAttribute(key, value)
+                is Boolean -> message.setAttribute(key, value)
+                is JSONObject -> message.setAttribute(key, value)
+                is JSONArray -> message.setAttribute(key, value)
+                else -> message.setAttribute(key, value.toString())
+            }
+        }
+        Log.d("MessageHelper", "设置扩展属性成功: $extJson")
+    } catch (e: Exception) {
+        Log.e("MessageHelper", "设置扩展属性失败: ${e.message}")
+    }
+}
+
+/**
+ * 获取消息扩展属性JSON字符串
+ * @param message 消息对象
+ * @return 扩展属性JSON字符串
+ */
+fun getMessageExtAsJson(message: EMMessage): String {
+    val extMap = message.ext() ?: return "{}"
+    val jsonObject = JSONObject()
+    try {
+        for ((key, value) in extMap) {
+            jsonObject.put(key, value)
+        }
+    } catch (e: Exception) {
+        Log.e("MessageHelper", "获取扩展属性失败: ${e.message}")
+    }
+    return jsonObject.toString()
 }
