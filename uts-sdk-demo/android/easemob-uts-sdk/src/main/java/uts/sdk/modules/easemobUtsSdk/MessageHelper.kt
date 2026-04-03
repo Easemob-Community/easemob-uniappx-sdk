@@ -2,6 +2,7 @@ package uts.sdk.modules.easemobUtsSdk
 
 import com.hyphenate.chat.EMMessage
 import com.hyphenate.EMCallBack
+import com.hyphenate.chat.EMCustomMessageBody
 import android.util.Log
 import org.json.JSONObject
 import org.json.JSONArray
@@ -103,4 +104,89 @@ fun getMessageExtAsJson(message: EMMessage): String {
         Log.e("MessageHelper", "获取扩展属性失败: ${e.message}")
     }
     return jsonObject.toString()
+}
+
+/**
+ * 将JSON字符串转换为Map<String, String>
+ * 用于自定义消息的params参数
+ * @param paramsJson params的JSON字符串
+ * @return Map<String, String>
+ */
+fun parseCustomParamsFromJson(paramsJson: String): Map<String, String> {
+    val result = mutableMapOf<String, String>()
+    if (paramsJson.isEmpty()) return result
+    try {
+        val jsonObject = JSONObject(paramsJson)
+        val keys = jsonObject.keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            result[key] = jsonObject.getString(key)
+        }
+    } catch (e: Exception) {
+        Log.e("MessageHelper", "解析自定义消息params失败: ${e.message}")
+    }
+    return result
+}
+
+/**
+ * 将Map<String, String>转换为JSON字符串
+ * 用于获取自定义消息的params
+ * @param params Map<String, String>
+ * @return JSON字符串
+ */
+fun convertCustomParamsToJson(params: Map<String, String>?): String {
+    if (params == null || params.isEmpty()) return "{}"
+    val jsonObject = JSONObject()
+    try {
+        for ((key, value) in params) {
+            jsonObject.put(key, value)
+        }
+    } catch (e: Exception) {
+        Log.e("MessageHelper", "转换自定义消息params失败: ${e.message}")
+    }
+    return jsonObject.toString()
+}
+
+/**
+ * 创建并设置自定义消息体
+ * @param event 自定义事件名称
+ * @param paramsJson params的JSON字符串
+ * @return EMCustomMessageBody
+ */
+fun createCustomMessageBody(event: String, paramsJson: String): EMCustomMessageBody {
+    val customBody = EMCustomMessageBody(event)
+    if (paramsJson.isNotEmpty() && paramsJson != "{}") {
+        try {
+            val jsonObject = JSONObject(paramsJson)
+            val params = mutableMapOf<String, String>()
+            val keys = jsonObject.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                params[key] = jsonObject.getString(key)
+            }
+            customBody.setParams(params)
+        } catch (e: Exception) {
+            Log.e("MessageHelper", "创建自定义消息体失败: ${e.message}")
+        }
+    }
+    return customBody
+}
+
+/**
+ * 获取自定义消息体的event
+ * @param body 自定义消息体
+ * @return event字符串
+ */
+fun getCustomMessageEvent(body: EMCustomMessageBody): String {
+    return body.event() ?: ""
+}
+
+/**
+ * 获取自定义消息体的params并转为JSON字符串
+ * @param body 自定义消息体
+ * @return params的JSON字符串
+ */
+fun getCustomMessageParamsAsJson(body: EMCustomMessageBody): String {
+    val params = body.getParams()
+    return convertCustomParamsToJson(params)
 }

@@ -122,6 +122,46 @@
 				</view>
 			</view>
 			
+			<!-- 第六段：自定义消息测试 - 淘宝订单消息 -->
+			<view class="section">
+				<text class="section-title">发送自定义消息（淘宝订单）</text>
+				<text class="custom-hint">模拟发送图文混合的淘宝订单消息，event: taobao_order</text>
+				
+				<!-- 订单预览卡片 -->
+				<view class="order-card">
+					<view class="order-header">
+						<text class="order-shop">淘宝店铺：官方旗舰店</text>
+						<text class="order-status">已发货</text>
+					</view>
+					<view class="order-content">
+						<image 
+							class="order-image" 
+							src="/static/logo.png" 
+							mode="aspectFill"
+						/>
+						<view class="order-info">
+							<text class="order-title">高端智能手表 运动版</text>
+							<text class="order-spec">颜色：星空黑 / 规格：标准版</text>
+							<text class="order-price">¥299.00</text>
+						</view>
+						<text class="order-count">x1</text>
+					</view>
+					<view class="order-footer">
+						<text class="order-total">共1件商品 合计: </text>
+						<text class="order-total-price">¥299.00</text>
+					</view>
+				</view>
+				
+				<view 
+					class="btn btn-custom" 
+					:class="{ 'btn-disabled': targetId.length === 0 }"
+					hover-class="btn-custom-hover"
+					@click="handleSendTaobaoOrder"
+				>
+					<text class="btn-text">发送淘宝订单消息</text>
+				</view>
+			</view>
+			
 			<!-- 日志区域 -->
 			<view class="section log-section">
 				<text class="section-title">发送日志</text>
@@ -134,7 +174,7 @@
 </template>
 
 <script setup lang="uts">
-	import { sendTextMessage, sendImageMessage, sendCmdMessage } from "@/uni_modules/easemob-uts-sdk"
+	import { sendTextMessage, sendImageMessage, sendCmdMessage, sendCustomMessage } from "@/uni_modules/easemob-uts-sdk"
 	
 	// 响应式数据
 	const targetId = ref('')
@@ -308,6 +348,59 @@
 			},
 			onProgress: (progress: number, status: string) => {
 				console.log(`[MessagePage] CMD消息发送进度回调触发: progress=${progress}, status=${status}`)
+				addLog(`发送进度: ${progress}%, status=${status}`)
+			}
+		} as UTSJSONObject)
+	}
+	
+	// 发送淘宝订单自定义消息
+	function handleSendTaobaoOrder(): void {
+		if (targetId.value.length === 0) {
+			addLog('错误：请先输入目标ID')
+			return
+		}
+		
+		const to = targetId.value.trim()
+		const event = 'taobao_order'
+		
+		// 构造淘宝订单消息参数
+		const orderParams: UTSJSONObject = {
+			orderId: 'TB' + Date.now().toString(),
+			shopName: '官方旗舰店',
+			productName: '高端智能手表 运动版',
+			productImage: 'https://example.com/watch.jpg',
+			spec: '颜色：星空黑 / 规格：标准版',
+			price: '299.00',
+			count: '1',
+			status: '已发货',
+			totalPrice: '299.00'
+		}
+		
+		addLog(`发送自定义消息到 ${chatType.value === 'single' ? '用户' : '群组'}: ${to}`)
+		addLog(`Event: ${event}`)
+		addLog(`订单ID: ${orderParams['orderId']}`)
+		
+		sendCustomMessage(event, orderParams, to, chatType.value, {
+			onSuccess: (messageInfo: UTSJSONObject) => {
+				console.log('[MessagePage] 自定义消息发送成功回调触发')
+				if (messageInfo != null) {
+					const msgId = messageInfo.getString('msgId') ?? 'unknown'
+					const msgType = messageInfo.getString('type') ?? 'unknown'
+					console.log('[MessagePage] 自定义消息ID:', msgId)
+					console.log('[MessagePage] 消息类型:', msgType)
+					addLog('自定义消息发送成功, ID: ' + msgId)
+					addLog('消息类型: ' + msgType + ', event: ' + event)
+				} else {
+					console.log('[MessagePage] messageInfo为null或undefined')
+					addLog('自定义消息发送成功(无详情)')
+				}
+			},
+			onError: (code: number, message: string) => {
+				console.log(`[MessagePage] 自定义消息发送失败回调触发: code=${code}, message=${message}`)
+				addLog(`自定义消息发送失败: code=${code}, message=${message}`)
+			},
+			onProgress: (progress: number, status: string) => {
+				console.log(`[MessagePage] 自定义消息发送进度回调触发: progress=${progress}, status=${status}`)
 				addLog(`发送进度: ${progress}%, status=${status}`)
 			}
 		} as UTSJSONObject)
@@ -546,5 +639,115 @@
 	
 	.btn-cmd-hover {
 		background-color: #e68600;
+	}
+	
+	/* 自定义消息样式 */
+	.custom-hint {
+		font-size: 13px;
+		color: #999999;
+		margin-bottom: 15px;
+	}
+	
+	.btn-custom {
+		background-color: #ff4d4f;
+	}
+	
+	.btn-custom-hover {
+		background-color: #ff7875;
+	}
+	
+	/* 订单卡片样式 */
+	.order-card {
+		background-color: #f8f8f8;
+		border-radius: 8px;
+		margin-bottom: 15px;
+		overflow: hidden;
+	}
+	
+	.order-header {
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		padding: 10px 12px;
+		border-bottom-width: 1px;
+		border-bottom-color: #eeeeee;
+		border-bottom-style: solid;
+	}
+	
+	.order-shop {
+		font-size: 13px;
+		color: #333333;
+		font-weight: 500;
+	}
+	
+	.order-status {
+		font-size: 12px;
+		color: #ff6b00;
+	}
+	
+	.order-content {
+		flex-direction: row;
+		padding: 12px;
+	}
+	
+	.order-image {
+		width: 70px;
+		height: 70px;
+		border-radius: 4px;
+		margin-right: 10px;
+		background-color: #eeeeee;
+	}
+	
+	.order-info {
+		flex: 1;
+		justify-content: space-between;
+	}
+	
+	.order-title {
+		font-size: 14px;
+		color: #333333;
+		font-weight: 500;
+		lines: 2;
+		text-overflow: ellipsis;
+	}
+	
+	.order-spec {
+		font-size: 12px;
+		color: #999999;
+		margin-top: 4px;
+	}
+	
+	.order-price {
+		font-size: 14px;
+		color: #ff4d4f;
+		font-weight: bold;
+		margin-top: 4px;
+	}
+	
+	.order-count {
+		font-size: 12px;
+		color: #999999;
+		margin-left: 10px;
+	}
+	
+	.order-footer {
+		flex-direction: row;
+		justify-content: flex-end;
+		align-items: center;
+		padding: 10px 12px;
+		border-top-width: 1px;
+		border-top-color: #eeeeee;
+		border-top-style: solid;
+	}
+	
+	.order-total {
+		font-size: 12px;
+		color: #666666;
+	}
+	
+	.order-total-price {
+		font-size: 14px;
+		color: #ff4d4f;
+		font-weight: bold;
 	}
 </style>

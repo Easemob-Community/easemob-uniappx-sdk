@@ -13,13 +13,14 @@ import EMVideoMessageBody from 'com.hyphenate.chat.EMVideoMessageBody';
 import EMLocationMessageBody from 'com.hyphenate.chat.EMLocationMessageBody';
 import EMFileMessageBody from 'com.hyphenate.chat.EMFileMessageBody';
 import EMCmdMessageBody from 'com.hyphenate.chat.EMCmdMessageBody';
+import EMCustomMessageBody from 'com.hyphenate.chat.EMCustomMessageBody';
 import EMGroupReadAck from 'com.hyphenate.chat.EMGroupReadAck';
 import EMRecallMessageInfo from 'com.hyphenate.chat.EMRecallMessageInfo';
 import EMMessageReactionChange from 'com.hyphenate.chat.EMMessageReactionChange';
 import EMMessagePinInfo from 'com.hyphenate.chat.EMMessagePinInfo';
 
 // 导入Kotlin辅助类
-import { MessageHelper, getMessageExtAsJson } from 'uts.sdk.modules.easemobUtsSdk';
+import { MessageHelper, getMessageExtAsJson, getCustomMessageEvent, getCustomMessageParamsAsJson } from 'uts.sdk.modules.easemobUtsSdk';
 
 // 消息体类型
 export type MessageType = 'txt' | 'img' | 'video' | 'location' | 'voice' | 'file' | 'cmd' | 'custom';
@@ -53,6 +54,9 @@ export type MessageBody = {
 	longitude : number | null;
 	fileName : string | null;
 	action : string | null;
+	// 自定义消息字段
+	customEvent : string | null;
+	customParams : UTSJSONObject | null;
 }
 
 // 消息数据结构
@@ -159,7 +163,9 @@ function convertEMMessage(msg : EMMessage) : Message {
 		latitude: null,
 		longitude: null,
 		fileName: null,
-		action: null
+		action: null,
+		customEvent: null,
+		customParams: null
 	};
 
 	if (body instanceof EMTextMessageBody) {
@@ -202,6 +208,14 @@ function convertEMMessage(msg : EMMessage) : Message {
 	} else if (body instanceof EMCmdMessageBody) {
 		messageBody.type = 'cmd';
 		messageBody.action = body.action() ?? '';
+	} else if (body instanceof EMCustomMessageBody) {
+		messageBody.type = 'custom';
+		// 使用Kotlin辅助函数获取event和params
+		messageBody.customEvent = getCustomMessageEvent(body);
+		const paramsJson = getCustomMessageParamsAsJson(body);
+		if (paramsJson.length > 2) {
+			messageBody.customParams = JSON.parse(paramsJson) as UTSJSONObject;
+		}
 	}
 
 	return {

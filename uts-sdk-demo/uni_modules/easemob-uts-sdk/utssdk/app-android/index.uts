@@ -24,6 +24,7 @@ import {
   sendFileMessageImpl,
   sendFileMessageWithUriImpl,
   sendCmdMessageImpl,
+  sendCustomMessageImpl,
   sendCombinedMessageImpl
 } from './apis/message.uts';
 import {
@@ -237,6 +238,19 @@ export function sendFileMessage(filePath: string, to: string, callback: UTSJSONO
  */
 export function sendCmdMessage(action: string, to: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
   sendCmdMessageImpl(action, to, callback, ext);
+}
+
+/**
+ * 发送自定义消息
+ * @param event 自定义事件名称
+ * @param params 自定义参数（JSON对象）
+ * @param to 接收方
+ * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
+ * @param callback 发送回调
+ * @param ext 扩展属性（可选）
+ */
+export function sendCustomMessage(event: string, params: UTSJSONObject, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+  sendCustomMessageImpl(event, params, to, chatType, callback, ext);
 }
 
 /**
