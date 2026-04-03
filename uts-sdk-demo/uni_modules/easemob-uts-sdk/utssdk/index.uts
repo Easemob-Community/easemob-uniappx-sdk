@@ -59,6 +59,11 @@ export {
   
   // 下载
   downloadAttachment,
-  downloadThumbnail
+  downloadThumbnail,
+  
+  // 文件选择器
+  openFilePicker,
+  handleFilePickerResult,
+  FilePickResultData
 } from './app-android/index.uts';
 // #endif

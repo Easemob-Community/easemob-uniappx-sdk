@@ -256,15 +256,15 @@ export function sendLocationMessageSimple(latitude: Double, longitude: Double, l
 /**
  * 发送文件消息（使用文件路径）
  */
-export function sendFileMessage(filePath: string, to: string, callback: UTSJSONObject): void {
-  sendFileMessageImpl(filePath, to, callback);
+export function sendFileMessage(filePath: string, to: string, chatType: string, callback: UTSJSONObject): void {
+  sendFileMessageImpl(filePath, to, chatType, callback);
 }
 
 /**
  * 发送文件消息（使用Uri）
  */
-export function sendFileMessageWithUri(fileUri: Uri, to: string, callback: UTSJSONObject): void {
-  sendFileMessageWithUriImpl(fileUri, to, callback);
+export function sendFileMessageWithUri(fileUri: Uri, to: string, chatType: string, callback: UTSJSONObject): void {
+  sendFileMessageWithUriImpl(fileUri, to, chatType, callback);
 }
 
 /**
@@ -301,3 +301,11 @@ export function downloadAttachment(message: Message, callback: UTSJSONObject): v
 export function downloadThumbnail(message: Message, callback: UTSJSONObject): void {
   downloadThumbnailImpl(message, callback);
 }
+
+// ==================== 文件选择器 ====================
+
+export {
+  openFilePicker,
+  handleFilePickerResult,
+  FilePickResultData
+} from './file/picker.uts';

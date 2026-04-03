@@ -132,7 +132,23 @@
 				</view>
 			</view>
 			
-			<!-- 第五段：CMD消息测试 -->
+			<!-- 第五段：文件消息测试 -->
+			<view class="section">
+				<text class="section-title">发送文件</text>
+				<text class="file-hint">支持选择任意类型文件发送，如PDF、Word、Excel等</text>
+				
+				<!-- 文件选择按钮 -->
+				<view 
+					class="btn btn-file" 
+					:class="{ 'btn-disabled': targetId.length === 0 }"
+					hover-class="btn-file-hover"
+					@click="handleChooseFile"
+				>
+					<text class="btn-text">选择文件并发送</text>
+				</view>
+			</view>
+			
+			<!-- 第六段：CMD消息测试 -->
 			<view class="section">
 				<text class="section-title">发送CMD消息</text>
 				<text class="cmd-hint">透传消息用于发送命令，action: test_command</text>
@@ -146,7 +162,7 @@
 				</view>
 			</view>
 			
-			<!-- 第六段：自定义消息测试 - 淘宝订单消息 -->
+			<!-- 第七段：自定义消息测试 - 淘宝订单消息 -->
 			<view class="section">
 				<text class="section-title">发送自定义消息（淘宝订单）</text>
 				<text class="custom-hint">模拟发送图文混合的淘宝订单消息，event: taobao_order</text>
@@ -198,7 +214,7 @@
 </template>
 
 <script setup lang="uts">
-	import { sendTextMessage, sendImageMessage, sendVideoMessage, sendCmdMessage, sendCustomMessage } from "@/uni_modules/easemob-uts-sdk"
+	import { sendTextMessage, sendImageMessage, sendVideoMessage, sendFileMessage, sendCmdMessage, sendCustomMessage, openFilePicker, FilePickResultData } from "@/uni_modules/easemob-uts-sdk"
 	
 	// 响应式数据
 	const targetId = ref('')
@@ -392,6 +408,55 @@
 				addLog(`选择视频失败`)
 			}
 		})
+	}
+	
+	// 选择并发送文件
+	function handleChooseFile(): void {
+		if (targetId.value.length == 0) {
+			addLog('错误：请先输入目标ID')
+			return
+		}
+		
+		addLog('正在打开文件选择器...')
+		
+		openFilePicker({
+			onSuccess: (result: FilePickResultData) => {
+				console.log('[MessagePage] 文件选择成功回调触发')
+				addLog(`已选择文件: ${result.fileName}`)
+				addLog(`文件大小: ${result.fileSize} 字节`)
+				addLog(`文件类型: ${result.mimeType}`)
+				
+				// 发送文件消息
+				sendFileMessage(result.filePath, targetId.value.trim(), chatType.value, {
+					onSuccess: (messageInfo: UTSJSONObject) => {
+						console.log('[MessagePage] 文件发送成功回调触发')
+						const msgId = messageInfo.getString('msgId') ?? 'unknown'
+						const msgType = messageInfo.getString('type') ?? 'unknown'
+						const chatTypeStr = messageInfo.getString('chatType') ?? 'unknown'
+						console.log('[MessagePage] 文件消息ID:', msgId)
+						console.log('[MessagePage] 消息类型:', msgType)
+						console.log('[MessagePage] 聊天类型:', chatTypeStr)
+						addLog('文件发送成功, ID: ' + msgId)
+						addLog('消息类型: ' + msgType + ', 聊天类型: ' + chatTypeStr)
+					},
+					onError: (code: number, message: string) => {
+						console.log(`[MessagePage] 文件发送失败回调触发: code=${code}, message=${message}`)
+						addLog(`文件发送失败: code=${code}, message=${message}`)
+					},
+					onProgress: (progress: number, status: string) => {
+						console.log(`[MessagePage] 文件发送进度回调触发: progress=${progress}`)
+						addLog(`文件上传进度: ${progress}%`)
+					}
+				} as UTSJSONObject)
+			},
+			onError: (code: number, message: string) => {
+				console.log(`[MessagePage] 文件选择失败: code=${code}, message=${message}`)
+				addLog(`文件选择失败: code=${code}, message=${message}`)
+			},
+			onCancel: () => {
+				addLog('用户取消文件选择')
+			}
+		} as UTSJSONObject)
 	}
 	
 	// 发送CMD消息
@@ -702,6 +767,21 @@
 	
 	.btn-video-hover {
 		background-color: #0d9be6;
+	}
+	
+	/* 文件测试样式 */
+	.file-hint {
+		font-size: 13px;
+		color: #999999;
+		margin-bottom: 15px;
+	}
+	
+	.btn-file {
+		background-color: #8e44ad;
+	}
+	
+	.btn-file-hover {
+		background-color: #7d3c98;
 	}
 	
 	.log-section {

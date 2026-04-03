@@ -289,11 +289,12 @@ export function sendLocationMessageSimpleImpl(latitude: Double, longitude: Doubl
 /**
  * 发送文件消息（使用文件路径）
  */
-export function sendFileMessageImpl(filePath: string, to: string, callback: UTSJSONObject): void {
+export function sendFileMessageImpl(filePath: string, to: string, chatType: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
 	messageCallbacks.set(callbackId, callback);
 
 	const message = EMMessage.createFileSendMessage(filePath, to);
+	setEMMessageChatType(message, chatType);
 	setMessageCallback(message, callbackId);
 	EMClient.getInstance().chatManager().sendMessage(message);
 }
@@ -301,11 +302,12 @@ export function sendFileMessageImpl(filePath: string, to: string, callback: UTSJ
 /**
  * 发送文件消息（使用Uri）
  */
-export function sendFileMessageWithUriImpl(fileUri: Uri, to: string, callback: UTSJSONObject): void {
+export function sendFileMessageWithUriImpl(fileUri: Uri, to: string, chatType: string, callback: UTSJSONObject): void {
 	const callbackId = generateCallbackId();
 	messageCallbacks.set(callbackId, callback);
 
 	const message = EMMessage.createFileSendMessage(fileUri, to);
+	setEMMessageChatType(message, chatType);
 	setMessageCallback(message, callbackId);
 	EMClient.getInstance().chatManager().sendMessage(message);
 }

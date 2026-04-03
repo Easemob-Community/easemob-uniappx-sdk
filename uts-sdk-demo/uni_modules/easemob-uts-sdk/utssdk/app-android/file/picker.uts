@@ -1,0 +1,149 @@
+/**
+ * 文件选择器工具
+ */
+
+import Intent from "android.content.Intent";
+import Uri from "android.net.Uri";
+import {
+	FilePickerHelper,
+	FilePickResult,
+	FilePickerCallback
+} from "uts.sdk.modules.easemobUtsSdk";
+
+// 文件选择请求码（与 Kotlin 层保持一致）
+const REQUEST_CODE_PICK_FILE: Int = 10001;
+
+// Activity 结果监听器引用
+let activityResultCallback: ((requestCode: Int, resultCode: Int, data: Intent | null) => void) | null = null;
+
+// 文件选择回调映射
+const filePickerCallbacks: Map<string, UTSJSONObject> = new Map();
+
+/**
+ * 生成回调ID
+ */
+function generatePickerCallbackId(): string {
+	return Date.now().toString() + Math.random().toString(36).substring(2, 9);
+}
+
+/**
+ * 文件选择结果数据类
+ */
+export class FilePickResultData {
+	filePath: string = '';
+	fileName: string = '';
+	fileSize: number = 0;
+	mimeType: string = '';
+}
+
+/**
+ * 内部文件选择回调实现
+ */
+class InnerFilePickerCallback extends FilePickerCallback {
+	private callbackId: string;
+
+	constructor(callbackId: string) {
+		super();
+		this.callbackId = callbackId;
+	}
+
+	override onSuccess(result: FilePickResult): void {
+		const callback = filePickerCallbacks.get(this.callbackId);
+		if (callback != null) {
+			const onSuccess = callback["onSuccess"];
+			if (onSuccess != null) {
+				const resultData = new FilePickResultData();
+				resultData.filePath = result.filePath;
+				resultData.fileName = result.fileName;
+				resultData.fileSize = result.fileSize as number;
+				resultData.mimeType = result.mimeType;
+				(onSuccess as (result: FilePickResultData) => void)(resultData);
+			}
+			filePickerCallbacks.delete(this.callbackId);
+		}
+	}
+
+	override onError(code: Int, message: String): void {
+		const callback = filePickerCallbacks.get(this.callbackId);
+		if (callback != null) {
+			const onError = callback["onError"];
+			if (onError != null) {
+				(onError as (code: number, message: string) => void)(code as number, message as string);
+			}
+			filePickerCallbacks.delete(this.callbackId);
+		}
+	}
+
+	override onCancel(): void {
+		const callback = filePickerCallbacks.get(this.callbackId);
+		if (callback != null) {
+			const onCancel = callback["onCancel"];
+			if (onCancel != null) {
+				(onCancel as () => void)();
+			}
+			filePickerCallbacks.delete(this.callbackId);
+		}
+	}
+}
+
+/**
+ * 注册 Activity 结果监听器
+ */
+function registerActivityResultCallback(): void {
+	if (activityResultCallback == null) {
+		activityResultCallback = (requestCode: Int, resultCode: Int, data: Intent | null): void => {
+			if (requestCode == REQUEST_CODE_PICK_FILE) {
+				FilePickerHelper.handleActivityResult(requestCode, resultCode, data);
+			}
+		};
+		UTSAndroid.onAppActivityResult(activityResultCallback!);
+	}
+}
+
+/**
+ * 打开文件选择器
+ * @param callback 回调对象，包含 onSuccess, onError, onCancel
+ * 
+ * 成功回调返回 FilePickResultData:
+ * - filePath: 文件路径(uri字符串)
+ * - fileName: 文件名
+ * - fileSize: 文件大小(字节)
+ * - mimeType: 文件类型
+ * 
+ * @example
+ * openFilePicker({
+ *   onSuccess: (result) => {
+ *     console.log("文件名:", result.fileName);
+ *     console.log("文件大小:", result.fileSize);
+ *     // 发送文件消息
+ *     sendFileMessage(result.filePath, to, chatType, callback);
+ *   },
+ *   onError: (code, message) => {
+ *     console.log("选择失败:", code, message);
+ *   },
+ *   onCancel: () => {
+ *     console.log("用户取消选择");
+ *   }
+ * });
+ */
+export function openFilePicker(callback: UTSJSONObject): void {
+	const callbackId = generatePickerCallbackId();
+	filePickerCallbacks.set(callbackId, callback);
+
+	// 确保 Activity 结果监听器已注册
+	registerActivityResultCallback();
+
+	const innerCallback = new InnerFilePickerCallback(callbackId);
+	FilePickerHelper.openFilePicker(innerCallback);
+}
+
+/**
+ * 处理 Activity 结果（保留手动调用接口）
+ * @param requestCode 请求码
+ * @param resultCode 结果码
+ * @param data 返回的 Intent 数据
+ * @returns 是否处理了该结果
+ */
+export function handleFilePickerResult(requestCode: number, resultCode: number, data: Intent | null): boolean {
+	return FilePickerHelper.handleActivityResult(requestCode as Int, resultCode as Int, data);
+}
