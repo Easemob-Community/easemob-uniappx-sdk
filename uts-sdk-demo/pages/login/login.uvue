@@ -51,6 +51,17 @@
 				</button>
 			</view>
 			
+			<!-- 消息发送入口 -->
+			<view class="button-row">
+				<button 
+					class="btn btn-secondary" 
+					:disabled="!isLoggedIn"
+					@click="goToMessage"
+				>
+					发送消息
+				</button>
+			</view>
+			
 			<!-- 登出按钮 -->
 			<view class="button-row">
 				<button 
@@ -156,6 +167,13 @@
 				addLog(`登录进度：code=${code}, message=${message}`)
 			}
 		} as UTSJSONObject)
+	}
+
+	// 跳转到消息发送页面
+	function goToMessage(): void {
+		uni.navigateTo({
+			url: '/pages/message/message'
+		})
 	}
 
 	// 登出处理

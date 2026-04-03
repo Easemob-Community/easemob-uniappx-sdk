@@ -11,6 +11,12 @@
 			"style": {
 				"navigationBarTitleText": "登录"
 			}
+		},
+		{
+			"path": "pages/message/message",
+			"style": {
+				"navigationBarTitleText": "发送消息"
+			}
 		}
 	],
 	"globalStyle": {

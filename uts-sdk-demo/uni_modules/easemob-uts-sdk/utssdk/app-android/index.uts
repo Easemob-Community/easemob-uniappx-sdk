@@ -9,7 +9,22 @@ import {
 } from './apis/connection.uts';
 import {
   addMessageListenerImpl as addMsgListenerImpl,
-  removeMessageListenerImpl as removeMsgListenerImpl
+  removeMessageListenerImpl as removeMsgListenerImpl,
+  sendTextMessageImpl,
+  sendImageMessageImpl,
+  sendImageMessageWithUriImpl,
+  sendGifImageMessageImpl,
+  sendVoiceMessageImpl,
+  sendVoiceMessageWithUriImpl,
+  sendVideoMessageImpl,
+  sendVideoMessageWithUriImpl,
+  sendVideoMessageWithUrisImpl,
+  sendLocationMessageImpl,
+  sendLocationMessageSimpleImpl,
+  sendFileMessageImpl,
+  sendFileMessageWithUriImpl,
+  sendCmdMessageImpl,
+  sendCombinedMessageImpl
 } from './apis/message.uts';
 import {
   loginEMClient,
@@ -116,4 +131,120 @@ export function logoutSDKSync(unbindToken: boolean): number {
  */
 export function logoutSDK(unbindToken: boolean, callback: UTSJSONObject = {} as UTSJSONObject): void {
   logoutEMClient(unbindToken, callback);
+}
+
+// ==================== 消息发送API ====================
+
+/**
+ * 发送文本消息
+ * @param content 文本内容
+ * @param to 接收方（用户ID、群组ID或聊天室ID）
+ * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
+ * @param callback 发送回调 { onSuccess, onError, onProgress }
+ */
+export function sendTextMessage(content: string, to: string, chatType: string, callback: UTSJSONObject): void {
+  sendTextMessageImpl(content, to, chatType, callback);
+}
+
+/**
+ * 发送图片消息（使用文件路径）
+ * @param filePath 图片文件路径
+ * @param sendOriginalImage 是否发送原图
+ * @param to 接收方
+ * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
+ * @param callback 发送回调
+ */
+export function sendImageMessage(filePath: string, sendOriginalImage: boolean, to: string, chatType: string, callback: UTSJSONObject): void {
+  sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback);
+}
+
+/**
+ * 发送GIF图片消息
+ * @param gifFilePath GIF图片文件路径
+ * @param to 接收方
+ * @param callback 发送回调
+ */
+export function sendGifImageMessage(gifFilePath: string, to: string, callback: UTSJSONObject): void {
+  sendGifImageMessageImpl(gifFilePath, to, callback);
+}
+
+/**
+ * 发送语音消息（使用文件路径）
+ * @param filePath 语音文件路径
+ * @param timeLength 语音时长（秒）
+ * @param to 接收方
+ * @param callback 发送回调
+ */
+export function sendVoiceMessage(filePath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
+  sendVoiceMessageImpl(filePath, timeLength, to, callback);
+}
+
+/**
+ * 发送视频消息（使用文件路径）
+ * @param videoFilePath 视频文件路径
+ * @param imageThumbPath 视频缩略图路径
+ * @param timeLength 视频时长（秒）
+ * @param to 接收方
+ * @param callback 发送回调
+ */
+export function sendVideoMessage(videoFilePath: string, imageThumbPath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
+  sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, callback);
+}
+
+/**
+ * 发送位置消息
+ * @param latitude 纬度
+ * @param longitude 经度
+ * @param locationAddress 位置地址描述
+ * @param buildingName 建筑物名称
+ * @param to 接收方
+ * @param callback 发送回调
+ */
+export function sendLocationMessage(latitude: Double, longitude: Double, locationAddress: string, buildingName: string, to: string, callback: UTSJSONObject): void {
+  sendLocationMessageImpl(latitude, longitude, locationAddress, buildingName, to, callback);
+}
+
+/**
+ * 发送位置消息（不含建筑物名称）
+ * @param latitude 纬度
+ * @param longitude 经度
+ * @param locationAddress 位置地址描述
+ * @param to 接收方
+ * @param callback 发送回调
+ */
+export function sendLocationMessageSimple(latitude: Double, longitude: Double, locationAddress: string, to: string, callback: UTSJSONObject): void {
+  sendLocationMessageSimpleImpl(latitude, longitude, locationAddress, to, callback);
+}
+
+/**
+ * 发送文件消息（使用文件路径）
+ * @param filePath 文件路径
+ * @param to 接收方
+ * @param callback 发送回调
+ */
+export function sendFileMessage(filePath: string, to: string, callback: UTSJSONObject): void {
+  sendFileMessageImpl(filePath, to, callback);
+}
+
+/**
+ * 发送透传（命令）消息
+ * @param action 命令动作
+ * @param to 接收方
+ * @param callback 发送回调
+ */
+export function sendCmdMessage(action: string, to: string, callback: UTSJSONObject): void {
+  sendCmdMessageImpl(action, to, callback);
+}
+
+/**
+ * 发送合并转发消息
+ * @param title 合并消息标题
+ * @param summary 合并消息概要
+ * @param compatibleText 兼容信息
+ * @param messageIdList 消息ID列表（最多300个）
+ * @param to 接收方
+ * @param callback 发送回调
+ */
+export function sendCombinedMessage(title: string, summary: string, compatibleText: string, messageIdList: string[], to: string, callback: UTSJSONObject): void {
+  sendCombinedMessageImpl(title, summary, compatibleText, messageIdList, to, callback);
 }

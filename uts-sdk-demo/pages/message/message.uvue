@@ -1,0 +1,405 @@
+<template>
+	<scroll-view class="container" scroll-y="true">
+		<view class="content">
+			<!-- 第一段：目标ID输入 -->
+			<view class="section">
+				<text class="section-title">接收方信息</text>
+				<view class="input-row">
+					<text class="label">目标ID</text>
+					<input 
+						class="input" 
+						type="text" 
+						v-model="targetId" 
+						placeholder="请输入接收方ID"
+					/>
+				</view>
+				
+				<!-- 聊天类型选择 -->
+				<view class="chat-type-row">
+					<text class="label">会话类型</text>
+					<view class="radio-group">
+						<view class="radio-item" @click="chatType = 'single'">
+							<view :class="['radio-circle', chatType === 'single' ? 'checked' : '']">
+								<view v-if="chatType === 'single'" class="radio-inner"></view>
+							</view>
+							<text class="radio-label">单聊</text>
+						</view>
+						<view class="radio-item" @click="chatType = 'group'">
+							<view :class="['radio-circle', chatType === 'group' ? 'checked' : '']">
+								<view v-if="chatType === 'group'" class="radio-inner"></view>
+							</view>
+							<text class="radio-label">群组</text>
+						</view>
+					</view>
+				</view>
+			</view>
+			
+			<!-- 第二段：消息内容输入 -->
+			<view class="section">
+				<text class="section-title">消息内容</text>
+				<textarea 
+					class="textarea" 
+					v-model="messageContent" 
+					placeholder="请输入要发送的文本消息"
+					:maxlength="500"
+				/>
+				<text class="char-count">{{ messageContent.length }}/500</text>
+			</view>
+			
+			<!-- 第三段：操作按钮 -->
+			<view class="section">
+				<text class="section-title">发送文本消息</text>
+				<view 
+					class="btn btn-primary" 
+					:class="{ 'btn-disabled': !canSend }"
+					hover-class="btn-primary-hover"
+					@click="handleSend"
+				>
+					<text class="btn-text">发送文本消息</text>
+				</view>
+			</view>
+			
+			<!-- 第四段：图片测试 -->
+			<view class="section">
+				<text class="section-title">发送图片</text>
+				
+				<!-- 原图选项 -->
+				<view class="checkbox-row" @click="sendOriginalImage = !sendOriginalImage">
+					<view :class="['checkbox', sendOriginalImage ? 'checked' : '']">
+						<text v-if="sendOriginalImage" class="checkbox-mark">✓</text>
+					</view>
+					<text class="checkbox-label">发送原图</text>
+				</view>
+				
+				<!-- 图片按钮 -->
+				<view class="image-btn-group">
+					<view 
+						class="btn btn-image" 
+						hover-class="btn-image-hover"
+						@click="handleChooseImage('album')"
+					>
+						<text class="btn-text">从相册选择</text>
+					</view>
+					<view 
+						class="btn btn-image" 
+						hover-class="btn-image-hover"
+						@click="handleChooseImage('camera')"
+					>
+						<text class="btn-text">拍照</text>
+					</view>
+				</view>
+			</view>
+			
+			<!-- 日志区域 -->
+			<view class="section log-section">
+				<text class="section-title">发送日志</text>
+				<scroll-view class="log-scroll" scroll-y="true">
+					<text class="log-content">{{ logContent }}</text>
+				</scroll-view>
+			</view>
+		</view>
+	</scroll-view>
+</template>
+
+<script setup lang="uts">
+	import { sendTextMessage, sendImageMessage } from "@/uni_modules/easemob-uts-sdk"
+	
+	// 响应式数据
+	const targetId = ref('')
+	const chatType = ref('single') // 'single' 或 'group'
+	const messageContent = ref('')
+	const logContent = ref('')
+	const sendOriginalImage = ref(false) // 是否发送原图
+	
+	// 计算属性：是否可以发送
+	const canSend = computed((): boolean => {
+		return targetId.value.length > 0 && messageContent.value.length > 0
+	})
+	
+	// 添加日志
+	function addLog(message: string): void {
+		const time = new Date().toLocaleTimeString()
+		logContent.value = `[${time}] ${message}\n` + logContent.value
+	}
+	
+	// 发送消息
+	function handleSend(): void {
+		if (!canSend.value) {
+			addLog('错误：目标ID和消息内容不能为空')
+			return
+		}
+		
+		const to = targetId.value.trim()
+		const content = messageContent.value.trim()
+		
+		addLog(`发送消息到 ${chatType.value === 'single' ? '用户' : '群组'}: ${to}`)
+		addLog(`消息内容: ${content}`)
+		
+		sendTextMessage(content, to, chatType.value, {
+			onSuccess: () => {
+				console.log('[MessagePage] 消息发送成功回调触发')
+				addLog('消息发送成功')
+				// 清空输入
+				messageContent.value = ''
+			},
+			onError: (code: number, message: string) => {
+				console.log(`[MessagePage] 消息发送失败回调触发: code=${code}, message=${message}`)
+				addLog(`消息发送失败: code=${code}, message=${message}`)
+			},
+			onProgress: (progress: number, status: string) => {
+				console.log(`[MessagePage] 消息发送进度回调触发: progress=${progress}, status=${status}`)
+				addLog(`发送进度: ${progress}%, status=${status}`)
+			}
+		} as UTSJSONObject)
+	}
+	
+	// 选择并发送图片
+	function handleChooseImage(sourceType: string): void {
+		if (targetId.value.length == 0) {
+			addLog('错误：请先输入目标ID')
+			return
+		}
+		
+		addLog(`正在打开${sourceType === 'camera' ? '相机' : '相册'}...`)
+		
+		uni.chooseImage({
+			count: 1,
+			sizeType: ['original', 'compressed'],
+			sourceType: [sourceType] as string[],
+			success: (res) => {
+				const paths = res.tempFilePaths
+				if (paths != null && paths.length > 0) {
+					const imagePath = paths[0]!
+					addLog(`已选择图片: ${imagePath}`)
+					
+					// 发送图片消息
+					sendImageMessage(imagePath, sendOriginalImage.value, targetId.value.trim(), chatType.value, {
+						onSuccess: () => {
+							console.log('[MessagePage] 图片发送成功回调触发')
+							addLog('图片发送成功')
+						},
+						onError: (code: number, message: string) => {
+							console.log(`[MessagePage] 图片发送失败回调触发: code=${code}, message=${message}`)
+							addLog(`图片发送失败: code=${code}, message=${message}`)
+						},
+						onProgress: (progress: number, status: string) => {
+							console.log(`[MessagePage] 图片发送进度回调触发: progress=${progress}`)
+							addLog(`图片上传进度: ${progress}%`)
+						}
+					} as UTSJSONObject)
+				}
+			},
+			fail: (err) => {
+				addLog(`选择图片失败`)
+			}
+		})
+	}
+	
+	// 页面加载
+	onLoad(() => {
+		addLog('消息发送页面加载')
+	})
+</script>
+
+<style>
+	.container {
+		flex: 1;
+		background-color: #f5f5f5;
+	}
+	
+	.content {
+		padding: 15px;
+	}
+	
+	.section {
+		background-color: #ffffff;
+		border-radius: 10px;
+		padding: 15px;
+		margin-bottom: 15px;
+	}
+	
+	.section-title {
+		font-size: 16px;
+		font-weight: bold;
+		color: #333333;
+		margin-bottom: 15px;
+	}
+	
+	.input-row {
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 15px;
+	}
+	
+	.label {
+		width: 70px;
+		font-size: 14px;
+		color: #666666;
+	}
+	
+	.input {
+		flex: 1;
+		height: 40px;
+		border-width: 1px;
+		border-color: #dddddd;
+		border-radius: 5px;
+		padding-left: 10px;
+		padding-right: 10px;
+		font-size: 14px;
+	}
+	
+	.chat-type-row {
+		flex-direction: row;
+		align-items: center;
+	}
+	
+	.radio-group {
+		flex: 1;
+		flex-direction: row;
+	}
+	
+	.radio-item {
+		flex-direction: row;
+		align-items: center;
+		margin-right: 30px;
+	}
+	
+	.radio-circle {
+		width: 20px;
+		height: 20px;
+		border-radius: 10px;
+		border-width: 1px;
+		border-color: #dddddd;
+		justify-content: center;
+		align-items: center;
+		margin-right: 8px;
+	}
+	
+	.radio-circle.checked {
+		border-color: #07c160;
+	}
+	
+	.radio-inner {
+		width: 12px;
+		height: 12px;
+		border-radius: 6px;
+		background-color: #07c160;
+	}
+	
+	.radio-label {
+		font-size: 14px;
+		color: #333333;
+	}
+	
+	.textarea {
+		width: 100%;
+		height: 120px;
+		border-width: 1px;
+		border-color: #dddddd;
+		border-radius: 5px;
+		padding: 10px;
+		font-size: 14px;
+		text-align: left;
+	}
+	
+	.char-count {
+		font-size: 12px;
+		color: #999999;
+		text-align: right;
+		margin-top: 5px;
+	}
+	
+	.btn {
+		height: 48px;
+		border-radius: 8px;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.btn-primary {
+		background-color: #07c160;
+	}
+
+	.btn-primary-hover {
+		background-color: #06ad56;
+	}
+
+	.btn-disabled {
+		background-color: #9ed9ad;
+	}
+
+	.btn-text {
+		font-size: 16px;
+		color: #ffffff;
+		font-weight: bold;
+	}
+	
+	/* 图片测试样式 */
+	.checkbox-row {
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 15px;
+	}
+	
+	.checkbox {
+		width: 22px;
+		height: 22px;
+		border-width: 2px;
+		border-color: #dddddd;
+		border-radius: 4px;
+		justify-content: center;
+		align-items: center;
+		margin-right: 10px;
+	}
+	
+	.checkbox.checked {
+		background-color: #07c160;
+		border-color: #07c160;
+	}
+	
+	.checkbox-mark {
+		color: #ffffff;
+		font-size: 14px;
+		font-weight: bold;
+	}
+	
+	.checkbox-label {
+		font-size: 14px;
+		color: #333333;
+	}
+	
+	.image-btn-group {
+		flex-direction: row;
+		justify-content: space-between;
+	}
+	
+	.btn-image {
+		flex: 1;
+		background-color: #576b95;
+		margin-right: 10px;
+	}
+	
+	.btn-image:last-child {
+		margin-right: 0;
+	}
+	
+	.btn-image-hover {
+		background-color: #4a5a80;
+	}
+	
+	.log-section {
+		min-height: 150px;
+	}
+	
+	.log-scroll {
+		height: 150px;
+		background-color: #f9f9f9;
+		border-radius: 5px;
+		padding: 10px;
+	}
+	
+	.log-content {
+		font-size: 12px;
+		color: #666666;
+	}
+</style>

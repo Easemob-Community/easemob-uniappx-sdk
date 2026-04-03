@@ -3,6 +3,8 @@
  * 适配 UTSJSONObject 参数，内部调用 modules/listeners/message-listener.uts
  */
 
+import Uri from 'android.net.Uri';
+
 import {
 	addMessageListenerImpl as addMsgListenerInternal,
 	removeMessageListenerImpl as removeMsgListenerInternal,
@@ -17,6 +19,27 @@ import {
 	MessageReactionChange,
 	MessagePinInfo
 } from './modules/listeners/message-listener.uts';
+
+// 消息发送API
+import {
+	sendTextMessageImpl as sendTextMsgInternal,
+	sendImageMessageImpl as sendImageMsgInternal,
+	sendImageMessageWithUriImpl as sendImageMsgWithUriInternal,
+	sendGifImageMessageImpl as sendGifImageMsgInternal,
+	sendVoiceMessageImpl as sendVoiceMsgInternal,
+	sendVoiceMessageWithUriImpl as sendVoiceMsgWithUriInternal,
+	sendVideoMessageImpl as sendVideoMsgInternal,
+	sendVideoMessageWithUriImpl as sendVideoMsgWithUriInternal,
+	sendVideoMessageWithUrisImpl as sendVideoMsgWithUrisInternal,
+	sendLocationMessageImpl as sendLocationMsgInternal,
+	sendLocationMessageSimpleImpl as sendLocationMsgSimpleInternal,
+	sendFileMessageImpl as sendFileMsgInternal,
+	sendFileMessageWithUriImpl as sendFileMsgWithUriInternal,
+	sendCmdMessageImpl as sendCmdMsgInternal,
+	sendCombinedMessageImpl as sendCombinedMsgInternal,
+	downloadAttachmentImpl,
+	downloadThumbnailImpl
+} from './modules/message.uts';
 
 // 重新导出类型
 export {
@@ -70,4 +93,120 @@ export function removeMessageListenerImpl(listenerId : string) : void {
  */
 export function clearAllMessageListeners() : void {
 	removeAllMessageListeners();
+}
+
+// ==================== 消息发送API ====================
+
+/**
+ * 发送文本消息
+ * @param content 文本内容
+ * @param to 接收方（用户ID、群组ID或聊天室ID）
+ * @param chatType 聊天类型：'single'-单聊, 'group'-群聊, 'chatroom'-聊天室
+ * @param callback 发送回调 { onSuccess, onError, onProgress }
+ */
+export function sendTextMessageImpl(content: string, to: string, chatType: string, callback: UTSJSONObject): void {
+	sendTextMsgInternal(content, to, chatType, callback);
+}
+
+/**
+ * 发送图片消息（使用文件路径）
+ * @param filePath 图片文件路径
+ * @param sendOriginalImage 是否发送原图
+ * @param to 接收方
+ * @param chatType 聊天类型
+ * @param callback 发送回调
+ */
+export function sendImageMessageImpl(filePath: string, sendOriginalImage: boolean, to: string, chatType: string, callback: UTSJSONObject): void {
+	sendImageMsgInternal(filePath, sendOriginalImage, to, chatType, callback);
+}
+
+/**
+ * 发送图片消息（使用Uri）
+ */
+export function sendImageMessageWithUriImpl(imageUri: Uri, sendOriginalImage: boolean, to: string, callback: UTSJSONObject): void {
+	sendImageMsgWithUriInternal(imageUri, sendOriginalImage, to, callback);
+}
+
+/**
+ * 发送GIF图片消息
+ */
+export function sendGifImageMessageImpl(gifFilePath: string, to: string, callback: UTSJSONObject): void {
+	sendGifImageMsgInternal(gifFilePath, to, callback);
+}
+
+/**
+ * 发送语音消息（使用文件路径）
+ */
+export function sendVoiceMessageImpl(filePath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
+	sendVoiceMsgInternal(filePath, timeLength, to, callback);
+}
+
+/**
+ * 发送语音消息（使用Uri）
+ */
+export function sendVoiceMessageWithUriImpl(fileUri: Uri, timeLength: Int, to: string, callback: UTSJSONObject): void {
+	sendVoiceMsgWithUriInternal(fileUri, timeLength, to, callback);
+}
+
+/**
+ * 发送视频消息（使用文件路径）
+ */
+export function sendVideoMessageImpl(videoFilePath: string, imageThumbPath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
+	sendVideoMsgInternal(videoFilePath, imageThumbPath, timeLength, to, callback);
+}
+
+/**
+ * 发送视频消息（使用Uri，缩略图使用路径）
+ */
+export function sendVideoMessageWithUriImpl(videoUri: Uri, imageThumbPath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
+	sendVideoMsgWithUriInternal(videoUri, imageThumbPath, timeLength, to, callback);
+}
+
+/**
+ * 发送视频消息（视频和缩略图都使用Uri）
+ */
+export function sendVideoMessageWithUrisImpl(videoUri: Uri, thumbUri: Uri, timeLength: Int, to: string, callback: UTSJSONObject): void {
+	sendVideoMsgWithUrisInternal(videoUri, thumbUri, timeLength, to, callback);
+}
+
+/**
+ * 发送位置消息
+ */
+export function sendLocationMessageImpl(latitude: Double, longitude: Double, locationAddress: string, buildingName: string, to: string, callback: UTSJSONObject): void {
+	sendLocationMsgInternal(latitude, longitude, locationAddress, buildingName, to, callback);
+}
+
+/**
+ * 发送位置消息（不含建筑物名称）
+ */
+export function sendLocationMessageSimpleImpl(latitude: Double, longitude: Double, locationAddress: string, to: string, callback: UTSJSONObject): void {
+	sendLocationMsgSimpleInternal(latitude, longitude, locationAddress, to, callback);
+}
+
+/**
+ * 发送文件消息（使用文件路径）
+ */
+export function sendFileMessageImpl(filePath: string, to: string, callback: UTSJSONObject): void {
+	sendFileMsgInternal(filePath, to, callback);
+}
+
+/**
+ * 发送文件消息（使用Uri）
+ */
+export function sendFileMessageWithUriImpl(fileUri: Uri, to: string, callback: UTSJSONObject): void {
+	sendFileMsgWithUriInternal(fileUri, to, callback);
+}
+
+/**
+ * 发送透传（命令）消息
+ */
+export function sendCmdMessageImpl(action: string, to: string, callback: UTSJSONObject): void {
+	sendCmdMsgInternal(action, to, callback);
+}
+
+/**
+ * 发送合并转发消息
+ */
+export function sendCombinedMessageImpl(title: string, summary: string, compatibleText: string, messageIdList: string[], to: string, callback: UTSJSONObject): void {
+	sendCombinedMsgInternal(title, summary, compatibleText, messageIdList, to, callback);
 }
