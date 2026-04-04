@@ -17,7 +17,9 @@
     "targetSdkVersion": 35
   },
   "ios": {
-    "autoCodeSign": false,
+    "appName": "uts-sdk-demo",
+    "autoCodeSign": true,
+    "bundleId": "uts-sdk-demo",
     "capabilities": {
       "entitlements": {}
     },
@@ -32,9 +34,10 @@
       "release": {}
     },
     "staticPods": [],
-    "teamId": ""
+    "teamId": "4ZF3K79D2X"
   },
   "uniSdk": {
-    "android": "/Users/neohuang/Desktop/WorkCommonUse/UNI/Android-uni-app-x-SDK@14660-5.06"
+    "android": "/Users/neohuang/Desktop/WorkCommonUse/UNI/Android-uni-app-x-SDK@14660-5.06",
+    "ios": "/Users/neohuang/Desktop/WorkCommonUse/UNI/UniAppX-iOS@5.06"
   }
 }

@@ -1,5 +1,7 @@
 <script setup lang="uts">
+	// #ifdef APP-ANDROID
 	import { initSDK, addConnectionListener, addMessageListener, Message } from "./uni_modules/easemob-uts-sdk"
+	// #endif
 	// #ifdef APP-ANDROID || APP-HARMONY
 	let firstBackTime = 0
 	// #endif

@@ -97,6 +97,7 @@
 </template>
 
 <script setup lang="uts">
+	// #ifdef APP-ANDROID
 	import { 
 		loginSDK, 
 		logoutSDK, 
@@ -106,6 +107,7 @@
 		addMessageListener,
 		Message
 	} from "@/uni_modules/easemob-uts-sdk"
+	// #endif
 
 	// 响应式数据
 	const username = ref('')

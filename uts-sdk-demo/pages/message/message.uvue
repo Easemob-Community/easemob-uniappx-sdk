@@ -214,7 +214,9 @@
 </template>
 
 <script setup lang="uts">
+	// #ifdef APP-ANDROID
 	import { sendTextMessage, sendImageMessage, sendVideoMessage, sendFileMessage, sendCmdMessage, sendCustomMessage, openFilePicker, FilePickResultData } from "@/uni_modules/easemob-uts-sdk"
+	// #endif
 	
 	// 响应式数据
 	const targetId = ref('')
