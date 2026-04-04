@@ -2,3 +2,6 @@ node_modules/
 unpackage/
 .hbuilderx/
 .DS_Store
+
+# iOS 离线打包工程（包含编译产物、证书等个人信息）
+ios/
