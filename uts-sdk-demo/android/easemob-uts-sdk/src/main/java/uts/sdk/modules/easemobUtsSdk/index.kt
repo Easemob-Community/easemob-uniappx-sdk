@@ -1,10 +1,13 @@
 @file:Suppress("UNCHECKED_CAST", "USELESS_CAST", "INAPPLICABLE_JVM_NAME", "UNUSED_ANONYMOUS_PARAMETER", "SENSELESS_COMPARISON", "NAME_SHADOWING", "UNNECESSARY_NOT_NULL_ASSERTION")
 package uts.sdk.modules.easemobUtsSdk
+import android.content.Intent
+import android.net.Uri
 import com.hyphenate.EMCallBack
 import com.hyphenate.EMConnectionListener
 import com.hyphenate.EMMessageListener
 import com.hyphenate.chat.EMClient
 import com.hyphenate.chat.EMCmdMessageBody
+import com.hyphenate.chat.EMCustomMessageBody
 import com.hyphenate.chat.EMFileMessageBody
 import com.hyphenate.chat.EMGroupReadAck
 import com.hyphenate.chat.EMImageMessageBody
@@ -33,9 +36,15 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import com.hyphenate.chat.EMMessage.ChatType as EMMessageChatType
+import uts.sdk.modules.easemobUtsSdk.FilePickerHelper
+import uts.sdk.modules.easemobUtsSdk.FilePickResult
+import uts.sdk.modules.easemobUtsSdk.FilePickerCallback
 import uts.sdk.modules.easemobUtsSdk.MessageHelper
-import org.json.JSONObject
-import org.json.JSONArray
+import uts.sdk.modules.easemobUtsSdk.getMessageExtAsJson
+import uts.sdk.modules.easemobUtsSdk.getCustomMessageEvent
+import uts.sdk.modules.easemobUtsSdk.getCustomMessageParamsAsJson
+import uts.sdk.modules.easemobUtsSdk.setMessageExtFromJson
+import uts.sdk.modules.easemobUtsSdk.createCustomMessageBody
 fun initEMClient(appkey: String): Unit {
     val options = EMOptions()
     options.setAppKey(appkey)
@@ -93,13 +102,6 @@ fun removeConnectionListenerImpl(listenerId: String): Unit {
         listenerMap.`delete`(listenerId)
     }
 }
-fun removeAllConnectionListeners(): Unit {
-    listenerMap.forEach(fun(listener, id){
-        EMClient.getInstance().removeConnectionListener(listener)
-    }
-    )
-    listenerMap.clear()
-}
 typealias MessageType = String
 val MessageTypeValues: UTSJSONObject = _uO("TXT" to "txt", "IMAGE" to "img", "VIDEO" to "video", "LOCATION" to "location", "VOICE" to "voice", "FILE" to "file", "CMD" to "cmd", "CUSTOM" to "custom")
 open class MessageBody (
@@ -119,6 +121,8 @@ open class MessageBody (
     open var longitude: Number? = null,
     open var fileName: String? = null,
     open var action: String? = null,
+    open var customEvent: String? = null,
+    open var customParams: UTSJSONObject? = null,
 ) : UTSObject()
 open class Message (
     @JsonNotNull
@@ -147,6 +151,8 @@ open class Message (
     open var serverTime: Number,
     @JsonNotNull
     open var body: MessageBody,
+    @JsonNotNull
+    open var ext: UTSJSONObject,
 ) : UTSObject()
 open class GroupReadAck (
     @JsonNotNull
@@ -206,9 +212,21 @@ open class MessageListenerCallbacks (
     open var onMessageContentChanged: ((messageModified: Message, operatorId: String, operationTime: Long) -> Unit)? = null,
     open var onMessagePinChanged: ((messageId: String, conversationId: String, pinOperation: Number, pinInfo: MessagePinInfo) -> Unit)? = null,
 ) : UTSObject()
+fun getMessageExtFromEMMessage(msg: EMMessage): UTSJSONObject {
+    try {
+        val extJson = getMessageExtAsJson(msg)
+        if (extJson != null && extJson.length > 2) {
+            return JSON.parse(extJson) as UTSJSONObject
+        }
+    }
+     catch (e: Throwable) {
+        console.log("[EMMessage] 获取扩展属性失败:", e)
+    }
+    return UTSJSONObject()
+}
 fun convertEMMessage(msg: EMMessage): Message {
     val body = msg.getBody()
-    var messageBody = MessageBody(type = "txt", message = null, remoteUrl = null, localUrl = null, thumbnailRemoteUrl = null, thumbnailLocalUrl = null, width = null, height = null, fileSize = null, length = null, address = null, latitude = null, longitude = null, fileName = null, action = null)
+    var messageBody = MessageBody(type = "txt", message = null, remoteUrl = null, localUrl = null, thumbnailRemoteUrl = null, thumbnailLocalUrl = null, width = null, height = null, fileSize = null, length = null, address = null, latitude = null, longitude = null, fileName = null, action = null, customEvent = null, customParams = null)
     if (body is EMTextMessageBody) {
         messageBody.type = "txt"
         messageBody.message = body.getMessage()
@@ -249,8 +267,15 @@ fun convertEMMessage(msg: EMMessage): Message {
     } else if (body is EMCmdMessageBody) {
         messageBody.type = "cmd"
         messageBody.action = body.action() ?: ""
+    } else if (body is EMCustomMessageBody) {
+        messageBody.type = "custom"
+        messageBody.customEvent = getCustomMessageEvent(body)
+        val paramsJson = getCustomMessageParamsAsJson(body)
+        if (paramsJson.length > 2) {
+            messageBody.customParams = JSON.parse(paramsJson) as UTSJSONObject
+        }
     }
-    return Message(msgId = msg.getMsgId() ?: "", from = msg.getFrom() ?: "", to = msg.getTo() ?: "", conversationId = msg.conversationId() ?: "", chatType = msg.getChatType().ordinal, direction = msg.direct().ordinal, status = msg.status().ordinal, isRead = !msg.isUnread(), isAcked = msg.isAcked(), isDelivered = msg.isDelivered(), localTime = msg.localTime(), serverTime = msg.getMsgTime(), body = messageBody)
+    return Message(msgId = msg.getMsgId() ?: "", from = msg.getFrom() ?: "", to = msg.getTo() ?: "", conversationId = msg.conversationId() ?: "", chatType = msg.getChatType().ordinal, direction = msg.direct().ordinal, status = msg.status().ordinal, isRead = !msg.isUnread(), isAcked = msg.isAcked(), isDelivered = msg.isDelivered(), localTime = msg.localTime(), serverTime = msg.getMsgTime(), body = messageBody, ext = getMessageExtFromEMMessage(msg))
 }
 fun convertGroupReadAck(ack: EMGroupReadAck): GroupReadAck {
     return GroupReadAck(msgId = ack.getMsgId() ?: "", ackId = ack.getAckId() ?: "", from = ack.getFrom() ?: "", content = ack.getContent() ?: "", count = ack.getCount(), timestamp = ack.getTimestamp())
@@ -430,21 +455,16 @@ fun removeMessageListenerImpl(listenerId: String): Unit {
         listenerMap__1.`delete`(listenerId)
     }
 }
-fun removeAllMessageListeners(): Unit {
-    listenerMap__1.forEach(fun(listener, id){
-        EMClient.getInstance().chatManager().removeMessageListener(listener)
-    }
-    )
-    listenerMap__1.clear()
-}
 val messageCallbacks: Map<String, UTSJSONObject> = Map()
 fun generateCallbackId(): String {
     return Date.now().toString(10) + Math.random().toString(36).substring(2, 11)
 }
 open class MessageSendCallBack : EMCallBack {
     private var callbackId: String
-    constructor(callbackId: String) : super() {
+    private var message: EMMessage? = null
+    constructor(callbackId: String, message: EMMessage? = null) : super() {
         this.callbackId = callbackId
+        this.message = message
     }
     override fun onError(code: Int, message: String): Unit {
         val callback = messageCallbacks.get(this.callbackId)
@@ -470,16 +490,38 @@ open class MessageSendCallBack : EMCallBack {
         val callback = messageCallbacks.get(this.callbackId)
         if (callback != null) {
             val onSuccess = callback["onSuccess"]
-            if (onSuccess != null) {
-                (onSuccess as () -> Unit)()
+            val msg = this.message
+            if (onSuccess != null && msg != null) {
+                val messageInfo = UTSJSONObject()
+                messageInfo["msgId"] = msg.getMsgId()
+                messageInfo["from"] = msg.getFrom()
+                messageInfo["to"] = msg.getTo()
+                messageInfo["type"] = msg.getType().name
+                val chatType = msg.getChatType()
+                if (chatType == EMMessageChatType.GroupChat) {
+                    messageInfo["chatType"] = "group"
+                } else if (chatType == EMMessageChatType.ChatRoom) {
+                    messageInfo["chatType"] = "chatroom"
+                } else {
+                    messageInfo["chatType"] = "single"
+                }
+                messageInfo["timestamp"] = msg.getMsgTime()
+                messageInfo["ext"] = getMessageExt(msg)
+                (onSuccess as (messageInfo: UTSJSONObject) -> Unit)(messageInfo)
             }
             messageCallbacks.`delete`(this.callbackId)
         }
-        console.log("[EMMessage] 消息发送成功")
+        val msg = this.message
+        console.log("[EMMessage] 消息发送成功, ID:", if (msg != null) {
+            msg.getMsgId()
+        } else {
+            "unknown"
+        }
+        )
     }
 }
 fun setMessageCallback(message: EMMessage, callbackId: String): Unit {
-    val callback = MessageSendCallBack(callbackId)
+    val callback = MessageSendCallBack(callbackId, message)
     MessageHelper.setMessageStatusCallback(message, callback)
 }
 fun setEMMessageChatType(message: EMMessage, chatType: String): Unit {
@@ -491,19 +533,47 @@ fun setEMMessageChatType(message: EMMessage, chatType: String): Unit {
         message.setChatType(EMMessageChatType.Chat)
     }
 }
-fun sendTextMessageImpl(content: String, to: String, chatType: String, callback: UTSJSONObject): Unit {
+fun setMessageExt(message: EMMessage, ext: UTSJSONObject?): Unit {
+    if (ext == null) {
+        return
+    }
+    val extJson = JSON.stringify(ext)
+    setMessageExtFromJson(message, extJson)
+}
+fun getMessageExt(message: EMMessage): UTSJSONObject {
+    try {
+        val extJson = getMessageExtAsJson(message)
+        if (extJson != null && extJson.length > 2) {
+            return JSON.parse(extJson) as UTSJSONObject
+        }
+    }
+     catch (e: Throwable) {
+        console.log("[EMMessage] 获取扩展属性失败:", e)
+    }
+    return UTSJSONObject()
+}
+fun sendTextMessageImpl(content: String, to: String, chatType: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
     val callbackId = generateCallbackId()
     messageCallbacks.set(callbackId, callback)
     val message = EMMessage.createTxtSendMessage(content, to)
     setEMMessageChatType(message, chatType)
+    setMessageExt(message, ext)
     setMessageCallback(message, callbackId)
     EMClient.getInstance().chatManager().sendMessage(message)
 }
-fun sendImageMessageImpl(filePath: String, sendOriginalImage: Boolean, to: String, chatType: String, callback: UTSJSONObject): Unit {
+fun sendImageMessageImpl(filePath: String, sendOriginalImage: Boolean, to: String, chatType: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
     val callbackId = generateCallbackId()
     messageCallbacks.set(callbackId, callback)
     val message = EMMessage.createImageSendMessage(filePath, sendOriginalImage, to)
     setEMMessageChatType(message, chatType)
+    setMessageExt(message, ext)
+    setMessageCallback(message, callbackId)
+    EMClient.getInstance().chatManager().sendMessage(message)
+}
+fun sendImageMessageWithUriImpl(imageUri: Uri, sendOriginalImage: Boolean, to: String, callback: UTSJSONObject): Unit {
+    val callbackId = generateCallbackId()
+    messageCallbacks.set(callbackId, callback)
+    val message = EMMessage.createImageSendMessage(imageUri, sendOriginalImage, to)
     setMessageCallback(message, callbackId)
     EMClient.getInstance().chatManager().sendMessage(message)
 }
@@ -521,10 +591,34 @@ fun sendVoiceMessageImpl(filePath: String, timeLength: Int, to: String, callback
     setMessageCallback(message, callbackId)
     EMClient.getInstance().chatManager().sendMessage(message)
 }
-fun sendVideoMessageImpl(videoFilePath: String, imageThumbPath: String, timeLength: Int, to: String, callback: UTSJSONObject): Unit {
+fun sendVoiceMessageWithUriImpl(fileUri: Uri, timeLength: Int, to: String, callback: UTSJSONObject): Unit {
+    val callbackId = generateCallbackId()
+    messageCallbacks.set(callbackId, callback)
+    val message = EMMessage.createVoiceSendMessage(fileUri, timeLength, to)
+    setMessageCallback(message, callbackId)
+    EMClient.getInstance().chatManager().sendMessage(message)
+}
+fun sendVideoMessageImpl(videoFilePath: String, imageThumbPath: String, timeLength: Int, to: String, chatType: String, callback: UTSJSONObject): Unit {
     val callbackId = generateCallbackId()
     messageCallbacks.set(callbackId, callback)
     val message = EMMessage.createVideoSendMessage(videoFilePath, imageThumbPath, timeLength, to)
+    setEMMessageChatType(message, chatType)
+    setMessageCallback(message, callbackId)
+    EMClient.getInstance().chatManager().sendMessage(message)
+}
+fun sendVideoMessageWithUriImpl(videoUri: Uri, imageThumbPath: String, timeLength: Int, to: String, chatType: String, callback: UTSJSONObject): Unit {
+    val callbackId = generateCallbackId()
+    messageCallbacks.set(callbackId, callback)
+    val message = EMMessage.createVideoSendMessage(videoUri, imageThumbPath, timeLength, to)
+    setEMMessageChatType(message, chatType)
+    setMessageCallback(message, callbackId)
+    EMClient.getInstance().chatManager().sendMessage(message)
+}
+fun sendVideoMessageWithUrisImpl(videoUri: Uri, thumbUri: Uri, timeLength: Int, to: String, chatType: String, callback: UTSJSONObject): Unit {
+    val callbackId = generateCallbackId()
+    messageCallbacks.set(callbackId, callback)
+    val message = EMMessage.createVideoSendMessage(videoUri, thumbUri, timeLength, to)
+    setEMMessageChatType(message, chatType)
     setMessageCallback(message, callbackId)
     EMClient.getInstance().chatManager().sendMessage(message)
 }
@@ -542,20 +636,43 @@ fun sendLocationMessageSimpleImpl(latitude: Double, longitude: Double, locationA
     setMessageCallback(message, callbackId)
     EMClient.getInstance().chatManager().sendMessage(message)
 }
-fun sendFileMessageImpl(filePath: String, to: String, callback: UTSJSONObject): Unit {
+fun sendFileMessageImpl(filePath: String, to: String, chatType: String, callback: UTSJSONObject): Unit {
     val callbackId = generateCallbackId()
     messageCallbacks.set(callbackId, callback)
     val message = EMMessage.createFileSendMessage(filePath, to)
+    setEMMessageChatType(message, chatType)
     setMessageCallback(message, callbackId)
     EMClient.getInstance().chatManager().sendMessage(message)
 }
-fun sendCmdMessageImpl(action: String, to: String, callback: UTSJSONObject): Unit {
+fun sendFileMessageWithUriImpl(fileUri: Uri, to: String, chatType: String, callback: UTSJSONObject): Unit {
+    val callbackId = generateCallbackId()
+    messageCallbacks.set(callbackId, callback)
+    val message = EMMessage.createFileSendMessage(fileUri, to)
+    setEMMessageChatType(message, chatType)
+    setMessageCallback(message, callbackId)
+    EMClient.getInstance().chatManager().sendMessage(message)
+}
+fun sendCmdMessageImpl(action: String, to: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
     val callbackId = generateCallbackId()
     messageCallbacks.set(callbackId, callback)
     val message = EMMessage.createSendMessage(EMMessage.Type.CMD)
     message.setTo(to)
     val body = EMCmdMessageBody(action)
     message.addBody(body)
+    setMessageExt(message, ext)
+    setMessageCallback(message, callbackId)
+    EMClient.getInstance().chatManager().sendMessage(message)
+}
+fun sendCustomMessageImpl(event: String, params: UTSJSONObject, to: String, chatType: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
+    val callbackId = generateCallbackId()
+    messageCallbacks.set(callbackId, callback)
+    val message = EMMessage.createSendMessage(EMMessage.Type.CUSTOM)
+    message.setTo(to)
+    val paramsJson = JSON.stringify(params)
+    val customBody = createCustomMessageBody(event, paramsJson)
+    message.addBody(customBody)
+    setEMMessageChatType(message, chatType)
+    setMessageExt(message, ext)
     setMessageCallback(message, callbackId)
     EMClient.getInstance().chatManager().sendMessage(message)
 }
@@ -574,42 +691,23 @@ fun sendCombinedMessageImpl(title: String, summary: String, compatibleText: Stri
     setMessageCallback(message, callbackId)
     EMClient.getInstance().chatManager().sendMessage(message)
 }
-fun addMessageListenerImpl__1(listenerId: String, listener: UTSJSONObject): Unit {
-    val callbacks = MessageListenerCallbacks(onMessageReceived = listener["onMessageReceived"] as ((messages: UTSArray<Message>) -> Unit)?, onStreamMessageReceived = listener["onStreamMessageReceived"] as ((messages: UTSArray<Message>) -> Unit)?, onCmdMessageReceived = listener["onCmdMessageReceived"] as ((messages: UTSArray<Message>) -> Unit)?, onMessageRead = listener["onMessageRead"] as ((messages: UTSArray<Message>) -> Unit)?, onGroupMessageRead = listener["onGroupMessageRead"] as ((groupReadAcks: UTSArray<GroupReadAck>) -> Unit)?, onReadAckForGroupMessageUpdated = listener["onReadAckForGroupMessageUpdated"] as (() -> Unit)?, onMessageDelivered = listener["onMessageDelivered"] as ((messages: UTSArray<Message>) -> Unit)?, onMessageRecalled = listener["onMessageRecalled"] as ((messages: UTSArray<Message>) -> Unit)?, onMessageRecalledWithExt = listener["onMessageRecalledWithExt"] as ((recallMessageInfo: UTSArray<RecallMessageInfo>) -> Unit)?, onMessageChanged = listener["onMessageChanged"] as ((message: Message, change: Any) -> Unit)?, onReactionChanged = listener["onReactionChanged"] as ((messageReactionChangeList: UTSArray<MessageReactionChange>) -> Unit)?, onMessageContentChanged = listener["onMessageContentChanged"] as ((messageModified: Message, operatorId: String, operationTime: Long) -> Unit)?, onMessagePinChanged = listener["onMessagePinChanged"] as ((messageId: String, conversationId: String, pinOperation: Number, pinInfo: MessagePinInfo) -> Unit)?)
-    addMessageListenerImpl(listenerId, callbacks)
+fun downloadAttachmentImpl(message: Message, callback: UTSJSONObject): Unit {
+    val emMessage = EMClient.getInstance().chatManager().getMessage(message.msgId)
+    if (emMessage != null) {
+        val callbackId = generateCallbackId()
+        messageCallbacks.set(callbackId, callback)
+        setMessageCallback(emMessage, callbackId)
+        EMClient.getInstance().chatManager().downloadAttachment(emMessage)
+    }
 }
-fun removeMessageListenerImpl__1(listenerId: String): Unit {
-    removeMessageListenerImpl(listenerId)
-}
-fun sendTextMessageImpl__1(content: String, to: String, chatType: String, callback: UTSJSONObject): Unit {
-    sendTextMessageImpl(content, to, chatType, callback)
-}
-fun sendImageMessageImpl__1(filePath: String, sendOriginalImage: Boolean, to: String, chatType: String, callback: UTSJSONObject): Unit {
-    sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback)
-}
-fun sendGifImageMessageImpl__1(gifFilePath: String, to: String, callback: UTSJSONObject): Unit {
-    sendGifImageMessageImpl(gifFilePath, to, callback)
-}
-fun sendVoiceMessageImpl__1(filePath: String, timeLength: Int, to: String, callback: UTSJSONObject): Unit {
-    sendVoiceMessageImpl(filePath, timeLength, to, callback)
-}
-fun sendVideoMessageImpl__1(videoFilePath: String, imageThumbPath: String, timeLength: Int, to: String, callback: UTSJSONObject): Unit {
-    sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, callback)
-}
-fun sendLocationMessageImpl__1(latitude: Double, longitude: Double, locationAddress: String, buildingName: String, to: String, callback: UTSJSONObject): Unit {
-    sendLocationMessageImpl(latitude, longitude, locationAddress, buildingName, to, callback)
-}
-fun sendLocationMessageSimpleImpl__1(latitude: Double, longitude: Double, locationAddress: String, to: String, callback: UTSJSONObject): Unit {
-    sendLocationMessageSimpleImpl(latitude, longitude, locationAddress, to, callback)
-}
-fun sendFileMessageImpl__1(filePath: String, to: String, callback: UTSJSONObject): Unit {
-    sendFileMessageImpl(filePath, to, callback)
-}
-fun sendCmdMessageImpl__1(action: String, to: String, callback: UTSJSONObject): Unit {
-    sendCmdMessageImpl(action, to, callback)
-}
-fun sendCombinedMessageImpl__1(title: String, summary: String, compatibleText: String, messageIdList: UTSArray<String>, to: String, callback: UTSJSONObject): Unit {
-    sendCombinedMessageImpl(title, summary, compatibleText, messageIdList, to, callback)
+fun downloadThumbnailImpl(message: Message, callback: UTSJSONObject): Unit {
+    val emMessage = EMClient.getInstance().chatManager().getMessage(message.msgId)
+    if (emMessage != null) {
+        val callbackId = generateCallbackId()
+        messageCallbacks.set(callbackId, callback)
+        setMessageCallback(emMessage, callbackId)
+        EMClient.getInstance().chatManager().downloadThumbnail(emMessage)
+    }
 }
 val loginCallbacks: Map<String, UTSJSONObject> = Map()
 fun loginEMClient(userId: String, password: String, callback: UTSJSONObject): Unit {
@@ -707,6 +805,79 @@ open class LogoutCallBack : EMCallBack {
         console.log("[EMLogout] 登出成功")
     }
 }
+val REQUEST_CODE_PICK_FILE: Int = 10001
+var activityResultCallback: ((requestCode: Int, resultCode: Int, data: Intent?) -> Unit)? = null
+val filePickerCallbacks: Map<String, UTSJSONObject> = Map()
+fun generatePickerCallbackId(): String {
+    return Date.now().toString(10) + Math.random().toString(36).substring(2, 9)
+}
+open class FilePickResultData {
+    open var filePath: String = ""
+    open var fileName: String = ""
+    open var fileSize: Number = 0
+    open var mimeType: String = ""
+}
+open class InnerFilePickerCallback : FilePickerCallback {
+    private var callbackId: String
+    constructor(callbackId: String) : super() {
+        this.callbackId = callbackId
+    }
+    override fun onSuccess(result: FilePickResult): Unit {
+        val callback = filePickerCallbacks.get(this.callbackId)
+        if (callback != null) {
+            val onSuccess = callback["onSuccess"]
+            if (onSuccess != null) {
+                val resultData = FilePickResultData()
+                resultData.filePath = result.filePath
+                resultData.fileName = result.fileName
+                resultData.fileSize = result.fileSize as Number
+                resultData.mimeType = result.mimeType
+                (onSuccess as (result: FilePickResultData) -> Unit)(resultData)
+            }
+            filePickerCallbacks.`delete`(this.callbackId)
+        }
+    }
+    override fun onError(code: Int, message: String): Unit {
+        val callback = filePickerCallbacks.get(this.callbackId)
+        if (callback != null) {
+            val onError = callback["onError"]
+            if (onError != null) {
+                (onError as (code: Number, message: String) -> Unit)(code as Number, message as String)
+            }
+            filePickerCallbacks.`delete`(this.callbackId)
+        }
+    }
+    override fun onCancel(): Unit {
+        val callback = filePickerCallbacks.get(this.callbackId)
+        if (callback != null) {
+            val onCancel = callback["onCancel"]
+            if (onCancel != null) {
+                (onCancel as () -> Unit)()
+            }
+            filePickerCallbacks.`delete`(this.callbackId)
+        }
+    }
+}
+fun registerActivityResultCallback(): Unit {
+    if (activityResultCallback == null) {
+        activityResultCallback = fun(requestCode: Int, resultCode: Int, data: Intent?): Unit {
+            if (requestCode == REQUEST_CODE_PICK_FILE) {
+                FilePickerHelper.handleActivityResult(requestCode, resultCode, data)
+            }
+        }
+        UTSAndroid.onAppActivityResult(activityResultCallback!!)
+    }
+}
+fun openFilePicker(callback: UTSJSONObject): Unit {
+    val callbackId = generatePickerCallbackId()
+    filePickerCallbacks.set(callbackId, callback)
+    registerActivityResultCallback()
+    val innerCallback = InnerFilePickerCallback(callbackId)
+    FilePickerHelper.openFilePicker(innerCallback)
+}
+fun handleFilePickerResult(requestCode: Number, resultCode: Number, data: Intent?): Boolean {
+    return FilePickerHelper.handleActivityResult(requestCode as Int, resultCode as Int, data)
+}
 fun initSDK(config: UTSJSONObject): UTSPromise<Unit> {
     initEMClient(config["appKey"] as String)
     return UTSPromise.resolve()
@@ -723,9 +894,10 @@ fun removeConnectionListener(listenerId: String): Unit {
 }
 fun addMessageListener(listener: UTSJSONObject): () -> Unit {
     val id = Date.now().toString(10) + Math.random().toString(36).substring(2, 11)
-    addMessageListenerImpl__1(id, listener)
+    val callbacks = MessageListenerCallbacks(onMessageReceived = listener["onMessageReceived"] as ((messages: UTSArray<Message>) -> Unit)?, onStreamMessageReceived = listener["onStreamMessageReceived"] as ((messages: UTSArray<Message>) -> Unit)?, onCmdMessageReceived = listener["onCmdMessageReceived"] as ((messages: UTSArray<Message>) -> Unit)?, onMessageRead = listener["onMessageRead"] as ((messages: UTSArray<Message>) -> Unit)?, onGroupMessageRead = listener["onGroupMessageRead"] as ((groupReadAcks: UTSArray<GroupReadAck>) -> Unit)?, onReadAckForGroupMessageUpdated = listener["onReadAckForGroupMessageUpdated"] as (() -> Unit)?, onMessageDelivered = listener["onMessageDelivered"] as ((messages: UTSArray<Message>) -> Unit)?, onMessageRecalled = listener["onMessageRecalled"] as ((messages: UTSArray<Message>) -> Unit)?, onMessageRecalledWithExt = listener["onMessageRecalledWithExt"] as ((recallMessageInfo: UTSArray<RecallMessageInfo>) -> Unit)?, onMessageChanged = listener["onMessageChanged"] as ((message: Message, change: Any) -> Unit)?, onReactionChanged = listener["onReactionChanged"] as ((messageReactionChangeList: UTSArray<MessageReactionChange>) -> Unit)?, onMessageContentChanged = listener["onMessageContentChanged"] as ((messageModified: Message, operatorId: String, operationTime: Long) -> Unit)?, onMessagePinChanged = listener["onMessagePinChanged"] as ((messageId: String, conversationId: String, pinOperation: Number, pinInfo: MessagePinInfo) -> Unit)?)
+    addMessageListenerImpl(id, callbacks)
     return fun(){
-        return removeMessageListenerImpl__1(id)
+        return removeMessageListenerImpl(id)
     }
 }
 fun loginSDK(userId: String, password: String, callback: UTSJSONObject): Unit {
@@ -743,33 +915,57 @@ fun logoutSDKSync(unbindToken: Boolean): Number {
 fun logoutSDK(unbindToken: Boolean, callback: UTSJSONObject = _uO()): Unit {
     logoutEMClient(unbindToken, callback)
 }
-fun sendTextMessage(content: String, to: String, chatType: String, callback: UTSJSONObject): Unit {
-    sendTextMessageImpl__1(content, to, chatType, callback)
+fun sendTextMessage(content: String, to: String, chatType: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
+    sendTextMessageImpl(content, to, chatType, callback, ext)
 }
-fun sendImageMessage(filePath: String, sendOriginalImage: Boolean, to: String, chatType: String, callback: UTSJSONObject): Unit {
-    sendImageMessageImpl__1(filePath, sendOriginalImage, to, chatType, callback)
+fun sendImageMessage(filePath: String, sendOriginalImage: Boolean, to: String, chatType: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
+    sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback, ext)
+}
+fun sendImageMessageWithUri(imageUri: Uri, sendOriginalImage: Boolean, to: String, callback: UTSJSONObject): Unit {
+    sendImageMessageWithUriImpl(imageUri, sendOriginalImage, to, callback)
 }
 fun sendGifImageMessage(gifFilePath: String, to: String, callback: UTSJSONObject): Unit {
-    sendGifImageMessageImpl__1(gifFilePath, to, callback)
+    sendGifImageMessageImpl(gifFilePath, to, callback)
 }
 fun sendVoiceMessage(filePath: String, timeLength: Int, to: String, callback: UTSJSONObject): Unit {
-    sendVoiceMessageImpl__1(filePath, timeLength, to, callback)
+    sendVoiceMessageImpl(filePath, timeLength, to, callback)
 }
-fun sendVideoMessage(videoFilePath: String, imageThumbPath: String, timeLength: Int, to: String, callback: UTSJSONObject): Unit {
-    sendVideoMessageImpl__1(videoFilePath, imageThumbPath, timeLength, to, callback)
+fun sendVoiceMessageWithUri(fileUri: Uri, timeLength: Int, to: String, callback: UTSJSONObject): Unit {
+    sendVoiceMessageWithUriImpl(fileUri, timeLength, to, callback)
+}
+fun sendVideoMessage(videoFilePath: String, imageThumbPath: String, timeLength: Int, to: String, chatType: String, callback: UTSJSONObject): Unit {
+    sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, chatType, callback)
+}
+fun sendVideoMessageWithUri(videoUri: Uri, imageThumbPath: String, timeLength: Int, to: String, chatType: String, callback: UTSJSONObject): Unit {
+    sendVideoMessageWithUriImpl(videoUri, imageThumbPath, timeLength, to, chatType, callback)
+}
+fun sendVideoMessageWithUris(videoUri: Uri, thumbUri: Uri, timeLength: Int, to: String, chatType: String, callback: UTSJSONObject): Unit {
+    sendVideoMessageWithUrisImpl(videoUri, thumbUri, timeLength, to, chatType, callback)
 }
 fun sendLocationMessage(latitude: Double, longitude: Double, locationAddress: String, buildingName: String, to: String, callback: UTSJSONObject): Unit {
-    sendLocationMessageImpl__1(latitude, longitude, locationAddress, buildingName, to, callback)
+    sendLocationMessageImpl(latitude, longitude, locationAddress, buildingName, to, callback)
 }
 fun sendLocationMessageSimple(latitude: Double, longitude: Double, locationAddress: String, to: String, callback: UTSJSONObject): Unit {
-    sendLocationMessageSimpleImpl__1(latitude, longitude, locationAddress, to, callback)
+    sendLocationMessageSimpleImpl(latitude, longitude, locationAddress, to, callback)
 }
-fun sendFileMessage(filePath: String, to: String, callback: UTSJSONObject): Unit {
-    sendFileMessageImpl__1(filePath, to, callback)
+fun sendFileMessage(filePath: String, to: String, chatType: String, callback: UTSJSONObject): Unit {
+    sendFileMessageImpl(filePath, to, chatType, callback)
 }
-fun sendCmdMessage(action: String, to: String, callback: UTSJSONObject): Unit {
-    sendCmdMessageImpl__1(action, to, callback)
+fun sendFileMessageWithUri(fileUri: Uri, to: String, chatType: String, callback: UTSJSONObject): Unit {
+    sendFileMessageWithUriImpl(fileUri, to, chatType, callback)
+}
+fun sendCmdMessage(action: String, to: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
+    sendCmdMessageImpl(action, to, callback, ext)
+}
+fun sendCustomMessage(event: String, params: UTSJSONObject, to: String, chatType: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
+    sendCustomMessageImpl(event, params, to, chatType, callback, ext)
 }
 fun sendCombinedMessage(title: String, summary: String, compatibleText: String, messageIdList: UTSArray<String>, to: String, callback: UTSJSONObject): Unit {
-    sendCombinedMessageImpl__1(title, summary, compatibleText, messageIdList, to, callback)
+    sendCombinedMessageImpl(title, summary, compatibleText, messageIdList, to, callback)
+}
+fun downloadAttachment(message: Message, callback: UTSJSONObject): Unit {
+    downloadAttachmentImpl(message, callback)
+}
+fun downloadThumbnail(message: Message, callback: UTSJSONObject): Unit {
+    downloadThumbnailImpl(message, callback)
 }

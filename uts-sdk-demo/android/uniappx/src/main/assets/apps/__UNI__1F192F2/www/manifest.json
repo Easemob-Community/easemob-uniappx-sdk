@@ -14,9 +14,9 @@
       "modules": {
         "Camera": {},
         "Gallery": {},
+        "uni-media": {},
         "uni-prompt": {},
-        "uni-exit": {},
-        "uni-media": {}
+        "uni-exit": {}
       },
       "icons": {
         "hdpi": "",

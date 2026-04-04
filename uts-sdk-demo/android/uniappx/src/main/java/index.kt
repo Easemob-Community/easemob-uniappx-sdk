@@ -67,11 +67,27 @@ open class GenApp : BaseApp {
                         if (msg.body.type === "txt") {
                             console.log("[EMMessage] 文本内容:", msg.body.message ?: "")
                         }
+                        val ext = msg.ext
+                        val extJson = JSON.stringify(ext)
+                        if (extJson != "{}" && extJson.length > 2) {
+                            console.log("[EMMessage] 扩展字段:", extJson)
+                        } else {
+                            console.log("[EMMessage] 无扩展字段")
+                        }
                     }
                     )
                 }
                 , "onCmdMessageReceived" to fun(messages: UTSArray<Message>){
                     console.log("[EMMessage] 收到命令消息, 数量:", messages.length)
+                    messages.forEach(fun(msg: Message){
+                        console.log("[EMMessage] CMD来自: " + msg.from + ", action: " + (msg.body.action ?: ""))
+                        val ext = msg.ext
+                        val extJson = JSON.stringify(ext)
+                        if (extJson != "{}" && extJson.length > 2) {
+                            console.log("[EMMessage] CMD扩展字段:", extJson)
+                        }
+                    }
+                    )
                 }
                 , "onMessageRead" to fun(messages: UTSArray<Message>){
                     console.log("[EMMessage] 消息已读, 数量:", messages.length)
