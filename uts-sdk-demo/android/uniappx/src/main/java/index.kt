@@ -37,7 +37,6 @@ open class GenApp : BaseApp {
             var firstBackTime: Number = 0
             onLaunch(fun(_options){
                 console.log("App Launch")
-                initSDK(_uO("appKey" to "easemob-demo#support"))
                 val unsubscribe = addConnectionListener(_uO("onConnected" to fun(){
                     console.log("[EMConnection] 已连接到服务器")
                 }

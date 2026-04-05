@@ -67,3 +67,43 @@ export {
   FilePickResultData
 } from './app-android/index.uts';
 // #endif
+
+// #ifdef APP-IOS
+export { 
+  // 初始化
+  initSDK,
+  
+  // 连接监听
+  addConnectionListener,
+  removeConnectionListener,
+  removeAllConnectionListeners,
+  ConnectionListenerCallbacks,
+  
+  // 消息监听
+  addMessageListener,
+  removeAllMessageListeners,
+  MessageListenerCallbacks,
+  Message,
+  MessageBody,
+  
+  // 登录/登出
+  loginSDK,
+  loginSDKWithToken,
+  logoutSDK,
+  getCurrentUser,
+  isConnected,
+  isLoggedIn,
+  
+  // 消息发送（stub）
+  sendTextMessage,
+  sendImageMessage,
+  sendVideoMessage,
+  sendFileMessage,
+  sendCmdMessage,
+  sendCustomMessage,
+  
+  // 文件选择器（stub）
+  openFilePicker,
+  FilePickResultData
+} from './app-ios/index.uts';
+// #endif

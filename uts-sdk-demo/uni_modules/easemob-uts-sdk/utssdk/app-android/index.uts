@@ -139,14 +139,26 @@ export function addMessageListener(listener: UTSJSONObject): () => void {
 /**
  * 登录 SDK（使用用户名密码）
  */
-export function loginSDK(userId: string, password: string, callback: UTSJSONObject): void {
+export function loginSDK(
+  userId: string,
+  password: string,
+  onSuccess: (() => void) | null,
+  onError: ((code: number, message: string) => void) | null
+): void {
+  const callback = { onSuccess, onError } as UTSJSONObject;
   loginEMClient(userId, password, callback);
 }
 
 /**
  * 使用 Token 登录
  */
-export function loginSDKWithToken(username: string, token: string, callback: UTSJSONObject): void {
+export function loginSDKWithToken(
+  username: string,
+  token: string,
+  onSuccess: (() => void) | null,
+  onError: ((code: number, message: string) => void) | null
+): void {
+  const callback = { onSuccess, onError } as UTSJSONObject;
   loginWithTokenImpl(username, token, callback);
 }
 
@@ -167,7 +179,12 @@ export function logoutSDKSync(unbindToken: boolean): number {
 /**
  * 异步登出 SDK
  */
-export function logoutSDK(unbindToken: boolean, callback: UTSJSONObject = {} as UTSJSONObject): void {
+export function logoutSDK(
+  unbindToken: boolean,
+  onSuccess: (() => void) | null = null,
+  onError: ((code: number, message: string) => void) | null = null
+): void {
+  const callback = { onSuccess, onError } as UTSJSONObject;
   logoutEMClient(unbindToken, callback);
 }
 

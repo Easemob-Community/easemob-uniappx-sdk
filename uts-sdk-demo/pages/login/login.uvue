@@ -108,6 +108,12 @@
 		Message
 	} from "@/uni_modules/easemob-uts-sdk"
 	// #endif
+	// #ifdef APP-IOS
+	import { 
+		loginSDK, 
+		logoutSDK
+	} from "@/uni_modules/easemob-uts-sdk"
+	// #endif
 
 	// 响应式数据
 	const username = ref('')
@@ -139,9 +145,11 @@
 
 	// 更新状态
 	function updateStatus(): void {
+		// #ifdef APP-ANDROID
 		currentUser.value = getCurrentUser()
 		isConnected.value = checkIsConnected()
 		isLoggedIn.value = checkIsLoggedIn()
+		// #endif
 	}
 
 	// 登录处理
@@ -154,21 +162,23 @@
 		isLoggingIn.value = true
 		addLog(`开始登录：${username.value}`)
 		
-		loginSDK(username.value, password.value, {
-			onSuccess: () => {
-				addLog('登录成功')
-				isLoggingIn.value = false
-				updateStatus()
-			},
-			onError: (code: number, message: string) => {
-				addLog(`登录失败：code=${code}, message=${message}`)
-				isLoggingIn.value = false
-				updateStatus()
-			},
-			onProgress: (code: number, message: string) => {
-				addLog(`登录进度：code=${code}, message=${message}`)
-			}
-		} as UTSJSONObject)
+		loginSDK(
+		username.value,
+		password.value,
+		(): void => {
+			addLog('登录成功')
+			isLoggingIn.value = false
+			isLoggedIn.value = true
+			currentUser.value = username.value
+			updateStatus()
+		},
+		(code: number, message: string): void => {
+			addLog(`登录失败：code=${code}, message=${message}`)
+			isLoggingIn.value = false
+			isLoggedIn.value = false
+			updateStatus()
+		}
+	)
 	}
 
 	// 跳转到消息发送页面
@@ -182,16 +192,20 @@
 	function handleLogout(): void {
 		addLog('开始登出...')
 		
-		logoutSDK(true, {
-			onSuccess: () => {
-				addLog('登出成功')
-				updateStatus()
-			},
-			onError: (code: number, message: string) => {
-				addLog(`登出失败：code=${code}, message=${message}`)
-				updateStatus()
-			}
-		} as UTSJSONObject)
+		logoutSDK(
+		true,
+		(): void => {
+			addLog('登出成功')
+			isLoggedIn.value = false
+			isConnected.value = false
+			currentUser.value = ''
+			updateStatus()
+		},
+		(code: number, message: string): void => {
+			addLog(`登出失败：code=${code}, message=${message}`)
+			updateStatus()
+		}
+	)
 	}
 
 	// 页面加载时更新状态
@@ -199,6 +213,7 @@
 		addLog('登录页面加载')
 		updateStatus()
 		
+		// #ifdef APP-ANDROID
 		// 添加消息监听
 		unsubscribeMessage = addMessageListener({
 			onMessageReceived: (messages : Message[]) => {
@@ -216,6 +231,7 @@
 				})
 			}
 		})
+		// #endif
 	})
 
 	// 页面卸载时移除监听

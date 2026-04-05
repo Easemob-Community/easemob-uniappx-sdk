@@ -217,6 +217,9 @@
 	// #ifdef APP-ANDROID
 	import { sendTextMessage, sendImageMessage, sendVideoMessage, sendFileMessage, sendCmdMessage, sendCustomMessage, openFilePicker, FilePickResultData } from "@/uni_modules/easemob-uts-sdk"
 	// #endif
+	// #ifdef APP-IOS
+	import { sendTextMessage, sendImageMessage, sendVideoMessage, sendFileMessage, sendCmdMessage, sendCustomMessage } from "@/uni_modules/easemob-uts-sdk"
+	// #endif
 	
 	// 响应式数据
 	const targetId = ref('')
@@ -414,6 +417,7 @@
 	
 	// 选择并发送文件
 	function handleChooseFile(): void {
+		// #ifdef APP-ANDROID
 		if (targetId.value.length == 0) {
 			addLog('错误：请先输入目标ID')
 			return
@@ -459,6 +463,10 @@
 				addLog('用户取消文件选择')
 			}
 		} as UTSJSONObject)
+		// #endif
+		// #ifdef APP-IOS
+		addLog('iOS 暂不支持文件选择器')
+		// #endif
 	}
 	
 	// 发送CMD消息

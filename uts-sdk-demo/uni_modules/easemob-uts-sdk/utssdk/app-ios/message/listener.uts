@@ -1,0 +1,72 @@
+/**
+ * iOS 平台 - 消息监听
+ */
+
+// 消息体数据结构（与 Android 一致）
+export type MessageBody = {
+  type: string;
+  message: string | null;
+  remoteUrl: string | null;
+  localUrl: string | null;
+  thumbnailRemoteUrl: string | null;
+  thumbnailLocalUrl: string | null;
+  width: number | null;
+  height: number | null;
+  fileSize: number | null;
+  length: number | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  fileName: string | null;
+  action: string | null;
+  customEvent: string | null;
+  customParams: UTSJSONObject | null;
+}
+
+// 消息数据结构（与 Android 一致）
+export type Message = {
+  msgId: string;
+  from: string;
+  to: string;
+  conversationId: string;
+  chatType: number;
+  direction: number;
+  status: number;
+  isRead: boolean;
+  isAcked: boolean;
+  isDelivered: boolean;
+  localTime: number;
+  serverTime: number;
+  body: MessageBody;
+  ext: UTSJSONObject;
+}
+
+// 回调类型定义
+export type MessageListenerCallbacks = {
+  onMessageReceived?: (messages: Message[]) => void;
+  onCmdMessageReceived?: (messages: Message[]) => void;
+  onMessageRead?: (messages: Message[]) => void;
+  onMessageDelivered?: (messages: Message[]) => void;
+  onMessageRecalled?: (messages: Message[]) => void;
+}
+
+/**
+ * 添加消息监听（stub）
+ */
+export function addMessageListenerImpl(listenerId: string, callbacks: MessageListenerCallbacks): void {
+  console.log('[iOS] addMessageListener stub:', listenerId);
+}
+
+/**
+ * 移除消息监听（stub）
+ */
+export function removeMessageListenerImpl(listenerId: string): void {
+  console.log('[iOS] removeMessageListener stub:', listenerId);
+}
+
+/**
+ * 移除所有消息监听（stub）
+ */
+export function removeAllMessageListeners(): void {
+  console.log('[iOS] removeAllMessageListeners stub');
+}

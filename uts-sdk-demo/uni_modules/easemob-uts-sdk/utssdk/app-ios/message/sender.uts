@@ -1,0 +1,91 @@
+/**
+ * iOS 平台 - 消息发送
+ * TODO: 待实现
+ */
+
+// 文件选择结果类型
+export type FilePickResultData = {
+  filePath: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+}
+
+/** 发送文本消息（stub） */
+export function sendTextMessageImpl(
+  content: string, to: string, chatType: string,
+  callback: UTSJSONObject, ext: UTSJSONObject | null
+): void {
+  console.log('[iOS] sendTextMessage stub:', content, '->', to);
+  const onError = callback["onError"];
+  if (onError != null) {
+    (onError as (code: number, message: string) => void)(501, 'iOS 暂未实现');
+  }
+}
+
+/** 发送图片消息（stub） */
+export function sendImageMessageImpl(
+  filePath: string, sendOriginalImage: boolean, to: string,
+  chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null
+): void {
+  console.log('[iOS] sendImageMessage stub:', filePath, '->', to);
+  const onError = callback["onError"];
+  if (onError != null) {
+    (onError as (code: number, message: string) => void)(501, 'iOS 暂未实现');
+  }
+}
+
+/** 发送视频消息（stub） */
+export function sendVideoMessageImpl(
+  videoFilePath: string, imageThumbPath: string, timeLength: number,
+  to: string, chatType: string, callback: UTSJSONObject
+): void {
+  console.log('[iOS] sendVideoMessage stub:', videoFilePath, '->', to);
+  const onError = callback["onError"];
+  if (onError != null) {
+    (onError as (code: number, message: string) => void)(501, 'iOS 暂未实现');
+  }
+}
+
+/** 发送文件消息（stub） */
+export function sendFileMessageImpl(
+  filePath: string, to: string, chatType: string, callback: UTSJSONObject
+): void {
+  console.log('[iOS] sendFileMessage stub:', filePath, '->', to);
+  const onError = callback["onError"];
+  if (onError != null) {
+    (onError as (code: number, message: string) => void)(501, 'iOS 暂未实现');
+  }
+}
+
+/** 发送透传消息（stub） */
+export function sendCmdMessageImpl(
+  action: string, to: string, callback: UTSJSONObject, ext: UTSJSONObject | null
+): void {
+  console.log('[iOS] sendCmdMessage stub:', action, '->', to);
+  const onError = callback["onError"];
+  if (onError != null) {
+    (onError as (code: number, message: string) => void)(501, 'iOS 暂未实现');
+  }
+}
+
+/** 发送自定义消息（stub） */
+export function sendCustomMessageImpl(
+  event: string, params: UTSJSONObject, to: string,
+  chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null
+): void {
+  console.log('[iOS] sendCustomMessage stub:', event, '->', to);
+  const onError = callback["onError"];
+  if (onError != null) {
+    (onError as (code: number, message: string) => void)(501, 'iOS 暂未实现');
+  }
+}
+
+/** 打开文件选择器（stub） */
+export function openFilePicker(callback: UTSJSONObject): void {
+  console.log('[iOS] openFilePicker stub');
+  const onError = callback["onError"];
+  if (onError != null) {
+    (onError as (code: number, message: string) => void)(501, 'iOS 暂未实现');
+  }
+}

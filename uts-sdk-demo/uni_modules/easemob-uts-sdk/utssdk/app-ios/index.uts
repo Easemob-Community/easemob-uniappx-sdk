@@ -68,18 +68,32 @@ export function removeConnectionListener(listenerId: string): void {
 
 export { removeAllConnectionListeners };
 
-// ==================== 登录/登出（stub） ====================
+// ==================== 登录/登出（真实实现） ====================
 
-export function loginSDK(userId: string, password: string, callback: UTSJSONObject): void {
-  loginEMClient(userId, password, callback);
+export function loginSDK(
+  userId: string,
+  password: string,
+  onSuccess: (() => void) | null,
+  onError: ((code: number, message: string) => void) | null
+): void {
+  loginEMClient(userId, password, onSuccess, onError);
 }
 
-export function loginSDKWithToken(username: string, token: string, callback: UTSJSONObject): void {
-  loginWithTokenImpl(username, token, callback);
+export function loginSDKWithToken(
+  username: string,
+  token: string,
+  onSuccess: (() => void) | null,
+  onError: ((code: number, message: string) => void) | null
+): void {
+  loginWithTokenImpl(username, token, onSuccess, onError);
 }
 
-export function logoutSDK(unbindToken: boolean, callback: UTSJSONObject): void {
-  logoutEMClient(unbindToken, callback);
+export function logoutSDK(
+  unbindToken: boolean,
+  onSuccess: (() => void) | null = null,
+  onError: ((code: number, message: string) => void) | null = null
+): void {
+  logoutEMClient(unbindToken, onSuccess, onError);
 }
 
 export { getCurrentUser, isConnected, isLoggedIn };
