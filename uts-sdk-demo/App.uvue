@@ -2,6 +2,9 @@
 	// #ifdef APP-ANDROID
 	import { initSDK, addConnectionListener, addMessageListener, Message } from "./uni_modules/easemob-uts-sdk"
 	// #endif
+	// #ifdef APP-IOS
+	import { initSDK,addConnectionListener } from "./uni_modules/easemob-uts-sdk"
+	// #endif
 	// #ifdef APP-ANDROID || APP-HARMONY
 	let firstBackTime = 0
 	// #endif
@@ -12,6 +15,7 @@
 		// 初始化 SDK
 		initSDK({ appKey: 'easemob-demo#support' })
 		
+		// #ifdef APP-ANDROID || APP-IOS
 		// 设置完 appKey 后第一时间挂载连接监听
 		const unsubscribe = addConnectionListener({
 			onConnected: () => {
@@ -36,7 +40,9 @@
 				console.log('[EMConnection] 离线消息同步完成')
 			}
 		})
-		
+		// #endif
+
+		// #ifdef APP-ANDROID
 		// 挂载消息监听
 		const unsubscribeMessage = addMessageListener({
 			onMessageReceived: (messages : Message[]) => {
@@ -85,6 +91,7 @@
 		// 保存取消订阅函数，在需要时调用（如应用退出）
 		// unsubscribe()
 		// unsubscribeMessage()
+		// #endif
 	})
 
 	onAppShow(() => {

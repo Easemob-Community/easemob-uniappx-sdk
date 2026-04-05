@@ -1,7 +1,148 @@
 /**
- * iOS 平台实现入口（占位）
+ * iOS 平台实现入口
+ * 只有 initSDK 是真实实现，其余均为 stub
  */
 
-export const EMClient = {
-  // TODO: iOS 实现
-};
+import { initEMClient } from './core/init.uts';
+
+import {
+  loginEMClient,
+  loginWithToken as loginWithTokenImpl,
+  logoutEMClient,
+  getCurrentUser,
+  isConnected,
+  isLoggedIn
+} from './auth/login.uts';
+
+import {
+  addMessageListenerImpl as addMsgListenerImpl,
+  removeMessageListenerImpl as removeMsgListenerImpl,
+  removeAllMessageListeners,
+  MessageListenerCallbacks,
+  Message,
+  MessageBody
+} from './message/listener.uts';
+
+import {
+  addConnectionListenerImpl as addConnListenerImpl,
+  removeConnectionListenerImpl as removeConnListenerImpl,
+  removeAllConnectionListeners
+} from './connection/listener.uts';
+
+import {
+  sendTextMessageImpl,
+  sendImageMessageImpl,
+  sendVideoMessageImpl,
+  sendFileMessageImpl,
+  sendCmdMessageImpl,
+  sendCustomMessageImpl,
+  openFilePicker,
+  FilePickResultData
+} from './message/sender.uts';
+
+// 导出类型
+export { Message, MessageBody, MessageListenerCallbacks, FilePickResultData };
+
+// ==================== 初始化（真实实现） ====================
+
+export function initSDK(config: UTSJSONObject): Promise<void> {
+  initEMClient(config["appKey"] as string);
+  return new Promise<void>((resolve, _reject) => {
+    resolve();
+  });
+}
+
+// ==================== 连接监听（stub） ====================
+
+export function addConnectionListener(listener: UTSJSONObject): () => void {
+  const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+  addConnListenerImpl(id, listener);
+  return (): void => {
+    removeConnListenerImpl(id);
+  };
+}
+
+export function removeConnectionListener(listenerId: string): void {
+  removeConnListenerImpl(listenerId);
+}
+
+export { removeAllConnectionListeners };
+
+// ==================== 登录/登出（stub） ====================
+
+export function loginSDK(userId: string, password: string, callback: UTSJSONObject): void {
+  loginEMClient(userId, password, callback);
+}
+
+export function loginSDKWithToken(username: string, token: string, callback: UTSJSONObject): void {
+  loginWithTokenImpl(username, token, callback);
+}
+
+export function logoutSDK(unbindToken: boolean, callback: UTSJSONObject): void {
+  logoutEMClient(unbindToken, callback);
+}
+
+export { getCurrentUser, isConnected, isLoggedIn };
+
+// ==================== 消息监听（stub） ====================
+
+export function addMessageListener(listener: UTSJSONObject): () => void {
+  const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+  const callbacks: MessageListenerCallbacks = {
+    onMessageReceived: listener["onMessageReceived"] as ((messages: Message[]) => void) | null,
+    onCmdMessageReceived: listener["onCmdMessageReceived"] as ((messages: Message[]) => void) | null,
+    onMessageRead: listener["onMessageRead"] as ((messages: Message[]) => void) | null,
+    onMessageDelivered: listener["onMessageDelivered"] as ((messages: Message[]) => void) | null,
+    onMessageRecalled: listener["onMessageRecalled"] as ((messages: Message[]) => void) | null
+  };
+  addMsgListenerImpl(id, callbacks);
+  return (): void => {
+    removeMsgListenerImpl(id);
+  };
+}
+
+export { removeAllMessageListeners };
+
+// ==================== 消息发送（stub） ====================
+
+export function sendTextMessage(
+  content: string, to: string, chatType: string,
+  callback: UTSJSONObject, ext: UTSJSONObject | null = null
+): void {
+  sendTextMessageImpl(content, to, chatType, callback, ext);
+}
+
+export function sendImageMessage(
+  filePath: string, sendOriginalImage: boolean, to: string,
+  chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null
+): void {
+  sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback, ext);
+}
+
+export function sendVideoMessage(
+  videoFilePath: string, imageThumbPath: string, timeLength: number,
+  to: string, chatType: string, callback: UTSJSONObject
+): void {
+  sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, chatType, callback);
+}
+
+export function sendFileMessage(
+  filePath: string, to: string, chatType: string, callback: UTSJSONObject
+): void {
+  sendFileMessageImpl(filePath, to, chatType, callback);
+}
+
+export function sendCmdMessage(
+  action: string, to: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null
+): void {
+  sendCmdMessageImpl(action, to, callback, ext);
+}
+
+export function sendCustomMessage(
+  event: string, params: UTSJSONObject, to: string,
+  chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null
+): void {
+  sendCustomMessageImpl(event, params, to, chatType, callback, ext);
+}
+
+export { openFilePicker };

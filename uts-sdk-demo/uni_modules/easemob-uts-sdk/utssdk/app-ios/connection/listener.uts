@@ -1,0 +1,25 @@
+/**
+ * iOS 平台 - 连接监听
+ * TODO: 待实现
+ */
+
+/**
+ * 添加连接状态监听（stub）
+ */
+export function addConnectionListenerImpl(listenerId: string, listener: UTSJSONObject): void {
+  console.log('[iOS] addConnectionListener registered:', listenerId);
+}
+
+/**
+ * 移除连接状态监听（stub）
+ */
+export function removeConnectionListenerImpl(listenerId: string): void {
+  console.log('[iOS] removeConnectionListener:', listenerId);
+}
+
+/**
+ * 移除所有连接监听（stub）
+ */
+export function removeAllConnectionListeners(): void {
+  console.log('[iOS] removeAllConnectionListeners');
+}
