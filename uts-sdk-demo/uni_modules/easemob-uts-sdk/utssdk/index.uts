@@ -13,12 +13,10 @@ export {
   addConnectionListener,
   removeConnectionListener,
   removeAllConnectionListeners,
-  ConnectionListenerCallbacks,
   
   // 消息监听
   addMessageListener,
   removeAllMessageListeners,
-  MessageListenerCallbacks,
   Message,
   MessageType,
   MessageTypeValues,
@@ -64,7 +62,11 @@ export {
   // 文件选择器
   openFilePicker,
   handleFilePickerResult,
-  FilePickResultData
+  FilePickResultData,
+  
+  // 事件总线集成
+  enableEventBus,
+  disableEventBus
 } from './app-android/index.uts';
 // #endif
 
@@ -77,12 +79,10 @@ export {
   addConnectionListener,
   removeConnectionListener,
   removeAllConnectionListeners,
-  ConnectionListenerCallbacks,
   
   // 消息监听
   addMessageListener,
   removeAllMessageListeners,
-  MessageListenerCallbacks,
   Message,
   MessageBody,
   
@@ -104,6 +104,10 @@ export {
   
   // 文件选择器（stub）
   openFilePicker,
-  FilePickResultData
+  FilePickResultData,
+  
+  // 事件总线集成
+  enableEventBus,
+  disableEventBus
 } from './app-ios/index.uts';
 // #endif

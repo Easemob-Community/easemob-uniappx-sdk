@@ -34,6 +34,7 @@ import {
   ConnectionListenerCallbacks
 } from './connection/listener.uts';
 
+
 import {
   sendTextMessageImpl,
   sendImageMessageImpl,
@@ -46,7 +47,7 @@ import {
 } from './message/sender.uts';
 
 // 导出类型
-export { Message, MessageBody, MessageListenerCallbacks, FilePickResultData };
+export { Message, MessageBody, FilePickResultData };
 
 // ==================== 初始化（真实实现） ====================
 
@@ -254,3 +255,109 @@ export function sendCustomMessage(
 }
 
 export { openFilePicker };
+
+// ==================== 事件总线集成 ====================
+
+import {
+  EMConnectionEvent,
+  EMMessageEvent
+} from '../common/event-constants.uts';
+
+/** 事件总线是否已启用 */
+let eventBusEnabled = false;
+
+/** 连接监听器 ID */
+let connectionListenerId: string | null = null;
+
+/** 消息监听器 ID */
+let messageListenerId: string | null = null;
+
+/**
+ * 启用事件总线
+ * 开启后，SDK 所有事件将自动分发到 EMEventBus
+ */
+export function enableEventBus(): void {
+  if (eventBusEnabled) {
+    console.log('[iOS] EventBus already enabled');
+    return;
+  }
+
+  // 注册连接监听器
+  const connectionCallbacks: ConnectionListenerCallbacks = {
+    onConnected: () => {
+      uni.$emit(EMConnectionEvent.CONNECTED, null);
+    },
+    onDisconnected: (errorCode: number) => {
+      uni.$emit(EMConnectionEvent.DISCONNECTED, errorCode);
+    },
+    onLogout: (errorCode: number) => {
+      uni.$emit(EMConnectionEvent.LOGOUT, errorCode);
+    },
+    onTokenWillExpire: () => {
+      uni.$emit(EMConnectionEvent.TOKEN_WILL_EXPIRE, null);
+    },
+    onTokenExpired: () => {
+      uni.$emit(EMConnectionEvent.TOKEN_EXPIRED, null);
+    },
+    onOfflineMessageSyncStart: () => {
+      uni.$emit(EMConnectionEvent.OFFLINE_SYNC_START, null);
+    },
+    onOfflineMessageSyncFinish: () => {
+      uni.$emit(EMConnectionEvent.OFFLINE_SYNC_FINISH, null);
+    }
+  };
+
+  const connId = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+  connectionListenerId = connId;
+  addConnListenerImpl(connId, connectionCallbacks);
+
+  // 注册消息监听器（数据经 JSON 序列化传递，避免 UTS 自定义类型无法穿透 uni.$emit）
+  const messageCallbacks: MessageListenerCallbacks = {
+    onMessageReceived: (messages: Message[]) => {
+      uni.$emit(EMMessageEvent.RECEIVED, JSON.stringify(messages));
+    },
+    onCmdMessageReceived: (messages: Message[]) => {
+      uni.$emit(EMMessageEvent.CMD_RECEIVED, JSON.stringify(messages));
+    },
+    onMessageRead: (messages: Message[]) => {
+      uni.$emit(EMMessageEvent.READ, JSON.stringify(messages));
+    },
+    onMessageDelivered: (messages: Message[]) => {
+      uni.$emit(EMMessageEvent.DELIVERED, JSON.stringify(messages));
+    },
+    onMessageRecalled: (messages: Message[]) => {
+      uni.$emit(EMMessageEvent.RECALLED, JSON.stringify(messages));
+    }
+  };
+
+  const msgId = Date.now().toString() + Math.random().toString(36).substring(2, 11) + '_msg';
+  messageListenerId = msgId;
+  addMsgListenerImpl(msgId, messageCallbacks);
+
+  eventBusEnabled = true;
+  console.log('[iOS] EventBus enabled');
+}
+
+/**
+ * 禁用事件总线
+ */
+export function disableEventBus(): void {
+  if (!eventBusEnabled) {
+    return;
+  }
+
+  const connIdToRemove = connectionListenerId;
+  if (connIdToRemove != null) {
+    removeConnListenerImpl(connIdToRemove);
+    connectionListenerId = null;
+  }
+
+  const msgIdToRemove = messageListenerId;
+  if (msgIdToRemove != null) {
+    removeMsgListenerImpl(msgIdToRemove);
+    messageListenerId = null;
+  }
+
+  eventBusEnabled = false;
+  console.log('[iOS] EventBus disabled');
+}

@@ -2,13 +2,15 @@
  * 类型定义（按需扩展）
  */
 
-// 初始化配置
+// ==================== 初始化配置 ====================
+
 export interface EMInitConfig {
   appKey: string;
   autoLogin?: boolean;
 }
 
-// 连接状态监听器（符合前端习惯）
+// ==================== 连接状态监听器 ====================
+
 export interface EMConnectionListener {
   onConnected?: () => void;
   onDisconnected?: (errorCode: number) => void;
@@ -19,15 +21,23 @@ export interface EMConnectionListener {
   onOfflineMessageSyncFinish?: () => void;
 }
 
-// 登录回调
+// ==================== 登录/登出回调 ====================
+
 export interface EMLoginCallback {
   onSuccess?: () => void;
   onError?: (code: number, message: string) => void;
   onProgress?: (code: number, message: string) => void;
 }
 
-// 登出回调
 export interface EMLogoutCallback {
   onSuccess?: () => void;
   onError?: (code: number, message: string) => void;
 }
+
+// ==================== 事件总线类型定义（简化版）====================
+
+/** 事件处理器函数 */
+export type EMEventHandler<T = any> = (data: T) => void;
+
+/** 分类事件处理器 */
+export type EMCategoryEventHandler = (eventName: string, data: any) => void;
