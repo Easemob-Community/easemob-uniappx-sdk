@@ -425,40 +425,130 @@ uni.$on('em_message_received', (data: UTSJSONObject) => {
 2. **iOS UTS 方法签名限制**：自定义 type 作为参数时，运行时找不到对应方法（`s_addConnectionListenerByJs` 报错）
 3. **uni.$emit 传递 UTS type 字段丢失**：自定义 type 对象不会自动序列化，需手动 JSON 中转
 
-### 待探讨：是否把 Android 也迁移到事件总线模式
+### 事件总线方案演进：从双平台差异到统一
 
-#### 现状 (Android)
+#### 背景：为什么放弃自定义 EventBus，改用 uni.$emit/uni.$on
+
+**最初尝试**：在 SDK 内部封装一个跨平台的事件总线（`event-bus.uts`），提供 `EMEventBus.on/once/emit/off` 等 API。
+
+**遇到的问题（UTS 编译限制）**：
+1. **不支持泛型**：`EventHandler<T = any>`、`on<T = any>()` 等语法编译失败
+2. **不支持 Map 解构**：`for (const [eventName, handlers] of this.atomicListeners)` 在 Android 上类型丢失
+3. **uts-proxy 仅支持 `export function`**：`EMEventBus` 是 class 实例 const，无法通过 uts-proxy 导出到 .uvue 层
+4. **类型重复声明导致编译器 panic**：同名类型从多个文件导入触发 "Multiple identifiers equivalent up to span hygiene"
+5. **iOS UTS 闭包字面量崩溃**：`.uvue` 层构建 `{ onConnected: () => {} }` 对象字面量直接崩溃
+
+**决策**：放弃自封装 EventBus，采用 uni-app X 原生 `uni.$emit` / `uni.$on` 机制。这是唯一能在双平台稳定运行的事件通信方案。
+
+#### 最终方案：`enableEventBus()` + `uni.$on`
 
 ```ts
-// 用户必须按平台写不同的监听代码
-addConnectionListener({
-  onConnected: () => { ... },
-  onDisconnected: (code) => { ... }
+// App.uvue 初始化
+import { initSDK, enableEventBus } from "./uni_modules/easemob-uts-sdk"
+
+onLaunch(() => {
+  initSDK({ appKey: 'easemob-demo#support' })
+  enableEventBus()  // 双平台统一启用事件广播
+  
+  // 连接事件
+  uni.$on('em:connection:connected', () => { /* 已连接 */ })
+  uni.$on('em:connection:disconnected', (errorCode: any) => { /* 断开 */ })
+  
+  // 消息事件（JSON 字符串需解析）
+  uni.$on('em:message:received', (data: any) => {
+    const messages = JSON.parse(data as string) as any[]
+    messages.forEach(msg => {
+      console.log(`来自: ${msg['from']}, 类型: ${msg['body']['type']}`)
+    })
+  })
 })
 ```
 
-#### 如果迁移到事件总线 (Android)
+#### 事件名规范
 
+| 类别 | 事件名 | 参数 | 说明 |
+|---|---|---|---|
+| 连接 | `em:connection:connected` | `null` | 连接建立 |
+| 连接 | `em:connection:disconnected` | `number` (errorCode) | 连接断开 |
+| 连接 | `em:connection:logout` | `number` (errorCode) | 被登出 |
+| 连接 | `em:connection:token_will_expire` | `null` | Token 即将过期 |
+| 连接 | `em:connection:token_expired` | `null` | Token 已过期 |
+| 连接 | `em:connection:offline_sync_start` | `null` | 开始同步离线消息 |
+| 连接 | `em:connection:offline_sync_finish` | `null` | 离线消息同步完成 |
+| 消息 | `em:message:received` | `string` (JSON) | 收到普通消息 |
+| 消息 | `em:message:cmd_received` | `string` (JSON) | 收到 CMD 消息 |
+| 消息 | `em:message:read` | `string` (JSON) | 消息已读 |
+| 消息 | `em:message:delivered` | `string` (JSON) | 消息已送达 |
+| 消息 | `em:message:recalled` | `string` (JSON) | 消息被撤回 |
+
+> 消息类事件传递的是 JSON 字符串，需在接收端 `JSON.parse()`。原因是 UTS 自定义 type 对象经 `uni.$emit` 传递后字段会丢失（iOS length 变 0，Android 强转 UTSJSONObject 抛 ClassCastException）。
+
+---
+
+## enableEventBus() 双端修复记录
+
+### 问题 1：iOS `ConnectionListenerCallbacks__1` 类型不兼容
+
+**现象**：编译报错 `cannot convert value of type 'ConnectionListenerCallbacks__1' to expected argument type 'ConnectionListenerCallbacks'`
+
+**原因**：`app-ios/index.uts` 本地内联定义了 `ConnectionListenerCallbacks`，与 `connection/listener.uts` 导出的同名类型被编译器视为不同类型。
+
+**修复**：删除本地类型定义，从 `./connection/listener.uts` 导入：
 ```ts
-// 双平台一致的使用方式
-startConnectionEmit()  // 不分平台
-uni.$on('em_connected', () => { ... })
-uni.$on('em_disconnected', (data) => { ... })
+import { ConnectionListenerCallbacks } from './connection/listener.uts'
 ```
 
-#### 迁移的优势
+### 问题 2：Android `String?` vs `String` 参数类型不匹配
 
-- 双平台 API 一致，用户没有平台差异感知
-- `uni.$on` / `uni.$off` 是标准的 uni-app 订阅模式，监听具名化、可中途取消
-- 减少用户的心智负担：不需要了解 `addConnectionListener` vs `addConnectionListenerIOS` 的平台差异
-- 页面组件层不需要 import 任何 SDK 类型，陆陆续续 `UTSJSONObject` 即可
+**现象**：`参数类型不匹配：实际类型为 'String?'，预期类型为 'String'`
 
-#### 迁移的代价
+**原因**：模块级 `let` 变量声明为 `string | null`，Kotlin 不允许对 mutable property 进行 Smart Cast。
 
-- 迁移层面需要在 SDK 内部封装一层事件分发逻辑，增加复杂度
-- 消息类事件传递数据时需要 JSON 序列化 / 反序列化，有一定性能开销
-- `uni.$on` 全局事件需要小心管理，避免重复注册涉及的内存泄漏
+**修复**：用 `const` 局部变量捕获值后传参：
+```ts
+const connId = Date.now().toString() + ...
+connectionListenerId = connId
+addConnListenerImpl(connId, callbacks)  // 传局部变量，类型是 string
 
-#### 建议
+// null 检查时
+const connIdToRemove = connectionListenerId
+if (connIdToRemove != null) {
+  removeConnListenerImpl(connIdToRemove)
+}
+```
 
-如果 SDK 后续要进行更大范围的跨平台统一重构，可以考虑将连接监听和消息监听全面迁移到事件总线模式。但目前 Android 端的对象字面量传递方式已经测通且简洁，在没有明确需求之前不建议改动。
+### 问题 3：Android `ClassCastException`（Message → UTSJSONObject）
+
+**现象**：`uts.sdk.modules.easemobUtsSdk.Message cannot be cast to io.dcloud.uts.UTSJSONObject`
+
+**原因**：UTS 自定义 type 编译为 Kotlin class，不是 UTSJSONObject 子类。
+
+**修复**：`enableEventBus` 中 emit 前 `JSON.stringify`，App.uvue 接收端 `JSON.parse`。
+
+### 问题 4：iOS `uni.$emit` 传递 `Message[]` 后 length 变为 0
+
+**现象**：`[EventBus] 收到消息, 数量: [Number] 0`，但 SDK 日志显示 count: 1
+
+**原因**：UTS 自定义 type 对象经 `uni.$emit` 传到 `.uvue` 层时字段丢失。
+
+**修复**：同问题 3，JSON 序列化中转。
+
+### 问题 5：Android `ConcurrentModificationException`
+
+**现象**：收到消息后崩溃 `java.util.ConcurrentModificationException`
+
+**原因**：环信 SDK 监听回调运行在非主线程，`uni.$emit` 触发 Vue 响应式系统并发修改。
+
+**修复**：所有 `uni.$emit` 包裹在 `setTimeout(() => {}, 0)` 中调度到主线程：
+```ts
+onMessageReceived: (messages: Message[]) => {
+  const json = JSON.stringify(messages)
+  setTimeout(() => { uni.$emit(EMMessageEvent.RECEIVED, json) }, 0)
+}
+```
+
+### 修改文件
+
+- `app-android/index.uts`：导入源类型、局部变量捕获 nullable、JSON.stringify + setTimeout
+- `app-ios/index.uts`：导入 ConnectionListenerCallbacks、局部变量捕获 nullable、JSON.stringify
+- `App.uvue`：消息事件 `JSON.parse(data as string)` 接收
