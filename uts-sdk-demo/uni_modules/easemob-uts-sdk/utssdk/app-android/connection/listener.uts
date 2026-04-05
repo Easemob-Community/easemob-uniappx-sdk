@@ -62,18 +62,8 @@ const listenerMap = new Map<string, EMConnectionListener>();
  * @param listenerId 监听器唯一标识（用于移除）
  * @param listener 监听器回调对象
  */
-export function addConnectionListenerImpl(listenerId: string, listener: UTSJSONObject): void {
-  const callbacks: ConnectionListenerCallbacks = {
-    onConnected: listener["onConnected"] as (() => void) | null,
-    onDisconnected: listener["onDisconnected"] as ((errorCode: number) => void) | null,
-    onLogout: listener["onLogout"] as ((errorCode: number) => void) | null,
-    onTokenWillExpire: listener["onTokenWillExpire"] as (() => void) | null,
-    onTokenExpired: listener["onTokenExpired"] as (() => void) | null,
-    onOfflineMessageSyncStart: listener["onOfflineMessageSyncStart"] as (() => void) | null,
-    onOfflineMessageSyncFinish: listener["onOfflineMessageSyncFinish"] as (() => void) | null
-  };
-
-  const androidListener = new InnerConnectionListener(callbacks);
+export function addConnectionListenerImpl(listenerId: string, listener: ConnectionListenerCallbacks): void {
+  const androidListener = new InnerConnectionListener(listener);
   listenerMap.set(listenerId, androidListener);
   EMClient.getInstance().addConnectionListener(androidListener);
 }

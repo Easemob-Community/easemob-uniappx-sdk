@@ -97,21 +97,18 @@
 </template>
 
 <script setup lang="uts">
-	// #ifdef APP-ANDROID
+	// 共用导入（Android 和 iOS 均可用）
 	import { 
 		loginSDK, 
 		logoutSDK, 
 		getCurrentUser, 
 		isLoggedIn as checkIsLoggedIn,
-		isConnected as checkIsConnected,
+		isConnected as checkIsConnected
+	} from "@/uni_modules/easemob-uts-sdk"
+	// #ifdef APP-ANDROID
+	import { 
 		addMessageListener,
 		Message
-	} from "@/uni_modules/easemob-uts-sdk"
-	// #endif
-	// #ifdef APP-IOS
-	import { 
-		loginSDK, 
-		logoutSDK
 	} from "@/uni_modules/easemob-uts-sdk"
 	// #endif
 
@@ -123,7 +120,12 @@
 	const isConnected = ref(false)
 	const currentUser = ref('')
 	const logContent = ref('')
+	// #ifdef APP-ANDROID
 	const messageList = ref([] as Message[])
+	// #endif
+	// #ifdef APP-IOS
+	const messageList = ref([] as UTSJSONObject[])
+	// #endif
 	let unsubscribeMessage : (() => void) | null = null
 
 	// 计算属性：连接状态文本
@@ -146,6 +148,11 @@
 	// 更新状态
 	function updateStatus(): void {
 		// #ifdef APP-ANDROID
+		currentUser.value = getCurrentUser()
+		isConnected.value = checkIsConnected()
+		isLoggedIn.value = checkIsLoggedIn()
+		// #endif
+		// #ifdef APP-IOS
 		currentUser.value = getCurrentUser()
 		isConnected.value = checkIsConnected()
 		isLoggedIn.value = checkIsLoggedIn()

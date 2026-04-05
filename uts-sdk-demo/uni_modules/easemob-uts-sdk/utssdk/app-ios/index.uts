@@ -26,7 +26,10 @@ import {
 import {
   addConnectionListenerImpl as addConnListenerImpl,
   removeConnectionListenerImpl as removeConnListenerImpl,
-  removeAllConnectionListeners
+  removeAllConnectionListeners,
+  enableConnectionEmit,
+  disableConnectionEmit,
+  ConnectionListenerCallbacks
 } from './connection/listener.uts';
 
 import {
@@ -52,14 +55,48 @@ export function initSDK(config: UTSJSONObject): Promise<void> {
   });
 }
 
-// ==================== 连接监听（stub） ====================
+// ==================== 连接监听 ====================
 
-export function addConnectionListener(listener: UTSJSONObject): () => void {
+/**
+ * 方案 A：独立函数参数注册回调（iOS 上最稳定）
+ * 适合在 UTS 插件内部注册，每个回调应单独传入而非包裹在对象字面量里
+ */
+export function addConnectionListenerIOS(
+  onConnected: (() => void) | null,
+  onDisconnected: ((errorCode: number) => void) | null,
+  onLogout: ((errorCode: number) => void) | null,
+  onTokenWillExpire: (() => void) | null,
+  onTokenExpired: (() => void) | null,
+  onOfflineMessageSyncStart: (() => void) | null,
+  onOfflineMessageSyncFinish: (() => void) | null
+): () => void {
   const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
-  addConnListenerImpl(id, listener);
-  return (): void => {
-    removeConnListenerImpl(id);
+  const cbs: ConnectionListenerCallbacks = {
+    onConnected: onConnected,
+    onDisconnected: onDisconnected,
+    onLogout: onLogout,
+    onTokenWillExpire: onTokenWillExpire,
+    onTokenExpired: onTokenExpired,
+    onOfflineMessageSyncStart: onOfflineMessageSyncStart,
+    onOfflineMessageSyncFinish: onOfflineMessageSyncFinish
   };
+  addConnListenerImpl(id, cbs);
+  return (): void => { removeConnListenerImpl(id); };
+}
+
+/**
+ * 方案 B：开启 uni.$emit 事件广播
+ * 开启后 SDK 连接事件自动广播，在任意 .uvue 中直接 uni.$on 监听：
+ * em_connected / em_disconnected / em_logout /
+ * em_token_will_expire / em_token_expired /
+ * em_offline_sync_start / em_offline_sync_finish
+ */
+export function startConnectionEmit(): void {
+  enableConnectionEmit();
+}
+
+export function stopConnectionEmit(): void {
+  disableConnectionEmit();
 }
 
 export function removeConnectionListener(listenerId: string): void {

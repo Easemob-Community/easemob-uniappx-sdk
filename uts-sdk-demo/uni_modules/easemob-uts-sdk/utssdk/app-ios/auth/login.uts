@@ -9,7 +9,7 @@
  */
 
 /** 轮询间隔（ms） */
-const POLL_INTERVAL = 100;
+const POLL_INTERVAL = 50;
 /** 最大等待时间（ms） */
 const POLL_TIMEOUT  = 15000;
 

@@ -3,7 +3,7 @@
 	import { initSDK, addConnectionListener, addMessageListener, Message } from "./uni_modules/easemob-uts-sdk"
 	// #endif
 	// #ifdef APP-IOS
-	import { initSDK,addConnectionListener } from "./uni_modules/easemob-uts-sdk"
+	import { initSDK, startConnectionEmit } from "./uni_modules/easemob-uts-sdk"
 	// #endif
 	// #ifdef APP-ANDROID || APP-HARMONY
 	let firstBackTime = 0
@@ -15,9 +15,28 @@
 		// 初始化 SDK
 		initSDK({ appKey: 'easemob-demo#support' })
 		
-		// #ifdef APP-ANDROID || APP-IOS
+		// #ifdef APP-IOS
+		// 方案 B：开启 uni.$emit 广播，.uvue 中直接 uni.$on('em_connected') 监听
+		startConnectionEmit()
+		uni.$on('em_connected', () => {
+			console.log('[EMConnection][iOS] 已连接到服务器')
+		})
+		uni.$on('em_disconnected', (data : UTSJSONObject) => {
+			console.log('[EMConnection][iOS] 连接断开, errorCode:', data['errorCode'])
+		})
+		uni.$on('em_logout', (data : UTSJSONObject) => {
+			console.log('[EMConnection][iOS] 被登出, errorCode:', data['errorCode'])
+		})
+		uni.$on('em_token_will_expire', () => {
+			console.log('[EMConnection][iOS] Token 即将过期')
+		})
+		uni.$on('em_token_expired', () => {
+			console.log('[EMConnection][iOS] Token 已过期')
+		})
+		// #endif
+		// #ifdef APP-ANDROID
 		// 设置完 appKey 后第一时间挂载连接监听
-		const unsubscribe = addConnectionListener({
+		addConnectionListener({
 			onConnected: () => {
 				console.log('[EMConnection] 已连接到服务器')
 			},
