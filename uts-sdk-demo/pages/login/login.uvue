@@ -113,8 +113,8 @@
 	// #endif
 
 	// 响应式数据
-	const username = ref('')
-	const password = ref('')
+	const username = ref('hfp')
+	const password = ref('1')
 	const isLoggingIn = ref(false)
 	const isLoggedIn = ref(false)
 	const isConnected = ref(false)
@@ -222,9 +222,9 @@
 		
 		// #ifdef APP-ANDROID
 		// 添加消息监听
-		unsubscribeMessage = addMessageListener({
-			onMessageReceived: (messages : Message[]) => {
-				messages.forEach((msg : Message) => {
+		unsubscribeMessage = addMessageListener(
+			(messages : Message[]): void => {
+				messages.forEach((msg : Message): void => {
 					addLog(`收到消息: 来自=${msg.from}, 类型=${msg.body.type}`)
 					if (msg.body.type === 'txt') {
 						addLog(`内容: ${msg.body.message ?? ''}`)
@@ -236,8 +236,9 @@
 						messageList.value.pop()
 					}
 				})
-			}
-		})
+			},
+			null, null, null, null, null, null, null, null, null, null, null, null
+		)
 		// #endif
 	})
 

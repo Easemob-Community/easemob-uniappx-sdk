@@ -1,7 +1,75 @@
 /**
  * iOS 平台 - 消息发送
- * TODO: 待实现
  */
+
+/** 轮询间隔（ms） */
+const MSG_POLL_INTERVAL = 50;
+/** 最大等待时间（ms） */
+const MSG_POLL_TIMEOUT  = 15000;
+
+/** 生成唯一回调 ID */
+function genCallbackId(): string {
+  return Date.now().toString() + Math.random().toString(36).substring(2, 9);
+}
+
+/**
+ * 轮询 EMMessageBridge 结果，获取后触发回调
+ */
+function pollMessageResult(
+  callbackId: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null
+): void {
+  let elapsed = 0;
+  let timer: number = 0;
+  timer = setInterval((): void => {
+    elapsed += MSG_POLL_INTERVAL;
+    const status = EMMessageBridge.getResultStatus(callbackId = callbackId);
+
+    if (status == 'success') {
+      clearInterval(timer);
+      const msgId     = EMMessageBridge.getResultMsgId(callbackId = callbackId);
+      const from      = EMMessageBridge.getResultFrom(callbackId = callbackId);
+      const to        = EMMessageBridge.getResultTo(callbackId = callbackId);
+      const type      = EMMessageBridge.getResultType(callbackId = callbackId);
+      const chatType  = EMMessageBridge.getResultChatType(callbackId = callbackId);
+      const timestamp = EMMessageBridge.getResultTimestamp(callbackId = callbackId);
+      const extJson   = EMMessageBridge.getResultExtJson(callbackId = callbackId);
+      EMMessageBridge.clearResult(callbackId = callbackId);
+
+      const messageInfo = new UTSJSONObject();
+      messageInfo['msgId']     = msgId;
+      messageInfo['from']      = from;
+      messageInfo['to']        = to;
+      messageInfo['type']      = type;
+      messageInfo['chatType']  = chatType;
+      messageInfo['timestamp'] = timestamp;
+      try {
+        messageInfo['ext'] = JSON.parse(extJson) as UTSJSONObject;
+      } catch (_e) {
+        messageInfo['ext'] = new UTSJSONObject();
+      }
+
+      if (onSuccess != null) {
+        onSuccess!(messageInfo);
+      }
+    } else if (status == 'error') {
+      clearInterval(timer);
+      const code = EMMessageBridge.getResultCode(callbackId = callbackId);
+      const msg  = EMMessageBridge.getResultMessage(callbackId = callbackId);
+      EMMessageBridge.clearResult(callbackId = callbackId);
+      if (onError != null) {
+        onError!(code as number, msg);
+      }
+    } else if (elapsed >= MSG_POLL_TIMEOUT) {
+      clearInterval(timer);
+      EMMessageBridge.clearResult(callbackId = callbackId);
+      if (onError != null) {
+        onError!(408, 'Send message timeout');
+      }
+    }
+  }, MSG_POLL_INTERVAL);
+}
 
 // 文件选择结果类型
 export type FilePickResultData = {
@@ -11,16 +79,29 @@ export type FilePickResultData = {
   mimeType: string;
 }
 
-/** 发送文本消息（stub） */
+/** 发送文本消息 */
 export function sendTextMessageImpl(
   content: string, to: string, chatType: string,
   callback: UTSJSONObject, ext: UTSJSONObject | null
 ): void {
-  console.log('[iOS] sendTextMessage stub:', content, '->', to);
-  const onError = callback["onError"];
-  if (onError != null) {
-    (onError as (code: number, message: string) => void)(501, 'iOS 暂未实现');
-  }
+  console.log('[iOS][sender] sendTextMessage 进入, to=', to);
+  const cid = genCallbackId();
+  const extJson: string = ext != null ? (JSON.stringify(ext) ?? '') : '';
+  // 在函数体顶层提取回调，规避 iOS 闭包内 UTSJSONObject 访问崩溃
+  const onSuccess = callback["onSuccess"] as ((messageInfo: UTSJSONObject) => void) | null;
+  const onError = callback["onError"] as ((code: number, message: string) => void) | null;
+  // 将参数打包为单一 JSON 字符串，规避 UTS 调用 Swift 多具名参数崩溃
+  const paramsObj = new UTSJSONObject();
+  paramsObj['content']    = content;
+  paramsObj['to']         = to;
+  paramsObj['chatType']   = chatType;
+  paramsObj['extJson']    = extJson;
+  paramsObj['callbackId'] = cid;
+  const paramsJson: string = JSON.stringify(paramsObj) ?? '{}';
+  console.log('[iOS][sender] 调用 EMMessageBridge.sendTextMessage');
+  EMMessageBridge.sendTextMessage(paramsJson = paramsJson);
+  console.log('[iOS][sender] 调用完毕，开始轮询');
+  pollMessageResult(cid, onSuccess, onError);
 }
 
 /** 发送图片消息（stub） */

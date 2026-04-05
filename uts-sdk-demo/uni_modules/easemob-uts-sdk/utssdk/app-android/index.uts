@@ -21,10 +21,10 @@ import {
   removeMessageListenerImpl as removeMsgListenerImpl,
   removeAllMessageListeners,
   MessageListenerCallbacks,
-  Message as MessageImpl,
+  Message,
   MessageType,
   MessageTypeValues,
-  MessageBody as MessageBodyImpl,
+  MessageBody,
   GroupReadAck,
   RecallMessageInfo,
   MessageReactionChange,
@@ -59,53 +59,17 @@ import {
   loginWithAgoraToken as loginWithAgoraTokenImpl,
   logoutSync as logoutSyncImpl,
   logoutEMClient,
-  getCurrentUser as getCurrentUserImpl,
-  isLoggedInBefore as isLoggedInBeforeImpl,
-  isConnected as isConnectedImpl,
-  isLoggedIn as isLoggedInImpl
+  queryCurrentUser,
+  queryIsLoggedInBefore,
+  queryIsConnected,
+  queryIsLoggedIn
 } from './auth/login.uts';
 
 // ==================== 导出类型 ====================
 
-// uts-proxy 需要直接导出形式才能识别类型
-export type MessageBody = {
-	type : string;
-	message : string | null;
-	remoteUrl : string | null;
-	localUrl : string | null;
-	thumbnailRemoteUrl : string | null;
-	thumbnailLocalUrl : string | null;
-	width : number | null;
-	height : number | null;
-	fileSize : number | null;
-	length : number | null;
-	address : string | null;
-	latitude : number | null;
-	longitude : number | null;
-	fileName : string | null;
-	action : string | null;
-	customEvent : string | null;
-	customParams : UTSJSONObject | null;
-}
-
-export type Message = {
-	msgId : string;
-	from : string;
-	to : string;
-	conversationId : string;
-	chatType : number;
-	direction : number;
-	status : number;
-	isRead : boolean;
-	isAcked : boolean;
-	isDelivered : boolean;
-	localTime : number;
-	serverTime : number;
-	body : MessageBody;
-	ext : UTSJSONObject;
-}
-
 export {
+  Message,
+  MessageBody,
   ConnectionListenerCallbacks,
   MessageListenerCallbacks,
   MessageType,
@@ -131,16 +95,24 @@ export function initSDK(config: UTSJSONObject): Promise<void> {
 /**
  * 添加连接状态监听
  */
-export function addConnectionListener(listener: UTSJSONObject): () => void {
+export function addConnectionListener(
+  onConnected: (() => void) | null,
+  onDisconnected: ((errorCode: number) => void) | null,
+  onLogout: ((errorCode: number) => void) | null,
+  onTokenWillExpire: (() => void) | null,
+  onTokenExpired: (() => void) | null,
+  onOfflineMessageSyncStart: (() => void) | null,
+  onOfflineMessageSyncFinish: (() => void) | null
+): () => void {
   const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
   const cbs: ConnectionListenerCallbacks = {
-    onConnected: listener["onConnected"] as (() => void) | undefined,
-    onDisconnected: listener["onDisconnected"] as ((errorCode: number) => void) | undefined,
-    onLogout: listener["onLogout"] as ((errorCode: number) => void) | undefined,
-    onTokenWillExpire: listener["onTokenWillExpire"] as (() => void) | undefined,
-    onTokenExpired: listener["onTokenExpired"] as (() => void) | undefined,
-    onOfflineMessageSyncStart: listener["onOfflineMessageSyncStart"] as (() => void) | undefined,
-    onOfflineMessageSyncFinish: listener["onOfflineMessageSyncFinish"] as (() => void) | undefined
+    onConnected: onConnected,
+    onDisconnected: onDisconnected,
+    onLogout: onLogout,
+    onTokenWillExpire: onTokenWillExpire,
+    onTokenExpired: onTokenExpired,
+    onOfflineMessageSyncStart: onOfflineMessageSyncStart,
+    onOfflineMessageSyncFinish: onOfflineMessageSyncFinish
   };
   addConnListenerImpl(id, cbs);
   return () => removeConnListenerImpl(id);
@@ -158,22 +130,36 @@ export function removeConnectionListener(listenerId: string): void {
 /**
  * 订阅消息监听
  */
-export function addMessageListener(listener: UTSJSONObject): () => void {
+export function addMessageListener(
+  onMessageReceived: ((messages: Message[]) => void) | null,
+  onStreamMessageReceived: ((messages: Message[]) => void) | null,
+  onCmdMessageReceived: ((messages: Message[]) => void) | null,
+  onMessageRead: ((messages: Message[]) => void) | null,
+  onGroupMessageRead: ((groupReadAcks: GroupReadAck[]) => void) | null,
+  onReadAckForGroupMessageUpdated: (() => void) | null,
+  onMessageDelivered: ((messages: Message[]) => void) | null,
+  onMessageRecalled: ((messages: Message[]) => void) | null,
+  onMessageRecalledWithExt: ((recallMessageInfo: RecallMessageInfo[]) => void) | null,
+  onMessageChanged: ((message: Message, change: any) => void) | null,
+  onReactionChanged: ((messageReactionChangeList: MessageReactionChange[]) => void) | null,
+  onMessageContentChanged: ((messageModified: Message, operatorId: string, operationTime: Long) => void) | null,
+  onMessagePinChanged: ((messageId: string, conversationId: string, pinOperation: number, pinInfo: MessagePinInfo) => void) | null
+): () => void {
   const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
   const callbacks: MessageListenerCallbacks = {
-    onMessageReceived: listener["onMessageReceived"] as ((messages: Message[]) => void) | null,
-    onStreamMessageReceived: listener["onStreamMessageReceived"] as ((messages: Message[]) => void) | null,
-    onCmdMessageReceived: listener["onCmdMessageReceived"] as ((messages: Message[]) => void) | null,
-    onMessageRead: listener["onMessageRead"] as ((messages: Message[]) => void) | null,
-    onGroupMessageRead: listener["onGroupMessageRead"] as ((groupReadAcks: GroupReadAck[]) => void) | null,
-    onReadAckForGroupMessageUpdated: listener["onReadAckForGroupMessageUpdated"] as (() => void) | null,
-    onMessageDelivered: listener["onMessageDelivered"] as ((messages: Message[]) => void) | null,
-    onMessageRecalled: listener["onMessageRecalled"] as ((messages: Message[]) => void) | null,
-    onMessageRecalledWithExt: listener["onMessageRecalledWithExt"] as ((recallMessageInfo: RecallMessageInfo[]) => void) | null,
-    onMessageChanged: listener["onMessageChanged"] as ((message: Message, change: any) => void) | null,
-    onReactionChanged: listener["onReactionChanged"] as ((messageReactionChangeList: MessageReactionChange[]) => void) | null,
-    onMessageContentChanged: listener["onMessageContentChanged"] as ((messageModified: Message, operatorId: string, operationTime: Long) => void) | null,
-    onMessagePinChanged: listener["onMessagePinChanged"] as ((messageId: string, conversationId: string, pinOperation: number, pinInfo: MessagePinInfo) => void) | null
+    onMessageReceived: onMessageReceived,
+    onStreamMessageReceived: onStreamMessageReceived,
+    onCmdMessageReceived: onCmdMessageReceived,
+    onMessageRead: onMessageRead,
+    onGroupMessageRead: onGroupMessageRead,
+    onReadAckForGroupMessageUpdated: onReadAckForGroupMessageUpdated,
+    onMessageDelivered: onMessageDelivered,
+    onMessageRecalled: onMessageRecalled,
+    onMessageRecalledWithExt: onMessageRecalledWithExt,
+    onMessageChanged: onMessageChanged,
+    onReactionChanged: onReactionChanged,
+    onMessageContentChanged: onMessageContentChanged,
+    onMessagePinChanged: onMessagePinChanged
   };
   addMsgListenerImpl(id, callbacks);
   return () => removeMsgListenerImpl(id);
@@ -233,22 +219,11 @@ export function logoutSDK(
   logoutEMClient(unbindToken, callback);
 }
 
-// 状态查询函数（直接导出，uts-proxy 才能识别）
-export function getCurrentUser(): string {
-  return getCurrentUserImpl();
-}
-
-export function isLoggedInBefore(): boolean {
-  return isLoggedInBeforeImpl();
-}
-
-export function isConnected(): boolean {
-  return isConnectedImpl();
-}
-
-export function isLoggedIn(): boolean {
-  return isLoggedInImpl();
-}
+// 状态查询函数（包装导出，uts-proxy 才能识别）
+export function getCurrentUser(): string { return queryCurrentUser(); }
+export function isLoggedInBefore(): boolean { return queryIsLoggedInBefore(); }
+export function isConnected(): boolean { return queryIsConnected(); }
+export function isLoggedIn(): boolean { return queryIsLoggedIn(); }
 
 // ==================== 消息发送API ====================
 

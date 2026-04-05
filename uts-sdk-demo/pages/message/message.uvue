@@ -218,11 +218,11 @@
 	import { sendTextMessage, sendImageMessage, sendVideoMessage, sendFileMessage, sendCmdMessage, sendCustomMessage, openFilePicker, FilePickResultData } from "@/uni_modules/easemob-uts-sdk"
 	// #endif
 	// #ifdef APP-IOS
-	import { sendTextMessage, sendImageMessage, sendVideoMessage, sendFileMessage, sendCmdMessage, sendCustomMessage } from "@/uni_modules/easemob-uts-sdk"
+	import { sendTextMessage } from "@/uni_modules/easemob-uts-sdk"
 	// #endif
 	
 	// 响应式数据
-	const targetId = ref('')
+	const targetId = ref('pfh2')
 	const chatType = ref('single') // 'single' 或 'group'
 	const messageContent = ref('')
 	const logContent = ref('')
@@ -256,58 +256,72 @@
 		}
 	}
 	
+	// 统一封装：发送文本消息（内部按平台分发）
+	function sendTxtMsg(
+		content: string,
+		to: string,
+		cType: string,
+		onSuccess: (messageInfo: UTSJSONObject) => void,
+		onError: (code: number, message: string) => void,
+		ext: UTSJSONObject | null = null
+	): void {
+		// #ifdef APP-ANDROID
+		sendTextMessage(content, to, cType, {
+			onSuccess: onSuccess,
+			onError: onError,
+			onProgress: (progress: number, status: string) => {
+				console.log(`[MessagePage] 发送进度: progress=${progress}, status=${status}`)
+			}
+		} as UTSJSONObject, ext)
+		// #endif
+		// #ifdef APP-IOS
+		sendTextMessage(content, to, cType, onSuccess, onError, ext)
+		// #endif
+	}
+
 	// 发送消息
 	function handleSend(): void {
 		if (!canSend.value) {
 			addLog('错误：目标ID和消息内容不能为空')
 			return
 		}
-		
+			
 		const to = targetId.value.trim()
 		const content = messageContent.value.trim()
 		const ext = parseExtField()
-		
+			
 		addLog(`发送消息到 ${chatType.value === 'single' ? '用户' : '群组'}: ${to}`)
 		addLog(`消息内容: ${content}`)
 		if (ext != null) {
 			addLog(`扩展字段: ${JSON.stringify(ext)}`)
 		}
-		
-		sendTextMessage(content, to, chatType.value, {
-			onSuccess: (messageInfo: UTSJSONObject) => {
+
+		sendTxtMsg(
+			content,
+			to,
+			chatType.value,
+			(messageInfo: UTSJSONObject) => {
 				console.log('[MessagePage] 消息发送成功回调触发')
-				if (messageInfo != null) {
-					// 使用 UTSJSONObject 的 get 方法访问属性
-					const msgId = messageInfo.getString('msgId') ?? 'unknown'
-					const msgType = messageInfo.getString('type') ?? 'unknown'
-					const chatTypeStr = messageInfo.getString('chatType') ?? 'unknown'
-					const timestamp = messageInfo.getNumber('timestamp') ?? 0
-					const msgExt = messageInfo['ext'] as UTSJSONObject | null
-					console.log('[MessagePage] 消息ID:', msgId)
-					console.log('[MessagePage] 消息类型:', msgType)
-					console.log('[MessagePage] 聊天类型:', chatTypeStr)
-					console.log('[MessagePage] 时间戳:', timestamp)
-					addLog('消息发送成功, ID: ' + msgId)
-					addLog('消息类型: ' + msgType + ', 聊天类型: ' + chatTypeStr)
-					if (msgExt != null) {
-						addLog('扩展字段: ' + JSON.stringify(msgExt))
-					}
-				} else {
-					console.log('[MessagePage] messageInfo为null或undefined')
-					addLog('消息发送成功(无详情)')
+				const msgId = (messageInfo['msgId'] as string | null) ?? (messageInfo.getString('msgId') ?? 'unknown')
+				const msgType = (messageInfo['type'] as string | null) ?? (messageInfo.getString('type') ?? 'unknown')
+				const chatTypeStr = (messageInfo['chatType'] as string | null) ?? (messageInfo.getString('chatType') ?? 'unknown')
+				const msgExt = messageInfo['ext'] as UTSJSONObject | null
+				console.log('[MessagePage] 消息 ID:', msgId)
+				console.log('[MessagePage] 消息类型:', msgType)
+				console.log('[MessagePage] 聊天类型:', chatTypeStr)
+				addLog('消息发送成功, ID: ' + msgId)
+				addLog('消息类型: ' + msgType + ', 聊天类型: ' + chatTypeStr)
+				if (msgExt != null) {
+					addLog('扩展字段: ' + JSON.stringify(msgExt))
 				}
-				// 清空输入
 				messageContent.value = ''
 			},
-			onError: (code: number, message: string) => {
-				console.log(`[MessagePage] 消息发送失败回调触发: code=${code}, message=${message}`)
+			(code: number, message: string) => {
+				console.log(`[MessagePage] 消息发送失败: code=${code}, message=${message}`)
 				addLog(`消息发送失败: code=${code}, message=${message}`)
 			},
-			onProgress: (progress: number, status: string) => {
-				console.log(`[MessagePage] 消息发送进度回调触发: progress=${progress}, status=${status}`)
-				addLog(`发送进度: ${progress}%, status=${status}`)
-			}
-		} as UTSJSONObject, ext)
+			ext
+		)
 	}
 	
 	// 选择并发送图片

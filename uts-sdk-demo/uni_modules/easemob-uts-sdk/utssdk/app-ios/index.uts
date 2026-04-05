@@ -60,6 +60,25 @@ export function initSDK(config: UTSJSONObject): Promise<void> {
 // ==================== 连接监听 ====================
 
 /**
+ * addConnectionListener 统一入口（和 Android 俧差同名）
+ */
+export function addConnectionListener(
+  onConnected: (() => void) | null,
+  onDisconnected: ((errorCode: number) => void) | null,
+  onLogout: ((errorCode: number) => void) | null,
+  onTokenWillExpire: (() => void) | null,
+  onTokenExpired: (() => void) | null,
+  onOfflineMessageSyncStart: (() => void) | null,
+  onOfflineMessageSyncFinish: (() => void) | null
+): () => void {
+  return addConnectionListenerIOS(
+    onConnected, onDisconnected, onLogout,
+    onTokenWillExpire, onTokenExpired,
+    onOfflineMessageSyncStart, onOfflineMessageSyncFinish
+  );
+}
+
+/**
  * 方案 A：独立函数参数注册回调（iOS 上最稳定）
  * 适合在 UTS 插件内部注册，每个回调应单独传入而非包裹在对象字面量里
  */
@@ -139,14 +158,28 @@ export { getCurrentUser, isConnected, isLoggedIn };
 
 // ==================== 消息监听 ====================
 
-export function addMessageListener(listener: UTSJSONObject): () => void {
+export function addMessageListener(
+  onMessageReceived: ((messages: Message[]) => void) | null,
+  onStreamMessageReceived: ((messages: Message[]) => void) | null,
+  onCmdMessageReceived: ((messages: Message[]) => void) | null,
+  onMessageRead: ((messages: Message[]) => void) | null,
+  onGroupMessageRead: ((groupReadAcks: UTSJSONObject[]) => void) | null,
+  onReadAckForGroupMessageUpdated: (() => void) | null,
+  onMessageDelivered: ((messages: Message[]) => void) | null,
+  onMessageRecalled: ((messages: Message[]) => void) | null,
+  onMessageRecalledWithExt: ((recallMessageInfo: UTSJSONObject[]) => void) | null,
+  onMessageChanged: ((message: Message, change: any) => void) | null,
+  onReactionChanged: ((messageReactionChangeList: UTSJSONObject[]) => void) | null,
+  onMessageContentChanged: ((messageModified: Message, operatorId: string, operationTime: number) => void) | null,
+  onMessagePinChanged: ((messageId: string, conversationId: string, pinOperation: number, pinInfo: UTSJSONObject) => void) | null
+): () => void {
   const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
   const callbacks: MessageListenerCallbacks = {
-    onMessageReceived: listener["onMessageReceived"] as ((messages: Message[]) => void) | null,
-    onCmdMessageReceived: listener["onCmdMessageReceived"] as ((messages: Message[]) => void) | null,
-    onMessageRead: listener["onMessageRead"] as ((messages: Message[]) => void) | null,
-    onMessageDelivered: listener["onMessageDelivered"] as ((messages: Message[]) => void) | null,
-    onMessageRecalled: listener["onMessageRecalled"] as ((messages: Message[]) => void) | null
+    onMessageReceived: onMessageReceived,
+    onCmdMessageReceived: onCmdMessageReceived,
+    onMessageRead: onMessageRead,
+    onMessageDelivered: onMessageDelivered,
+    onMessageRecalled: onMessageRecalled
   };
   addMsgListenerImpl(id, callbacks);
   return (): void => {
@@ -170,12 +203,20 @@ export function stopMessageEmit(): void {
 
 export { removeAllMessageListeners };
 
-// ==================== 消息发送（stub） ====================
+// ==================== 消息发送 ====================
 
 export function sendTextMessage(
-  content: string, to: string, chatType: string,
-  callback: UTSJSONObject, ext: UTSJSONObject | null = null
+  content: string,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  ext: UTSJSONObject | null = null
 ): void {
+  // 在函数体内重组 callback，避免调用方传入含闭包的 UTSJSONObject 字面量崩溃
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
   sendTextMessageImpl(content, to, chatType, callback, ext);
 }
 
