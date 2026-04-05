@@ -358,3 +358,107 @@ onUnmounted(() => {
 - [环信 iOS SDK API](https://doc.easemob.com/ios_product_overview.html)
 - [UTS 语法参考](https://doc.dcloud.net.cn/uni-app-x/uts/)
 - [UTS 插件开发](https://doc.dcloud.net.cn/uni-app-x/plugin/uts-plugin.html)
+
+---
+
+## iOS 监听模块设计实录：事件总线方案
+
+### 背景与问题
+
+iOS 平台的 UTS 编译器在处理回调时存在一个硬性限制：
+**在 `.uvue` 页面层中，无法将包含闭包的对象字面量（如 `{ onConnected: () => {} }`）传递给 UTS 插件函数。**
+
+常规写法（Android 测通，但 iOS 崩溃）：
+
+```ts
+// 这在 iOS 上会导致 App 崩溃
+addConnectionListener({
+  onConnected: () => { console.log('已连接') },
+  onDisconnected: (code) => { ... }
+})
+```
+
+根本原因是 iOS UTS 运行时无法在构建对象字面量时将闭包封装成 Swift 对象，传递过程中就就会崩溃。
+
+### 当前 iOS 实现：uni.$emit 事件总线
+
+SDK 内部实现 `class EMConnectionDelegate implements EMClientDelegate` 和 `class EMMessageDelegate implements EMChatManagerDelegate`，由这两个 delegate 接收原生 SDK 事件，然后内部调用 `uni.$emit` 广播。
+
+用户在任意 `.uvue` 页面里用 `uni.$on` 订阅：
+
+```ts
+// App.uvue 初始化时开启广播
+startConnectionEmit()   // 开启连接事件广播
+startMessageEmit()      // 开启消息事件广播
+
+// 任意页面订阅
+uni.$on('em_connected', () => { /* 已连接 */ })
+uni.$on('em_disconnected', (data: UTSJSONObject) => { /* 断开 */ })
+uni.$on('em_message_received', (data: UTSJSONObject) => {
+  const messages = JSON.parse(data['messagesJson'] as string) as UTSJSONObject[]
+  // 处理消息...
+})
+```
+
+**广播事件列表：**
+
+| 事件名 | 参数 | 说明 |
+|---|---|---|
+| `em_connected` | 无 | 连接建立 |
+| `em_disconnected` | `{ errorCode: number }` | 连接断开 |
+| `em_logout` | `{ errorCode: number }` | 被登出 |
+| `em_token_will_expire` | `{ errorCode: number }` | Token 即将过期 |
+| `em_token_expired` | `{ errorCode: number }` | Token 已过期 |
+| `em_offline_sync_start` | 无 | 开始同步离线消息 |
+| `em_offline_sync_finish` | 无 | 离线消息同步完成 |
+| `em_message_received` | `{ messagesJson: string }` | 收到普通消息 |
+| `em_cmd_message_received` | `{ messagesJson: string }` | 收到透传消息 |
+| `em_message_read` | `{ messagesJson: string }` | 消息已读 |
+| `em_message_delivered` | `{ messagesJson: string }` | 消息已送达 |
+| `em_message_recalled` | `{ messagesJson: string }` | 消息被撤回 |
+
+> 消息类事件的 `messagesJson` 是 JSON 字符串，需先 `JSON.parse()` 再使用。原因是 UTS 自定义 type 对象经过 `uni.$emit` 传递后内部字段会丢失，序列化为字符串是当前可靠的中转方式。
+
+### 深层驱动因素
+
+1. **iOS UTS 闭包传递崩溃**：`.uvue` 层构建包含闭包的对象字面量本身就会崩溃，无法绕过
+2. **iOS UTS 方法签名限制**：自定义 type 作为参数时，运行时找不到对应方法（`s_addConnectionListenerByJs` 报错）
+3. **uni.$emit 传递 UTS type 字段丢失**：自定义 type 对象不会自动序列化，需手动 JSON 中转
+
+### 待探讨：是否把 Android 也迁移到事件总线模式
+
+#### 现状 (Android)
+
+```ts
+// 用户必须按平台写不同的监听代码
+addConnectionListener({
+  onConnected: () => { ... },
+  onDisconnected: (code) => { ... }
+})
+```
+
+#### 如果迁移到事件总线 (Android)
+
+```ts
+// 双平台一致的使用方式
+startConnectionEmit()  // 不分平台
+uni.$on('em_connected', () => { ... })
+uni.$on('em_disconnected', (data) => { ... })
+```
+
+#### 迁移的优势
+
+- 双平台 API 一致，用户没有平台差异感知
+- `uni.$on` / `uni.$off` 是标准的 uni-app 订阅模式，监听具名化、可中途取消
+- 减少用户的心智负担：不需要了解 `addConnectionListener` vs `addConnectionListenerIOS` 的平台差异
+- 页面组件层不需要 import 任何 SDK 类型，陆陆续续 `UTSJSONObject` 即可
+
+#### 迁移的代价
+
+- 迁移层面需要在 SDK 内部封装一层事件分发逻辑，增加复杂度
+- 消息类事件传递数据时需要 JSON 序列化 / 反序列化，有一定性能开销
+- `uni.$on` 全局事件需要小心管理，避免重复注册涉及的内存泄漏
+
+#### 建议
+
+如果 SDK 后续要进行更大范围的跨平台统一重构，可以考虑将连接监听和消息监听全面迁移到事件总线模式。但目前 Android 端的对象字面量传递方式已经测通且简洁，在没有明确需求之前不建议改动。

@@ -18,6 +18,8 @@ import {
   addMessageListenerImpl as addMsgListenerImpl,
   removeMessageListenerImpl as removeMsgListenerImpl,
   removeAllMessageListeners,
+  enableMessageEmit,
+  disableMessageEmit,
   MessageListenerCallbacks,
   Message,
   MessageBody
@@ -135,7 +137,7 @@ export function logoutSDK(
 
 export { getCurrentUser, isConnected, isLoggedIn };
 
-// ==================== 消息监听（stub） ====================
+// ==================== 消息监听 ====================
 
 export function addMessageListener(listener: UTSJSONObject): () => void {
   const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
@@ -150,6 +152,20 @@ export function addMessageListener(listener: UTSJSONObject): () => void {
   return (): void => {
     removeMsgListenerImpl(id);
   };
+}
+
+/**
+ * 方案 B：开启消息 uni.$emit 广播
+ * 开启后可在任意 .uvue 中 uni.$on 监听：
+ * em_message_received / em_cmd_message_received /
+ * em_message_read / em_message_delivered / em_message_recalled
+ */
+export function startMessageEmit(): void {
+  enableMessageEmit();
+}
+
+export function stopMessageEmit(): void {
+  disableMessageEmit();
 }
 
 export { removeAllMessageListeners };

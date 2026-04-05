@@ -21,10 +21,10 @@ import {
   removeMessageListenerImpl as removeMsgListenerImpl,
   removeAllMessageListeners,
   MessageListenerCallbacks,
-  Message,
+  Message as MessageImpl,
   MessageType,
   MessageTypeValues,
-  MessageBody,
+  MessageBody as MessageBodyImpl,
   GroupReadAck,
   RecallMessageInfo,
   MessageReactionChange,
@@ -67,13 +67,49 @@ import {
 
 // ==================== 导出类型 ====================
 
+// uts-proxy 需要直接导出形式才能识别类型
+export type MessageBody = {
+	type : string;
+	message : string | null;
+	remoteUrl : string | null;
+	localUrl : string | null;
+	thumbnailRemoteUrl : string | null;
+	thumbnailLocalUrl : string | null;
+	width : number | null;
+	height : number | null;
+	fileSize : number | null;
+	length : number | null;
+	address : string | null;
+	latitude : number | null;
+	longitude : number | null;
+	fileName : string | null;
+	action : string | null;
+	customEvent : string | null;
+	customParams : UTSJSONObject | null;
+}
+
+export type Message = {
+	msgId : string;
+	from : string;
+	to : string;
+	conversationId : string;
+	chatType : number;
+	direction : number;
+	status : number;
+	isRead : boolean;
+	isAcked : boolean;
+	isDelivered : boolean;
+	localTime : number;
+	serverTime : number;
+	body : MessageBody;
+	ext : UTSJSONObject;
+}
+
 export {
   ConnectionListenerCallbacks,
   MessageListenerCallbacks,
-  Message,
   MessageType,
   MessageTypeValues,
-  MessageBody,
   GroupReadAck,
   RecallMessageInfo,
   MessageReactionChange,
