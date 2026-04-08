@@ -226,9 +226,23 @@ export function isLoggedIn(): boolean { return queryIsLoggedIn(); }
 // ==================== 消息发送API ====================
 
 /**
- * 发送文本消息
+ * 发送文本消息（统一跨平台签名，接收独立回调参数）
  */
-export function sendTextMessage(content: string, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+export function sendTextMessage(
+  content: string,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null,
+  ext: UTSJSONObject | null = null
+): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
+  if (onProgress != null) {
+    callback['onProgress'] = onProgress;
+  }
   sendTextMessageImpl(content, to, chatType, callback, ext);
 }
 

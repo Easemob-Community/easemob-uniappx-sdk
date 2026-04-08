@@ -214,11 +214,10 @@
 </template>
 
 <script setup lang="uts">
-	// #ifdef APP-ANDROID
-	import { sendTextMessage, sendImageMessage, sendVideoMessage, sendFileMessage, sendCmdMessage, sendCustomMessage, openFilePicker, FilePickResultData } from "@/uni_modules/easemob-uts-sdk"
-	// #endif
-	// #ifdef APP-IOS
+	// 统一 API（跨平台，无需条件编译）
 	import { sendTextMessage } from "@/uni_modules/easemob-uts-sdk"
+	// #ifdef APP-ANDROID
+	import { sendImageMessage, sendVideoMessage, sendFileMessage, sendCmdMessage, sendCustomMessage, openFilePicker, FilePickResultData } from "@/uni_modules/easemob-uts-sdk"
 	// #endif
 	
 	// 响应式数据
@@ -256,28 +255,7 @@
 		}
 	}
 	
-	// 统一封装：发送文本消息（内部按平台分发）
-	function sendTxtMsg(
-		content: string,
-		to: string,
-		cType: string,
-		onSuccess: (messageInfo: UTSJSONObject) => void,
-		onError: (code: number, message: string) => void,
-		ext: UTSJSONObject | null = null
-	): void {
-		// #ifdef APP-ANDROID
-		sendTextMessage(content, to, cType, {
-			onSuccess: onSuccess,
-			onError: onError,
-			onProgress: (progress: number, status: string) => {
-				console.log(`[MessagePage] 发送进度: progress=${progress}, status=${status}`)
-			}
-		} as UTSJSONObject, ext)
-		// #endif
-		// #ifdef APP-IOS
-		sendTextMessage(content, to, cType, onSuccess, onError, ext)
-		// #endif
-	}
+	// 发送文本消息已统一封装，无需平台分发
 
 	// 发送消息
 	function handleSend(): void {
@@ -296,7 +274,7 @@
 			addLog(`扩展字段: ${JSON.stringify(ext)}`)
 		}
 
-		sendTxtMsg(
+		sendTextMessage(
 			content,
 			to,
 			chatType.value,
@@ -319,6 +297,9 @@
 			(code: number, message: string) => {
 				console.log(`[MessagePage] 消息发送失败: code=${code}, message=${message}`)
 				addLog(`消息发送失败: code=${code}, message=${message}`)
+			},
+			(progress: number, status: string) => {
+				console.log(`[MessagePage] 发送进度: progress=${progress}, status=${status}`)
 			},
 			ext
 		)

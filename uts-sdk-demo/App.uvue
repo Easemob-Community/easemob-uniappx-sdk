@@ -1,20 +1,22 @@
 <script setup lang="uts">
 	import {
 		initSDK,
-		enableEventBus,
-		EM_CONNECTION_CONNECTED,
-		EM_CONNECTION_DISCONNECTED,
-		EM_CONNECTION_LOGOUT,
-		EM_CONNECTION_TOKEN_WILL_EXPIRE,
-		EM_CONNECTION_TOKEN_EXPIRED,
-		EM_CONNECTION_OFFLINE_SYNC_START,
-		EM_CONNECTION_OFFLINE_SYNC_FINISH,
-		EM_MESSAGE_RECEIVED,
-		EM_MESSAGE_CMD_RECEIVED,
-		EM_MESSAGE_READ,
-		EM_MESSAGE_DELIVERED,
-		EM_MESSAGE_RECALLED
+		enableEventBus
 	} from "./uni_modules/easemob-uts-sdk"
+	
+	// 事件常量（uts-proxy 不支持常量导出，需本地定义）
+	const EM_CONNECTION_CONNECTED = 'em:connection:connected'
+	const EM_CONNECTION_DISCONNECTED = 'em:connection:disconnected'
+	const EM_CONNECTION_LOGOUT = 'em:connection:logout'
+	const EM_CONNECTION_TOKEN_WILL_EXPIRE = 'em:connection:token_will_expire'
+	const EM_CONNECTION_TOKEN_EXPIRED = 'em:connection:token_expired'
+	const EM_CONNECTION_OFFLINE_SYNC_START = 'em:connection:offline_sync_start'
+	const EM_CONNECTION_OFFLINE_SYNC_FINISH = 'em:connection:offline_sync_finish'
+	const EM_MESSAGE_RECEIVED = 'em:message:received'
+	const EM_MESSAGE_CMD_RECEIVED = 'em:message:cmd_received'
+	const EM_MESSAGE_READ = 'em:message:read'
+	const EM_MESSAGE_DELIVERED = 'em:message:delivered'
+	const EM_MESSAGE_RECALLED = 'em:message:recalled'
 	// #ifdef APP-ANDROID || APP-HARMONY
 	let firstBackTime = 0
 	// #endif

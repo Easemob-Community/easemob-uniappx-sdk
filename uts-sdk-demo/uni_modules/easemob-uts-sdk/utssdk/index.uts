@@ -40,7 +40,7 @@ export {
   isConnected,
   isLoggedIn,
   
-  // 消息发送
+  // 消息发送（平台 index.uts 统一签名后 re-export）
   sendTextMessage,
   sendImageMessage,
   sendImageMessageWithUri,
@@ -97,7 +97,7 @@ export {
   isConnected,
   isLoggedIn,
   
-  // 消息发送（stub）
+  // 消息发送（平台 index.uts 统一签名后 re-export）
   sendTextMessage,
   sendImageMessage,
   sendVideoMessage,
