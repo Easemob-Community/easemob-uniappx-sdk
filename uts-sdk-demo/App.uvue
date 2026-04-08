@@ -1,7 +1,19 @@
 <script setup lang="uts">
 	import {
 		initSDK,
-		enableEventBus
+		enableEventBus,
+		EM_CONNECTION_CONNECTED,
+		EM_CONNECTION_DISCONNECTED,
+		EM_CONNECTION_LOGOUT,
+		EM_CONNECTION_TOKEN_WILL_EXPIRE,
+		EM_CONNECTION_TOKEN_EXPIRED,
+		EM_CONNECTION_OFFLINE_SYNC_START,
+		EM_CONNECTION_OFFLINE_SYNC_FINISH,
+		EM_MESSAGE_RECEIVED,
+		EM_MESSAGE_CMD_RECEIVED,
+		EM_MESSAGE_READ,
+		EM_MESSAGE_DELIVERED,
+		EM_MESSAGE_RECALLED
 	} from "./uni_modules/easemob-uts-sdk"
 	// #ifdef APP-ANDROID || APP-HARMONY
 	let firstBackTime = 0
@@ -18,37 +30,37 @@
 		
 		// ==================== 示例 1：连接事件监听 ====================
 		
-		uni.$on('em:connection:connected', (data : any) => {
+		uni.$on(EM_CONNECTION_CONNECTED, (data : any) => {
 			console.log('[EventBus] 已连接到服务器')
 		})
 		
-		uni.$on('em:connection:disconnected', (data : any) => {
+		uni.$on(EM_CONNECTION_DISCONNECTED, (data : any) => {
 			console.log('[EventBus] 连接断开, errorCode:', data)
 		})
 		
-		uni.$on('em:connection:logout', (data : any) => {
+		uni.$on(EM_CONNECTION_LOGOUT, (data : any) => {
 			console.log('[EventBus] 被登出, errorCode:', data)
 		})
 		
-		uni.$on('em:connection:token_will_expire', (data : any) => {
+		uni.$on(EM_CONNECTION_TOKEN_WILL_EXPIRE, (data : any) => {
 			console.log('[EventBus] Token 即将过期')
 		})
 		
-		uni.$on('em:connection:token_expired', (data : any) => {
+		uni.$on(EM_CONNECTION_TOKEN_EXPIRED, (data : any) => {
 			console.log('[EventBus] Token 已过期')
 		})
 		
-		uni.$on('em:connection:offline_sync_start', (data : any) => {
+		uni.$on(EM_CONNECTION_OFFLINE_SYNC_START, (data : any) => {
 			console.log('[EventBus] 开始同步离线消息')
 		})
 		
-		uni.$on('em:connection:offline_sync_finish', (data : any) => {
+		uni.$on(EM_CONNECTION_OFFLINE_SYNC_FINISH, (data : any) => {
 			console.log('[EventBus] 离线消息同步完成')
 		})
 		
 		// ==================== 示例 2：消息事件监听（数据经 JSON 中转） ====================
 		
-		uni.$on('em:message:received', (data : any) => {
+		uni.$on(EM_MESSAGE_RECEIVED, (data : any) => {
 			const messages = JSON.parse(data as string) as any[]
 			console.log('[EventBus] 收到消息, 数量:', messages.length)
 			messages.forEach((msg : any) => {
@@ -57,22 +69,22 @@
 			})
 		})
 		
-		uni.$on('em:message:cmd_received', (data : any) => {
+		uni.$on(EM_MESSAGE_CMD_RECEIVED, (data : any) => {
 			const messages = JSON.parse(data as string) as any[]
 			console.log('[EventBus] 收到 CMD 消息, 数量:', messages.length)
 		})
 		
-		uni.$on('em:message:read', (data : any) => {
+		uni.$on(EM_MESSAGE_READ, (data : any) => {
 			const messages = JSON.parse(data as string) as any[]
 			console.log('[EventBus] 消息已读, 数量:', messages.length)
 		})
 		
-		uni.$on('em:message:delivered', (data : any) => {
+		uni.$on(EM_MESSAGE_DELIVERED, (data : any) => {
 			const messages = JSON.parse(data as string) as any[]
 			console.log('[EventBus] 消息已送达, 数量:', messages.length)
 		})
 		
-		uni.$on('em:message:recalled', (data : any) => {
+		uni.$on(EM_MESSAGE_RECALLED, (data : any) => {
 			const messages = JSON.parse(data as string) as any[]
 			console.log('[EventBus] 消息被撤回, 数量:', messages.length)
 		})

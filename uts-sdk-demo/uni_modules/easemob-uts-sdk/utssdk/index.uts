@@ -4,6 +4,9 @@
 
 export * from './interface.uts';
 
+// 事件常量（跨平台通用）
+export * from './common/event-constants.uts';
+
 // #ifdef APP-ANDROID
 export { 
   // 初始化
