@@ -126,7 +126,7 @@ function registerActivityResultCallback(): void {
  *   }
  * });
  */
-export function openFilePicker(callback: UTSJSONObject): void {
+export function openFilePickerImpl(callback: UTSJSONObject): void {
 	const callbackId = generatePickerCallbackId();
 	filePickerCallbacks.set(callbackId, callback);
 

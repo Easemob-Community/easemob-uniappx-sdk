@@ -303,6 +303,80 @@ public class EMMessageBridge: NSObject {
         }
     }
 
+    // MARK: - 发送文件消息
+
+    /// 发送文件消息
+    /// - Parameter paramsJson: JSON 字符串，包含 filePath / to / chatType / extJson / callbackId
+    @objc public static func sendFileMessage(paramsJson: String) {
+        guard
+            let data = paramsJson.data(using: .utf8),
+            let params = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let filePath   = params["filePath"]   as? String,
+            let to         = params["to"]         as? String,
+            let chatType   = params["chatType"]   as? String,
+            let callbackId = params["callbackId"] as? String
+        else {
+            NSLog("[EMMessageBridge] sendFileMessage: invalid paramsJson")
+            return
+        }
+        let extJson = params["extJson"] as? String ?? ""
+        NSLog("[EMMessageBridge] sendFileMessage start, to: %@, callbackId: %@", to, callbackId)
+
+        // 处理 file:// 前缀
+        let localFilePath: String = filePath.hasPrefix("file://") ? String(filePath.dropFirst(7)) : filePath
+
+        // 构建文件消息体
+        let body = EMFileMessageBody(
+            localPath: localFilePath,
+            displayName: URL(fileURLWithPath: localFilePath).lastPathComponent
+        )
+
+        let fromUser = EMClient.shared().currentUsername ?? ""
+        let message = EMChatMessage(
+            conversationID: to,
+            from: fromUser,
+            to: to,
+            body: body,
+            ext: nil
+        )
+        switch chatType {
+        case "group":    message.chatType = .groupChat
+        case "chatroom": message.chatType = .chatRoom
+        default:         message.chatType = .chat
+        }
+        if !extJson.isEmpty, extJson != "null" {
+            if let d = extJson.data(using: .utf8),
+               let dict = try? JSONSerialization.jsonObject(with: d) as? [String: Any] {
+                message.ext = dict
+            }
+        }
+
+        EMClient.shared().chatManager?.send(message, progress: { progress in
+            NSLog("[EMMessageBridge] sendFileMessage progress: %d, callbackId: %@", progress, callbackId)
+            setMsgProgress(Int(progress), for: callbackId)
+        }) { sentMessage, error in
+            // 注意：不在此处 removeMsgProgress，由 UTS 侧 clearResult 统一清理
+            if let error = error {
+                NSLog("[EMMessageBridge] sendFileMessage error: %d %@", error.code.rawValue, error.errorDescription ?? "")
+                setMsgResult(["status": "error", "code": Int(error.code.rawValue), "message": error.errorDescription ?? "Send file failed"], for: callbackId)
+            } else if let msg = sentMessage {
+                NSLog("[EMMessageBridge] sendFileMessage success, msgId: %@", msg.messageId)
+                var chatTypeStr = "single"
+                switch msg.chatType {
+                case .groupChat: chatTypeStr = "group"
+                case .chatRoom:  chatTypeStr = "chatroom"
+                default:         chatTypeStr = "single"
+                }
+                setMsgResult([
+                    "status": "success", "msgId": msg.messageId,
+                    "from": msg.from ?? "", "to": msg.to ?? "",
+                    "type": "file", "chatType": chatTypeStr,
+                    "timestamp": Int(msg.timestamp), "extJson": extJson.isEmpty ? "{}" : extJson
+                ], for: callbackId)
+            }
+        }
+    }
+
     // MARK: - 发送 CMD 消息
 
     /// 发送透传（CMD）消息

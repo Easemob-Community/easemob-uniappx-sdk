@@ -42,9 +42,13 @@ import {
   sendFileMessageImpl,
   sendCmdMessageImpl,
   sendCustomMessageImpl,
-  openFilePicker,
+  openFilePickerImpl,
   FilePickResultData
 } from './message/sender.uts';
+
+import {
+  handleFilePickerResultImpl
+} from './file/picker.uts';
 
 // 导出类型
 export { Message, MessageBody, FilePickResultData };
@@ -258,6 +262,7 @@ export function sendVideoMessage(
   sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, chatType, callback);
 }
 
+@UTSJS.keepAlive
 export function sendFileMessage(
   filePath: string,
   to: string,
@@ -269,6 +274,7 @@ export function sendFileMessage(
   const callback = new UTSJSONObject();
   callback['onSuccess'] = onSuccess;
   callback['onError'] = onError;
+  callback['onProgress'] = onProgress;
   sendFileMessageImpl(filePath, to, chatType, callback);
 }
 
@@ -302,7 +308,23 @@ export function sendCustomMessage(
   sendCustomMessageImpl(event, params, to, chatType, callback, ext);
 }
 
-export { openFilePicker };
+@UTSJS.keepAlive
+export function openFilePicker(
+  onSuccess: ((result: FilePickResultData) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onCancel: (() => void) | null
+): void {
+  // 在函数体内重组 callback，避免调用方传入含闭包的 UTSJSONObject 字面量崩溃
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
+  callback['onCancel'] = onCancel;
+  openFilePickerImpl(callback);
+}
+
+export function handleFilePickerResult(): boolean {
+  return handleFilePickerResultImpl();
+}
 
 // ==================== 事件总线集成 ====================
 

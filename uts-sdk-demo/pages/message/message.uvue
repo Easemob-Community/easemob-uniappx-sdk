@@ -216,9 +216,8 @@
 <script setup lang="uts">
 	// 统一 API（跨平台，无需条件编译）
 	import { sendTextMessage, sendImageMessage, sendVideoMessage, sendCmdMessage, sendCustomMessage } from "@/uni_modules/easemob-uts-sdk"
-	// #ifdef APP-ANDROID
+	// 文件消息和文件选择器（Android 和 iOS 都支持）
 	import { sendFileMessage, openFilePicker, FilePickResultData } from "@/uni_modules/easemob-uts-sdk"
-	// #endif
 	
 	// 响应式数据
 	const targetId = ref('pfh2')
@@ -425,11 +424,10 @@
 			return
 		}
 		
-		// #ifdef APP-ANDROID
 		addLog('正在打开文件选择器...')
 		
-		openFilePicker({
-			onSuccess: (result: FilePickResultData) => {
+		openFilePicker(
+			(result: FilePickResultData) => {
 				console.log('[MessagePage] 文件选择成功回调触发')
 				addLog(`已选择文件: ${result.fileName}`)
 				addLog(`文件大小: ${result.fileSize} 字节`)
@@ -461,18 +459,14 @@
 					}
 				)
 			},
-			onError: (code: number, message: string) => {
+			(code: number, message: string) => {
 				console.log(`[MessagePage] 文件选择失败: code=${code}, message=${message}`)
 				addLog(`文件选择失败: code=${code}, message=${message}`)
 			},
-			onCancel: () => {
+			() => {
 				addLog('用户取消文件选择')
 			}
-		} as UTSJSONObject)
-		// #endif
-		// #ifdef APP-IOS
-		addLog('iOS 暂不支持文件选择器')
-		// #endif
+		)
 	}
 	
 	// 发送CMD消息

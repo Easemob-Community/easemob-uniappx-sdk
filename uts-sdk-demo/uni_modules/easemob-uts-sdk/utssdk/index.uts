@@ -105,8 +105,9 @@ export {
   sendCmdMessage,
   sendCustomMessage,
   
-  // 文件选择器（stub）
+  // 文件选择器
   openFilePicker,
+  handleFilePickerResult,
   FilePickResultData,
   
   // 事件总线集成

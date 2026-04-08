@@ -137,13 +137,13 @@ function pollMessageResultWithProgress(
   }, MSG_POLL_INTERVAL);
 }
 
-// 文件选择结果类型
-export type FilePickResultData = {
-  filePath: string;
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
-}
+// 从 file/picker.uts 导入文件选择器
+import {
+  openFilePickerImpl as openFilePickerNative,
+  FilePickResultData
+} from '../file/picker.uts';
+
+export { FilePickResultData };
 
 /** 发送文本消息 */
 export function sendTextMessageImpl(
@@ -219,15 +219,25 @@ export function sendVideoMessageImpl(
   pollMessageResultWithProgress(cid, onSuccess, onError, onProgress);
 }
 
-/** 发送文件消息（stub） */
+/** 发送文件消息 */
 export function sendFileMessageImpl(
   filePath: string, to: string, chatType: string, callback: UTSJSONObject
 ): void {
-  console.log('[iOS] sendFileMessage stub:', filePath, '->', to);
-  const onError = callback["onError"];
-  if (onError != null) {
-    (onError as (code: number, message: string) => void)(501, 'iOS 暂未实现');
-  }
+  console.log('[iOS][sender] sendFileMessage 进入, to=', to);
+  const cid = genCallbackId();
+  const onSuccess = callback["onSuccess"] as ((messageInfo: UTSJSONObject) => void) | null;
+  const onError = callback["onError"] as ((code: number, message: string) => void) | null;
+  const onProgress = callback["onProgress"] as ((progress: number, status: string) => void) | null;
+  const paramsObj = new UTSJSONObject();
+  paramsObj['filePath']  = filePath;
+  paramsObj['to']        = to;
+  paramsObj['chatType']  = chatType;
+  paramsObj['callbackId'] = cid;
+  const paramsJson: string = JSON.stringify(paramsObj) ?? '{}';
+  console.log('[iOS][sender] 调用 EMMessageBridge.sendFileMessage');
+  EMMessageBridge.sendFileMessage(paramsJson = paramsJson);
+  console.log('[iOS][sender] 文件消息发送完毕，开始轮询');
+  pollMessageResultWithProgress(cid, onSuccess, onError, onProgress);
 }
 
 /** 发送透传消息 */
@@ -278,11 +288,8 @@ export function sendCustomMessageImpl(
   pollMessageResult(cid, onSuccess, onError);
 }
 
-/** 打开文件选择器（stub） */
-export function openFilePicker(callback: UTSJSONObject): void {
-  console.log('[iOS] openFilePicker stub');
-  const onError = callback["onError"];
-  if (onError != null) {
-    (onError as (code: number, message: string) => void)(501, 'iOS 暂未实现');
-  }
+/** 打开文件选择器 */
+export function openFilePickerImpl(callback: UTSJSONObject): void {
+  console.log('[iOS] openFilePicker 调用');
+  openFilePickerNative(callback);
 }

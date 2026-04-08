@@ -438,11 +438,23 @@ export function downloadThumbnail(message: Message, callback: UTSJSONObject): vo
 
 // ==================== 文件选择器 ====================
 
-export {
-  openFilePicker,
-  handleFilePickerResult,
-  FilePickResultData
-} from './file/picker.uts';
+import { openFilePickerImpl, FilePickResultData } from './file/picker.uts';
+export { handleFilePickerResult, FilePickResultData } from './file/picker.uts';
+
+/**
+ * 打开文件选择器（统一跨平台签名，接收独立回调参数）
+ */
+export function openFilePicker(
+  onSuccess: ((result: FilePickResultData) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onCancel: (() => void) | null
+): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
+  callback['onCancel'] = onCancel;
+  openFilePickerImpl(callback);
+}
 
 // ==================== 事件总线集成 ====================
 
