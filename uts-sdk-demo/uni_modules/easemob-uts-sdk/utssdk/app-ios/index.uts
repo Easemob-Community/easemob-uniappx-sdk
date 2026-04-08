@@ -223,35 +223,78 @@ export function sendTextMessage(
 }
 
 export function sendImageMessage(
-  filePath: string, sendOriginalImage: boolean, to: string,
-  chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null
+  filePath: string,
+  sendOriginalImage: boolean,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null,
+  ext: UTSJSONObject | null = null
 ): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
   sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback, ext);
 }
 
 export function sendVideoMessage(
-  videoFilePath: string, imageThumbPath: string, timeLength: number,
-  to: string, chatType: string, callback: UTSJSONObject
+  videoFilePath: string,
+  imageThumbPath: string,
+  timeLength: number,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null
 ): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
   sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, chatType, callback);
 }
 
 export function sendFileMessage(
-  filePath: string, to: string, chatType: string, callback: UTSJSONObject
+  filePath: string,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null
 ): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
   sendFileMessageImpl(filePath, to, chatType, callback);
 }
 
 export function sendCmdMessage(
-  action: string, to: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null
+  action: string,
+  to: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null,
+  ext: UTSJSONObject | null = null
 ): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
   sendCmdMessageImpl(action, to, callback, ext);
 }
 
 export function sendCustomMessage(
-  event: string, params: UTSJSONObject, to: string,
-  chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null
+  event: string,
+  params: UTSJSONObject,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null,
+  ext: UTSJSONObject | null = null
 ): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
   sendCustomMessageImpl(event, params, to, chatType, callback, ext);
 }
 

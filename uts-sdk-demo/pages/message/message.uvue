@@ -215,9 +215,9 @@
 
 <script setup lang="uts">
 	// 统一 API（跨平台，无需条件编译）
-	import { sendTextMessage } from "@/uni_modules/easemob-uts-sdk"
+	import { sendTextMessage, sendImageMessage, sendVideoMessage, sendCmdMessage, sendCustomMessage } from "@/uni_modules/easemob-uts-sdk"
 	// #ifdef APP-ANDROID
-	import { sendImageMessage, sendVideoMessage, sendFileMessage, sendCmdMessage, sendCustomMessage, openFilePicker, FilePickResultData } from "@/uni_modules/easemob-uts-sdk"
+	import { sendFileMessage, openFilePicker, FilePickResultData } from "@/uni_modules/easemob-uts-sdk"
 	// #endif
 	
 	// 响应式数据
@@ -325,10 +325,13 @@
 					addLog(`已选择图片: ${imagePath}`)
 					
 					// 发送图片消息
-					sendImageMessage(imagePath, sendOriginalImage.value, targetId.value.trim(), chatType.value, {
-						onSuccess: (messageInfo: UTSJSONObject) => {
+					sendImageMessage(
+						imagePath,
+						sendOriginalImage.value,
+						targetId.value.trim(),
+						chatType.value,
+						(messageInfo: UTSJSONObject) => {
 							console.log('[MessagePage] 图片发送成功回调触发')
-							// 使用 UTSJSONObject 的 get 方法访问属性
 							const msgId = messageInfo.getString('msgId') ?? 'unknown'
 							const msgType = messageInfo.getString('type') ?? 'unknown'
 							const chatTypeStr = messageInfo.getString('chatType') ?? 'unknown'
@@ -338,15 +341,15 @@
 							addLog('图片发送成功, ID: ' + msgId)
 							addLog('消息类型: ' + msgType + ', 聊天类型: ' + chatTypeStr)
 						},
-						onError: (code: number, message: string) => {
+						(code: number, message: string) => {
 							console.log(`[MessagePage] 图片发送失败回调触发: code=${code}, message=${message}`)
 							addLog(`图片发送失败: code=${code}, message=${message}`)
 						},
-						onProgress: (progress: number, status: string) => {
+						(progress: number, status: string) => {
 							console.log(`[MessagePage] 图片发送进度回调触发: progress=${progress}`)
 							addLog(`图片上传进度: ${progress}%`)
 						}
-					} as UTSJSONObject)
+					)
 				}
 			},
 			fail: (err) => {
@@ -379,10 +382,15 @@
 					addLog(`视频时长: ${duration}秒`)
 					
 					// 发送视频消息
-					// sendVideoMessage 参数: videoFilePath, imageThumbPath, timeLength, to, chatType, callback
+					// sendVideoMessage 参数: videoFilePath, imageThumbPath, timeLength, to, chatType, onSuccess, onError, onProgress
 					// imageThumbPath 可以为空字符串，SDK 会自动生成缩略图
-					sendVideoMessage(videoPath, videoThumbPath.value, duration, targetId.value.trim(), chatType.value, {
-						onSuccess: (messageInfo: UTSJSONObject) => {
+					sendVideoMessage(
+						videoPath,
+						videoThumbPath.value,
+						duration,
+						targetId.value.trim(),
+						chatType.value,
+						(messageInfo: UTSJSONObject) => {
 							console.log('[MessagePage] 视频发送成功回调触发')
 							const msgId = messageInfo.getString('msgId') ?? 'unknown'
 							const msgType = messageInfo.getString('type') ?? 'unknown'
@@ -393,15 +401,15 @@
 							addLog('视频发送成功, ID: ' + msgId)
 							addLog('消息类型: ' + msgType + ', 聊天类型: ' + chatTypeStr)
 						},
-						onError: (code: number, message: string) => {
+						(code: number, message: string) => {
 							console.log(`[MessagePage] 视频发送失败回调触发: code=${code}, message=${message}`)
 							addLog(`视频发送失败: code=${code}, message=${message}`)
 						},
-						onProgress: (progress: number, status: string) => {
+						(progress: number, status: string) => {
 							console.log(`[MessagePage] 视频发送进度回调触发: progress=${progress}`)
 							addLog(`视频上传进度: ${progress}%`)
 						}
-					} as UTSJSONObject)
+					)
 				}
 			},
 			fail: (err) => {
@@ -412,12 +420,12 @@
 	
 	// 选择并发送文件
 	function handleChooseFile(): void {
-		// #ifdef APP-ANDROID
 		if (targetId.value.length == 0) {
 			addLog('错误：请先输入目标ID')
 			return
 		}
 		
+		// #ifdef APP-ANDROID
 		addLog('正在打开文件选择器...')
 		
 		openFilePicker({
@@ -428,8 +436,11 @@
 				addLog(`文件类型: ${result.mimeType}`)
 				
 				// 发送文件消息
-				sendFileMessage(result.filePath, targetId.value.trim(), chatType.value, {
-					onSuccess: (messageInfo: UTSJSONObject) => {
+				sendFileMessage(
+					result.filePath,
+					targetId.value.trim(),
+					chatType.value,
+					(messageInfo: UTSJSONObject) => {
 						console.log('[MessagePage] 文件发送成功回调触发')
 						const msgId = messageInfo.getString('msgId') ?? 'unknown'
 						const msgType = messageInfo.getString('type') ?? 'unknown'
@@ -440,15 +451,15 @@
 						addLog('文件发送成功, ID: ' + msgId)
 						addLog('消息类型: ' + msgType + ', 聊天类型: ' + chatTypeStr)
 					},
-					onError: (code: number, message: string) => {
+					(code: number, message: string) => {
 						console.log(`[MessagePage] 文件发送失败回调触发: code=${code}, message=${message}`)
 						addLog(`文件发送失败: code=${code}, message=${message}`)
 					},
-					onProgress: (progress: number, status: string) => {
+					(progress: number, status: string) => {
 						console.log(`[MessagePage] 文件发送进度回调触发: progress=${progress}`)
 						addLog(`文件上传进度: ${progress}%`)
 					}
-				} as UTSJSONObject)
+				)
 			},
 			onError: (code: number, message: string) => {
 				console.log(`[MessagePage] 文件选择失败: code=${code}, message=${message}`)
@@ -477,30 +488,32 @@
 		addLog(`发送CMD消息到 ${chatType.value === 'single' ? '用户' : '群组'}: ${to}`)
 		addLog(`Action: ${action}`)
 		
-		sendCmdMessage(action, to, {
-			onSuccess: (messageInfo: UTSJSONObject) => {
-				console.log('[MessagePage] CMD消息发送成功回调触发')
-				if (messageInfo != null) {
-					const msgId = messageInfo.getString('msgId') ?? 'unknown'
-					const msgType = messageInfo.getString('type') ?? 'unknown'
-					console.log('[MessagePage] CMD消息ID:', msgId)
-					console.log('[MessagePage] 消息类型:', msgType)
-					addLog('CMD消息发送成功, ID: ' + msgId)
-					addLog('消息类型: ' + msgType)
-				} else {
-					console.log('[MessagePage] messageInfo为null或undefined')
-					addLog('CMD消息发送成功(无详情)')
-				}
+		sendCmdMessage(
+			action,
+			to,
+			(messageInfo: UTSJSONObject) => {
+			console.log('[MessagePage] CMD消息发送成功回调触发')
+			if (messageInfo != null) {
+				const msgId = messageInfo.getString('msgId') ?? 'unknown'
+				const msgType = messageInfo.getString('type') ?? 'unknown'
+				console.log('[MessagePage] CMD消息ID:', msgId)
+				console.log('[MessagePage] 消息类型:', msgType)
+				addLog('CMD消息发送成功, ID: ' + msgId)
+				addLog('消息类型: ' + msgType)
+			} else {
+				console.log('[MessagePage] messageInfo为null或undefined')
+				addLog('CMD消息发送成功(无详情)')
+			}
 			},
-			onError: (code: number, message: string) => {
+			(code: number, message: string) => {
 				console.log(`[MessagePage] CMD消息发送失败回调触发: code=${code}, message=${message}`)
 				addLog(`CMD消息发送失败: code=${code}, message=${message}`)
 			},
-			onProgress: (progress: number, status: string) => {
+			(progress: number, status: string) => {
 				console.log(`[MessagePage] CMD消息发送进度回调触发: progress=${progress}, status=${status}`)
 				addLog(`发送进度: ${progress}%, status=${status}`)
 			}
-		} as UTSJSONObject)
+		)
 	}
 	
 	// 发送淘宝订单自定义消息
@@ -530,30 +543,34 @@
 		addLog(`Event: ${event}`)
 		addLog(`订单ID: ${orderParams['orderId']}`)
 		
-		sendCustomMessage(event, orderParams, to, chatType.value, {
-			onSuccess: (messageInfo: UTSJSONObject) => {
-				console.log('[MessagePage] 自定义消息发送成功回调触发')
-				if (messageInfo != null) {
-					const msgId = messageInfo.getString('msgId') ?? 'unknown'
-					const msgType = messageInfo.getString('type') ?? 'unknown'
-					console.log('[MessagePage] 自定义消息ID:', msgId)
-					console.log('[MessagePage] 消息类型:', msgType)
-					addLog('自定义消息发送成功, ID: ' + msgId)
-					addLog('消息类型: ' + msgType + ', event: ' + event)
-				} else {
-					console.log('[MessagePage] messageInfo为null或undefined')
-					addLog('自定义消息发送成功(无详情)')
-				}
+		sendCustomMessage(
+			event,
+			orderParams,
+			to,
+			chatType.value,
+			(messageInfo: UTSJSONObject) => {
+			console.log('[MessagePage] 自定义消息发送成功回调触发')
+			if (messageInfo != null) {
+				const msgId = messageInfo.getString('msgId') ?? 'unknown'
+				const msgType = messageInfo.getString('type') ?? 'unknown'
+				console.log('[MessagePage] 自定义消息ID:', msgId)
+				console.log('[MessagePage] 消息类型:', msgType)
+				addLog('自定义消息发送成功, ID: ' + msgId)
+				addLog('消息类型: ' + msgType + ', event: ' + event)
+			} else {
+				console.log('[MessagePage] messageInfo为null或undefined')
+				addLog('自定义消息发送成功(无详情)')
+			}
 			},
-			onError: (code: number, message: string) => {
+			(code: number, message: string) => {
 				console.log(`[MessagePage] 自定义消息发送失败回调触发: code=${code}, message=${message}`)
 				addLog(`自定义消息发送失败: code=${code}, message=${message}`)
 			},
-			onProgress: (progress: number, status: string) => {
+			(progress: number, status: string) => {
 				console.log(`[MessagePage] 自定义消息发送进度回调触发: progress=${progress}, status=${status}`)
 				addLog(`发送进度: ${progress}%, status=${status}`)
 			}
-		} as UTSJSONObject)
+		)
 	}
 	
 	// 页面加载
