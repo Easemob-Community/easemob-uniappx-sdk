@@ -222,6 +222,7 @@ export function sendTextMessage(
   sendTextMessageImpl(content, to, chatType, callback, ext);
 }
 
+@UTSJS.keepAlive
 export function sendImageMessage(
   filePath: string,
   sendOriginalImage: boolean,
@@ -235,9 +236,11 @@ export function sendImageMessage(
   const callback = new UTSJSONObject();
   callback['onSuccess'] = onSuccess;
   callback['onError'] = onError;
+  callback['onProgress'] = onProgress;
   sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback, ext);
 }
 
+@UTSJS.keepAlive
 export function sendVideoMessage(
   videoFilePath: string,
   imageThumbPath: string,
@@ -251,6 +254,7 @@ export function sendVideoMessage(
   const callback = new UTSJSONObject();
   callback['onSuccess'] = onSuccess;
   callback['onError'] = onError;
+  callback['onProgress'] = onProgress;
   sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, chatType, callback);
 }
 

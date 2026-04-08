@@ -280,9 +280,9 @@
 			chatType.value,
 			(messageInfo: UTSJSONObject) => {
 				console.log('[MessagePage] 消息发送成功回调触发')
-				const msgId = (messageInfo['msgId'] as string | null) ?? (messageInfo.getString('msgId') ?? 'unknown')
-				const msgType = (messageInfo['type'] as string | null) ?? (messageInfo.getString('type') ?? 'unknown')
-				const chatTypeStr = (messageInfo['chatType'] as string | null) ?? (messageInfo.getString('chatType') ?? 'unknown')
+				const msgId = (messageInfo['msgId'] as string | null) ?? 'unknown'
+				const msgType = (messageInfo['type'] as string | null) ?? 'unknown'
+				const chatTypeStr = (messageInfo['chatType'] as string | null) ?? 'unknown'
 				const msgExt = messageInfo['ext'] as UTSJSONObject | null
 				console.log('[MessagePage] 消息 ID:', msgId)
 				console.log('[MessagePage] 消息类型:', msgType)
@@ -332,9 +332,9 @@
 						chatType.value,
 						(messageInfo: UTSJSONObject) => {
 							console.log('[MessagePage] 图片发送成功回调触发')
-							const msgId = messageInfo.getString('msgId') ?? 'unknown'
-							const msgType = messageInfo.getString('type') ?? 'unknown'
-							const chatTypeStr = messageInfo.getString('chatType') ?? 'unknown'
+							const msgId = (messageInfo['msgId'] as string | null) ?? 'unknown'
+							const msgType = (messageInfo['type'] as string | null) ?? 'unknown'
+							const chatTypeStr = (messageInfo['chatType'] as string | null) ?? 'unknown'
 							console.log('[MessagePage] 图片消息ID:', msgId)
 							console.log('[MessagePage] 消息类型:', msgType)
 							console.log('[MessagePage] 聊天类型:', chatTypeStr)
@@ -392,9 +392,9 @@
 						chatType.value,
 						(messageInfo: UTSJSONObject) => {
 							console.log('[MessagePage] 视频发送成功回调触发')
-							const msgId = messageInfo.getString('msgId') ?? 'unknown'
-							const msgType = messageInfo.getString('type') ?? 'unknown'
-							const chatTypeStr = messageInfo.getString('chatType') ?? 'unknown'
+							const msgId = (messageInfo['msgId'] as string | null) ?? 'unknown'
+							const msgType = (messageInfo['type'] as string | null) ?? 'unknown'
+							const chatTypeStr = (messageInfo['chatType'] as string | null) ?? 'unknown'
 							console.log('[MessagePage] 视频消息ID:', msgId)
 							console.log('[MessagePage] 消息类型:', msgType)
 							console.log('[MessagePage] 聊天类型:', chatTypeStr)
@@ -442,9 +442,9 @@
 					chatType.value,
 					(messageInfo: UTSJSONObject) => {
 						console.log('[MessagePage] 文件发送成功回调触发')
-						const msgId = messageInfo.getString('msgId') ?? 'unknown'
-						const msgType = messageInfo.getString('type') ?? 'unknown'
-						const chatTypeStr = messageInfo.getString('chatType') ?? 'unknown'
+						const msgId = (messageInfo['msgId'] as string | null) ?? 'unknown'
+						const msgType = (messageInfo['type'] as string | null) ?? 'unknown'
+						const chatTypeStr = (messageInfo['chatType'] as string | null) ?? 'unknown'
 						console.log('[MessagePage] 文件消息ID:', msgId)
 						console.log('[MessagePage] 消息类型:', msgType)
 						console.log('[MessagePage] 聊天类型:', chatTypeStr)
@@ -494,8 +494,8 @@
 			(messageInfo: UTSJSONObject) => {
 			console.log('[MessagePage] CMD消息发送成功回调触发')
 			if (messageInfo != null) {
-				const msgId = messageInfo.getString('msgId') ?? 'unknown'
-				const msgType = messageInfo.getString('type') ?? 'unknown'
+				const msgId = (messageInfo['msgId'] as string | null) ?? 'unknown'
+				const msgType = (messageInfo['type'] as string | null) ?? 'unknown'
 				console.log('[MessagePage] CMD消息ID:', msgId)
 				console.log('[MessagePage] 消息类型:', msgType)
 				addLog('CMD消息发送成功, ID: ' + msgId)
@@ -551,8 +551,8 @@
 			(messageInfo: UTSJSONObject) => {
 			console.log('[MessagePage] 自定义消息发送成功回调触发')
 			if (messageInfo != null) {
-				const msgId = messageInfo.getString('msgId') ?? 'unknown'
-				const msgType = messageInfo.getString('type') ?? 'unknown'
+				const msgId = (messageInfo['msgId'] as string | null) ?? 'unknown'
+				const msgType = (messageInfo['type'] as string | null) ?? 'unknown'
 				console.log('[MessagePage] 自定义消息ID:', msgId)
 				console.log('[MessagePage] 消息类型:', msgType)
 				addLog('自定义消息发送成功, ID: ' + msgId)

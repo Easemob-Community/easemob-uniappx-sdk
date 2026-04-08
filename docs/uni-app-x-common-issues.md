@@ -298,8 +298,177 @@ MessageHelper | EMMessage | MessagePage
 
 ---
 
-## 八、参考链接
+## 八、iOS 轮询架构设计说明
+
+### 为什么 iOS 采用轮询而非直接回调？
+
+**根本原因：UTS/Swift 混编无法安全传递 `@escaping` 闭包**
+
+在 iOS 平台，UTS 插件调用 Swift `@objc` 方法时存在根本性限制：
+
+1. **闭包传递崩溃**：UTS 无法将 `@escaping` 闭包（如 `onSuccess`/`onError`/`onProgress`）安全传递给 Swift 方法。尝试传递会导致运行时崩溃，错误通常发生在参数求值阶段，早于函数体执行。
+
+2. **UTSJSONObject 含闭包崩溃**：在 UTS 层构造 `{ onSuccess: () => {} }` 这样的对象字面量，iOS 运行时在解析该对象时就会崩溃。
+
+3. **跨语言类型不匹配**：Swift 的闭包类型与 UTS 的函数类型在内存布局和调用约定上不兼容，无法直接桥接。
+
+**解决方案：轮询架构（Poll-based Architecture）**
+
+```
+┌─────────────┐     JSON参数      ┌──────────────────┐
+│  UTS Layer  │ ───────────────> │  Swift Bridge    │
+│  (sender)   │                  │  (EMMessageBridge)│
+└─────────────┘                  └──────────────────┘
+       ↑                                  │
+       │         轮询查询结果              │ 环信SDK异步回调
+       │    getResultStatus(callbackId)   │
+       └──────────────────────────────────┘
+```
+
+**工作流程：**
+
+1. **调用阶段**：UTS 生成唯一 `callbackId`，将参数序列化为 JSON 字符串传入 Swift
+2. **执行阶段**：Swift 层调用环信 SDK，在异步回调中将结果存入线程安全的 `msgResultMap[callbackId]`
+3. **轮询阶段**：UTS 使用 `setInterval` 每 50ms 查询 `getResultStatus(callbackId)`
+4. **回调阶段**：检测到 `success`/`error` 后，UTS 从 Swift 读取详细结果，触发 `onSuccess`/`onError`
+
+**架构优势：**
+
+| 方面 | 说明 |
+|------|------|
+| 零闭包传递 | 完全规避 UTS→Swift 闭包传递的崩溃风险 |
+| 类型安全 | 所有跨语言交互使用基本类型（String, Int） |
+| 可扩展 | 同一模式可复制到所有带回调的 SDK 方法 |
+| 可维护 | Swift 层纯异步，UTS 层纯轮询，职责清晰 |
+
+**相关文件：**
+- `app-ios/message/EMMessageBridge.swift` - Swift 桥接层，结果存储
+- `app-ios/message/sender.uts` - UTS 轮询实现
+
+---
+
+## 九、iOS 附件上传进度回调问题
+
+### 问题1：onProgress 回调不触发或崩溃
+
+**现象：**
+- 发送图片/视频时 onProgress 回调不触发
+- 或触发一次后报错：`onProgress回调函数已释放，不能再次执行`
+- 参考文档：https://doc.dcloud.net.cn/uni-app-x/plugin/uts-plugin.html#keepalive
+
+**原因：**
+1. UTS 插件 iOS 运行时默认在导出函数返回后释放回调参数，只允许异步调用一次
+2. `onSuccess`/`onError` 只调用一次所以能工作，`onProgress` 需多次调用故报错
+3. `app-ios/index.uts` 中未将 `onProgress` 显式赋值到 callback 对象
+
+**解决方案：**
+
+**1. 添加 @UTSJS.keepAlive 装饰器**
+
+在 `app-ios/index.uts` 中：
+
+```typescript
+@UTSJS.keepAlive
+export function sendImageMessage(
+  filePath: string,
+  sendOriginalImage: boolean,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null,
+  ext: UTSJSONObject | null = null
+): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
+  callback['onProgress'] = onProgress;  // 必须显式赋值
+  sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback, ext);
+}
+```
+
+**2. Swift Bridge 进度存储**
+
+在 `EMMessageBridge.swift` 中使用线程安全的 `msgProgressMap`：
+
+```swift
+private let msgProgressLock = NSLock()
+private var msgProgressMap: [String: Int] = [:]
+
+// 发送时注入 progress block
+EMClient.shared().chatManager?.send(message, progress: { progress in
+    setMsgProgress(Int(progress), for: callbackId)
+}) { sentMessage, error in
+    // 注意：不在此处 removeMsgProgress，由 UTS 层 clearResult 统一清理
+    // 避免竞态：progress 被提前删除导致 UTS 轮询读不到最终进度
+}
+```
+
+**3. UTS 层轮询与去重**
+
+在 `sender.uts` 中：
+
+```typescript
+function pollMessageResultWithProgress(
+  callbackId: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null
+): void {
+  let elapsed = 0;
+  let timer = 0;
+  let lastProgress = -1;
+  
+  timer = setInterval((): void => {
+    elapsed += MSG_POLL_INTERVAL;
+    const status = EMMessageBridge.getResultStatus(callbackId);
+    
+    if (status == 'success') {
+      clearInterval(timer);
+      if (onProgress != null) { onProgress!(100, 'complete'); }  // 完成时上报100%
+      const info = buildSuccessMessageInfo(callbackId);
+      if (onSuccess != null) { onSuccess!(info); }
+      EMMessageBridge.clearResult(callbackId);  // 统一清理
+    } else if (onProgress != null) {
+      const pRaw = EMMessageBridge.getResultProgress(callbackId);
+      if (pRaw >= 0 && pRaw != lastProgress) {  // 去重
+        lastProgress = pRaw;
+        onProgress!(pRaw, 'uploading');
+      }
+    }
+  }, MSG_POLL_INTERVAL);
+}
+```
+
+---
+
+### 问题2：进度值始终为 0 或只有 0→100
+
+**现象：**
+- 相册选择的小图片只有 `progress=0` 然后直接 `progress=100`
+- 拍照的大图片能看到 `0→40→61→81→100` 的完整进度
+
+**原因：**
+这是**正常的 SDK 行为**，不是 bug：
+- 进度回调只追踪**网络上传**阶段
+- 相册照片通常已被系统压缩，文件很小，网络上传在 1-2 个轮询周期内完成
+- 拍照的原始高分辨率照片文件较大，上传需要数秒，SDK 有足够时间报告中间进度
+
+**预期行为：**
+| 场景 | 文件大小 | 进度表现 |
+|------|----------|----------|
+| 拍照 | 大（几 MB） | 0→40→61→81→100（渐进） |
+| 相册 | 小（几百 KB） | 0→100（瞬间完成） |
+
+**建议：**
+- 接受真实进度行为，大文件自然有中间值，小文件秒传直接 100%
+- 如需模拟进度效果，可在 UI 层做动画过渡，但需明确区分真实进度和模拟进度
+
+---
+
+## 九、参考链接
 
 - [UTS 编译器已知问题](https://doc.dcloud.net.cn/uni-app-x/uts/compiler-known-issues.html)
 - [uni.chooseImage 文档](https://doc.dcloud.net.cn/uni-app-x/api/media/image/chooseImage.html)
 - [UTS 原生混编文档](https://doc.dcloud.net.cn/uni-app-x/uts/native-code.html)
+- [UTS 插件 keepAlive 文档](https://doc.dcloud.net.cn/uni-app-x/plugin/uts-plugin.html#keepalive)
