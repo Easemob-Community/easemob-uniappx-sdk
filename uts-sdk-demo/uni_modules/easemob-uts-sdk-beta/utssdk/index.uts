@@ -1,0 +1,73 @@
+/**
+ * Easemob IM SDK Beta - 主入口（精简版）
+ * 统一导出所有 API
+ */
+
+// ==================== 类型导出 ====================
+
+export {
+  EMInitConfig,
+  EMLoginConfig,
+  EMConnectionState,
+  EMConnectionEvent,
+  EMConnectionStateChangedEvent,
+  EMError,
+  EMConnectionStateChangedListener,
+  EMErrorListener,
+  EMTokenWillExpireListener,
+  EMTokenExpiredListener,
+  IEMClient,
+} from './interface.uts';
+
+// ==================== 平台相关导出 ====================
+
+// #ifdef APP-IOS
+export {
+  initSDK,
+  destroy,
+  login,
+  logout,
+  onConnectionStateChanged,
+  onError,
+  onTokenWillExpire,
+  onTokenExpired,
+  getVersion,
+  isConnected,
+  isLoggedIn,
+  getCurrentUser,
+} from './app-ios/index.uts';
+// #endif
+
+// #ifdef APP-ANDROID
+export {
+  initSDK,
+  destroy,
+  login,
+  logout,
+  onConnectionStateChanged,
+  onError,
+  onTokenWillExpire,
+  onTokenExpired,
+  getVersion,
+  isConnected,
+  isLoggedIn,
+  getCurrentUser,
+} from './app-android/index.uts';
+// #endif
+
+// #ifdef APP-HARMONY
+export {
+  initSDK,
+  destroy,
+  login,
+  logout,
+  onConnectionStateChanged,
+  onError,
+  onTokenWillExpire,
+  onTokenExpired,
+  getVersion,
+  isConnected,
+  isLoggedIn,
+  getCurrentUser,
+} from './app-harmony/index.uts';
+// #endif

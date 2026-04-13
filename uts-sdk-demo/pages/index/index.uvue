@@ -2,19 +2,26 @@
 	<view class="container">
 		<image class="logo" src="/static/logo.png"></image>
 		<text class="title">{{title}}</text>
-		
+
 		<view class="button-area">
 			<button class="btn" type="primary" @click="goToLogin">前往登录</button>
+			<button class="btn" type="default" @click="goToSDKDemo">SDK 测试页面</button>
 		</view>
 	</view>
 </template>
 
 <script setup lang="uts">
 	const title = ref('Hello')
-	
+
 	function goToLogin(): void {
 		uni.navigateTo({
 			url: '/pages/login/login'
+		})
+	}
+
+	function goToSDKDemo(): void {
+		uni.navigateTo({
+			url: '/pages/sdk-demo/sdk-demo'
 		})
 	}
 </script>

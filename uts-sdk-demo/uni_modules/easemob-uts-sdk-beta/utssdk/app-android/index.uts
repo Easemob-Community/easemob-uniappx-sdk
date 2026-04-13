@@ -1,0 +1,242 @@
+/**
+ * Easemob IM SDK Beta - Android 平台实现（精简版）
+ * 仅实现初始化 + 登录 + 连接监听，其他为桩函数
+ */
+
+import EMClient from 'com.hyphenate.chat.EMClient';
+import EMOptions from 'com.hyphenate.chat.EMOptions';
+import EMCallBack from 'com.hyphenate.EMCallBack';
+import EMConnectionListener from 'com.hyphenate.EMConnectionListener';
+
+import {
+  IEMClient,
+  EMInitConfig,
+  EMLoginConfig,
+  EMConnectionState,
+  EMConnectionEvent,
+  EMConnectionStateChangedEvent,
+  EMError,
+  EMConnectionStateChangedListener,
+  EMErrorListener,
+  EMTokenWillExpireListener,
+  EMTokenExpiredListener
+} from '../interface.uts';
+
+// ==================== 事件处理器实现 ====================
+
+class EMConnectionListenerImpl extends EMConnectionListener {
+  @UTSJS.keepAlive
+  onConnectionStateChanged: EMConnectionStateChangedListener | null = null;
+
+  override onConnected(): void {
+    const eventData = new EMConnectionStateChangedEvent(
+      EMConnectionState.CONNECTED,
+      EMConnectionEvent.LOGIN_SUCCESS
+    );
+    this.onConnectionStateChanged?.(eventData);
+  }
+
+  override onDisconnected(errorCode: Int): void {
+    let event = EMConnectionEvent.NETWORK_ERROR;
+    if (errorCode == 206) {
+      event = EMConnectionEvent.KICKED_BY_OTHER_DEVICE;
+    } else if (errorCode == 202 || errorCode == 204) {
+      event = EMConnectionEvent.LOGIN_FAILED;
+    }
+    const eventData = new EMConnectionStateChangedEvent(
+      EMConnectionState.DISCONNECTED,
+      event,
+      errorCode.toString()
+    );
+    this.onConnectionStateChanged?.(eventData);
+  }
+
+  override onTokenWillExpire(): void {}
+  override onTokenExpired(): void {}
+}
+
+// ==================== 回调工厂（核心：用普通成员属性持有闭包，彻底避免 Promise resolve/reject 类型转译问题）====================
+
+/**
+ * 通用 EMCallBack 实现：通过成员属性持有 onSuccess/onError 闭包
+ * 不直接持有 Promise 的 resolve/reject，避免 UTS→Kotlin 的 Function0/Function1 类型不匹配
+ */
+class EMCallBackImpl extends EMCallBack {
+  @UTSJS.keepAlive
+  onSuccessHandler: (() => void) | null = null;
+  @UTSJS.keepAlive
+  onErrorHandler: ((code: number, message: string) => void) | null = null;
+
+  override onSuccess(): void {
+    this.onSuccessHandler?.();
+  }
+
+  override onError(code: Int, message: string): void {
+    this.onErrorHandler?.(code, message);
+  }
+}
+
+/** 创建登录/登出回调实例，注册闭包后返回 */
+function makeCallBack(
+  onSuccess: () => void,
+  onError: (code: number, message: string) => void
+): EMCallBackImpl {
+  const cb = new EMCallBackImpl();
+  cb.onSuccessHandler = onSuccess;
+  cb.onErrorHandler = onError;
+  return cb;
+}
+
+// ==================== SDK 实现类 ====================
+
+class EMClientImpl implements IEMClient {
+  private static _instance: EMClientImpl | null = null;
+  private _listener: EMConnectionListenerImpl | null = null;
+  private _isInitialized = false;
+
+  private constructor() {}
+
+  static getInstance(): EMClientImpl {
+    if (this._instance == null) {
+      this._instance = new EMClientImpl();
+    }
+    return this._instance!;
+  }
+
+  // MARK: - 已实现：初始化 + 登录 + 连接监听
+
+  initSDK(config: UTSJSONObject): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        if (this._isInitialized) {
+          console.log('[Android] EMClient SDK already initialized');
+          resolve();
+          return;
+        }
+
+        const appKey = config['appKey'] as string;
+        const autoLogin = (config['autoLogin'] as boolean) ?? false;
+        const options = new EMOptions();
+        options.setAppKey(appKey);
+        options.setAutoLogin(autoLogin);
+
+        EMClient.getInstance().init(UTSAndroid.getAppContext()!, options);
+
+        this._listener = new EMConnectionListenerImpl();
+        EMClient.getInstance().addConnectionListener(this._listener!);
+
+        this._isInitialized = true;
+        console.log('[Android] EMClient SDK initialized');
+        resolve();
+      } catch (error) {
+        console.error('[Android] EMClient SDK init failed:', error);
+        reject(error);
+      }
+    });
+  }
+
+  login(config: UTSJSONObject): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const userId = config['userId'] as string;
+        const password = config['password'] as string;
+        const useToken = (config['useToken'] as boolean) ?? false;
+        const callback = makeCallBack(
+          (): void => {
+            console.log('[Android] Login success:', userId);
+            resolve();
+          },
+          (code: number, message: string): void => {
+            console.error('[Android] Login failed:', code, message);
+            reject(new Error(`Login failed: ${code} - ${message}`));
+          }
+        );
+        if (useToken) {
+          EMClient.getInstance().loginWithToken(userId, password, callback);
+        } else {
+          EMClient.getInstance().login(userId, password, callback);
+        }
+      } catch (error) {
+        console.error('[Android] Login error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  logout(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const callback = makeCallBack(
+          (): void => {
+            console.log('[Android] Logout success');
+            resolve();
+          },
+          (code: number, message: string): void => {
+            console.error('[Android] Logout failed:', code, message);
+            reject(new Error(`Logout failed: ${code} - ${message}`));
+          }
+        );
+        EMClient.getInstance().logout(true, callback);
+      } catch (error) {
+        console.error('[Android] Logout error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  destroy(): void {
+    this._listener = null;
+    this._isInitialized = false;
+    console.log('[Android] EMClient SDK destroyed');
+  }
+
+  @UTSJS.keepAlive
+  onConnectionStateChanged(listener: EMConnectionStateChangedListener | null): void {
+    if (this._listener != null) {
+      this._listener.onConnectionStateChanged = listener;
+    }
+  }
+
+  // MARK: - 桩函数
+
+  onError(_listener: EMErrorListener | null): void {}
+  onTokenWillExpire(_listener: EMTokenWillExpireListener | null): void {}
+  onTokenExpired(_listener: EMTokenExpiredListener | null): void {}
+  getVersion(): string { return 'unknown'; }
+  isConnected(): boolean { return false; }
+  isLoggedIn(): boolean { return false; }
+  getCurrentUser(): string | null { return null; }
+}
+
+// ==================== 导出 ====================
+
+export function initSDK(config: UTSJSONObject): Promise<void> {
+  return EMClientImpl.getInstance().initSDK(config);
+}
+
+export function login(config: UTSJSONObject): Promise<void> {
+  return EMClientImpl.getInstance().login(config);
+}
+
+export function logout(): Promise<void> {
+  return EMClientImpl.getInstance().logout();
+}
+
+export function destroy(): void {
+  EMClientImpl.getInstance().destroy();
+}
+
+export function onConnectionStateChanged(listener: EMConnectionStateChangedListener | null): void {
+  EMClientImpl.getInstance().onConnectionStateChanged(listener);
+}
+
+// 桩函数导出
+export function onError(_listener: EMErrorListener | null): void {}
+export function onTokenWillExpire(_listener: EMTokenWillExpireListener | null): void {}
+export function onTokenExpired(_listener: EMTokenExpiredListener | null): void {}
+export function getVersion(): string { return 'unknown'; }
+export function isConnected(): boolean { return false; }
+export function isLoggedIn(): boolean { return false; }
+export function getCurrentUser(): string | null { return null; }
+
+// 类型已在 utssdk/index.uts 统一导出，此处不重复 re-export，避免转译时产生 __1 别名冲突

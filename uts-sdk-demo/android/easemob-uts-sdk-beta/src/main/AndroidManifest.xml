@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+  <uses-permission android:name="android.permission.VIBRATE"></uses-permission>
+  <uses-permission android:name="android.permission.INTERNET"></uses-permission>
+  <uses-permission android:name="android.permission.RECORD_AUDIO"></uses-permission>
+  <uses-permission android:name="android.permission.CAMERA"></uses-permission>
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"></uses-permission>
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission>
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission>
+  <uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>
+  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"></uses-permission>
+  <application>
+    <service android:name="com.hyphenate.chat.EMChatService" android:exported="true"></service>
+    <service android:name="com.hyphenate.chat.EMJobService" android:exported="true" android:permission="android.permission.BIND_JOB_SERVICE"></service>
+  </application>
+</manifest>

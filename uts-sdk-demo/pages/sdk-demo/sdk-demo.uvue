@@ -1,0 +1,202 @@
+<template>
+	<view class="container">
+		<text class="title">SDK Beta 测试页面</text>
+		<text class="subtitle">Android 初始化 + 登录测试</text>
+
+		<view class="section">
+			<text class="section-title">初始化</text>
+			<input class="input" v-model="appKey" placeholder="输入 AppKey" />
+			<button class="btn" type="primary" @click="handleInit">初始化 SDK</button>
+		</view>
+
+		<view class="section">
+			<text class="section-title">登录</text>
+			<input class="input" v-model="userId" placeholder="输入用户 ID" />
+			<input class="input" v-model="password" placeholder="输入密码" password />
+			<button class="btn" type="primary" @click="handleLogin">登录</button>
+			<button class="btn" type="default" @click="handleLogout">登出</button>
+		</view>
+
+		<view class="section">
+			<text class="section-title">连接状态</text>
+			<text class="status">状态: {{ connectionStatus }}</text>
+		</view>
+
+		<view class="section">
+			<text class="section-title">日志</text>
+			<scroll-view class="log-view" scroll-y>
+				<text class="log-text">{{ logs }}</text>
+			</scroll-view>
+			<button class="btn" type="warn" size="mini" @click="clearLogs">清空日志</button>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	// #ifdef APP-ANDROID
+	import {
+		initSDK,
+		login,
+		logout,
+		onConnectionStateChanged,
+	} from '@/uni_modules/easemob-uts-sdk-beta'
+	// #endif
+
+	const appKey = ref('easemob-demo#support')
+	const userId = ref('hfp')
+	const password = ref('1')
+	const connectionStatus = ref('未连接')
+	const logs = ref('')
+
+	function addLog(message: string): void {
+		const time = new Date().toLocaleTimeString()
+		logs.value += '[' + time + '] ' + message + '\n'
+	}
+
+	function clearLogs(): void {
+		logs.value = ''
+	}
+
+	async function handleInit(): Promise<void> {
+		// #ifdef APP-ANDROID
+		try {
+			addLog('开始初始化...')
+			const config = { appKey: appKey.value, autoLogin: false }
+			await initSDK(config)
+			addLog('初始化成功')
+
+			// 监听连接状态
+			onConnectionStateChanged((event) => {
+				// 先打印原始值，确认回调是否触发及枚举转换结果
+				addLog('[beta] 连接回调触发，state=' + event.state + ' event=' + event.event)
+				let statusText = '未知'
+				const stateVal = event.state.value as number
+				if (stateVal == 0) {
+					statusText = '已连接'
+				} else if (stateVal == 1) {
+					statusText = '连接中'
+				} else if (stateVal == 2) {
+					statusText = '已断开'
+				}
+				connectionStatus.value = statusText
+				addLog('连接状态变更: ' + statusText)
+			})
+		} catch (error) {
+			addLog('初始化失败: ' + error)
+		}
+		// #endif
+
+		// #ifndef APP-ANDROID
+		addLog('当前仅支持 Android 平台')
+		// #endif
+	}
+
+	async function handleLogin(): Promise<void> {
+		// #ifdef APP-ANDROID
+		try {
+			addLog('开始登录...')
+			const config = {
+				userId: userId.value,
+				password: password.value,
+				useToken: false
+			}
+			await login(config)
+			addLog('登录成功')
+		} catch (error) {
+			addLog('登录失败: ' + error)
+		}
+		// #endif
+
+		// #ifndef APP-ANDROID
+		addLog('当前仅支持 Android 平台')
+		// #endif
+	}
+
+	async function handleLogout(): Promise<void> {
+		// #ifdef APP-ANDROID
+		try {
+			addLog('开始登出...')
+			await logout()
+			addLog('登出成功')
+		} catch (error) {
+			addLog('登出失败: ' + error)
+		}
+		// #endif
+
+		// #ifndef APP-ANDROID
+		addLog('当前仅支持 Android 平台')
+		// #endif
+	}
+</script>
+
+<style>
+	.container {
+		padding: 20px;
+	}
+
+	.title {
+		font-size: 24px;
+		font-weight: bold;
+		text-align: center;
+		margin-bottom: 10px;
+	}
+
+	.subtitle {
+		font-size: 14px;
+		color: #666;
+		text-align: center;
+		margin-bottom: 30px;
+	}
+
+	.section {
+		margin-bottom: 25px;
+		padding: 15px;
+		background-color: #f5f5f5;
+		border-radius: 8px;
+	}
+
+	.section-title {
+		font-size: 16px;
+		font-weight: bold;
+		margin-bottom: 10px;
+		display: block;
+	}
+
+	.input {
+		height: 40px;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		padding: 0 10px;
+		margin-bottom: 10px;
+		background-color: #fff;
+	}
+
+	.btn {
+		margin-top: 10px;
+	}
+
+	.status {
+		font-size: 14px;
+		color: #333;
+		padding: 10px;
+		background-color: #fff;
+		border-radius: 4px;
+	}
+
+	.log-view {
+		height: 200px;
+		background-color: #000;
+		border-radius: 4px;
+		padding: 10px;
+		margin-bottom: 10px;
+	}
+
+	.log-text {
+		color: #0f0;
+		font-size: 12px;
+		font-family: monospace;
+		white-space: pre-wrap;
+	}
+</style>

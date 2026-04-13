@@ -1,0 +1,67 @@
+/**
+ * Easemob IM SDK Beta - 错误定义
+ * 符合 uni 错误规范
+ */
+
+import { EMError } from "./interface.uts"
+
+/**
+ * 错误主题
+ */
+export const UniErrorSubject = 'easemob-uts-sdk-beta';
+
+/**
+ * SDK 错误码定义
+ */
+export enum EMErrorCode {
+  /** 通用错误 */
+  GENERAL_ERROR = 9010001,
+  /** 未初始化 */
+  NOT_INITIALIZED = 9010002,
+  /** 初始化失败 */
+  INIT_FAILED = 9010003,
+  /** 参数错误 */
+  INVALID_PARAMS = 9010004,
+  /** 网络错误 */
+  NETWORK_ERROR = 9010005,
+  /** 登录失败 */
+  LOGIN_FAILED = 9010006,
+}
+
+/**
+ * 错误信息映射
+ */
+export const EMErrorMessages: Map<EMErrorCode, string> = new Map([
+  [EMErrorCode.GENERAL_ERROR, 'General error'],
+  [EMErrorCode.NOT_INITIALIZED, 'SDK not initialized'],
+  [EMErrorCode.INIT_FAILED, 'SDK initialization failed'],
+  [EMErrorCode.INVALID_PARAMS, 'Invalid parameters'],
+  [EMErrorCode.NETWORK_ERROR, 'Network error'],
+  [EMErrorCode.LOGIN_FAILED, 'Login failed'],
+]);
+
+/**
+ * SDK 错误对象
+ */
+export class EMErrorImpl extends UniError implements EMError {
+  override errCode: number
+  override errMsg: string
+  code: number
+  message: string
+
+  constructor(errCode: EMErrorCode, customMessage?: string) {
+    super();
+    this.errSubject = UniErrorSubject;
+    this.errCode = errCode;
+    this.errMsg = customMessage ?? EMErrorMessages.get(errCode) ?? "Unknown error";
+    this.code = this.errCode;
+    this.message = this.errMsg;
+  }
+}
+
+/**
+ * 创建错误对象
+ */
+export function createEMError(code: EMErrorCode, message?: string): EMErrorImpl {
+  return new EMErrorImpl(code, message);
+}

@@ -1,0 +1,142 @@
+/**
+ * Easemob IM SDK Beta - 接口定义（精简版）
+ * Android: 初始化 + 登录 + 连接监听
+ * iOS: 仅桩函数
+ */
+
+// ==================== 初始化配置 ====================
+
+export type EMInitConfig = {
+  /** 应用 AppKey */
+  appKey: string;
+  /** 是否自动登录，默认 false */
+  autoLogin?: boolean;
+}
+
+// ==================== 登录配置 ====================
+
+export type EMLoginConfig = {
+  /** 用户 ID */
+  userId: string;
+  /** 密码或 Token */
+  password: string;
+  /** 是否使用 Token 登录 */
+  useToken?: boolean;
+}
+
+// ==================== 连接状态 ====================
+
+/** 连接状态 */
+export enum EMConnectionState {
+  /** 已连接 */
+  CONNECTED = 0,
+  /** 连接中 */
+  CONNECTING = 1,
+  /** 已断开 */
+  DISCONNECTED = 2,
+}
+
+/** 连接事件 */
+export enum EMConnectionEvent {
+  /** 成功登录 */
+  LOGIN_SUCCESS = 0,
+  /** 主动退出登录 */
+  LOGOUT = 1,
+  /** 被踢下线 */
+  KICKED_BY_OTHER_DEVICE = 2,
+  /** 登录认证失败 */
+  LOGIN_FAILED = 3,
+  /** 网络异常 */
+  NETWORK_ERROR = 4,
+}
+
+/** 连接状态变更事件数据 */
+export class EMConnectionStateChangedEvent {
+  /** 当前连接状态 */
+  state: EMConnectionState;
+  /** 触发事件 */
+  event: EMConnectionEvent;
+  /** 扩展信息 */
+  ext: string | null;
+
+  constructor(state: EMConnectionState, event: EMConnectionEvent, ext: string | null = null) {
+    this.state = state;
+    this.event = event;
+    this.ext = ext;
+  }
+}
+
+// ==================== 错误信息 ====================
+
+/** SDK 错误信息 */
+export type EMError = {
+  /** 错误码 */
+  code: number;
+  /** 错误描述 */
+  message: string;
+}
+
+// ==================== 事件处理器类型 ====================
+
+/** 连接状态变更监听器 */
+export type EMConnectionStateChangedListener = (event: EMConnectionStateChangedEvent) => void;
+
+/** 错误监听器 */
+export type EMErrorListener = (error: EMError) => void;
+
+/** Token 即将过期监听器 */
+export type EMTokenWillExpireListener = () => void;
+
+/** Token 已过期监听器 */
+export type EMTokenExpiredListener = () => void;
+
+// ==================== SDK 主接口 ====================
+
+/**
+ * Easemob IM SDK 主接口
+ */
+export interface IEMClient {
+  // MARK: - 事件监听（已实现）
+
+  /** 注册连接状态变更监听 */
+  onConnectionStateChanged(listener: EMConnectionStateChangedListener | null): void;
+
+  // MARK: - 事件监听（桩函数）
+
+  /** 注册错误监听（桩函数） */
+  onError(listener: EMErrorListener | null): void;
+
+  /** 注册 Token 即将过期监听（桩函数） */
+  onTokenWillExpire(listener: EMTokenWillExpireListener | null): void;
+
+  /** 注册 Token 已过期监听（桩函数） */
+  onTokenExpired(listener: EMTokenExpiredListener | null): void;
+
+  // MARK: - 核心方法（已实现）
+
+  /** 初始化 SDK */
+  initSDK(config: UTSJSONObject): Promise<void>;
+
+  /** 登录（Android 已实现，iOS 桩函数） */
+  login(config: UTSJSONObject): Promise<void>;
+
+  /** 登出（Android 已实现，iOS 桩函数） */
+  logout(): Promise<void>;
+
+  /** 销毁 SDK 实例 */
+  destroy(): void;
+
+  // MARK: - 核心方法（桩函数）
+
+  /** 获取 SDK 版本号（桩函数） */
+  getVersion(): string;
+
+  /** 判断是否已连接（桩函数） */
+  isConnected(): boolean;
+
+  /** 判断是否已登录（桩函数） */
+  isLoggedIn(): boolean;
+
+  /** 获取当前登录用户 ID（桩函数） */
+  getCurrentUser(): string | null;
+}
