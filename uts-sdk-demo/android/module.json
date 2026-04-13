@@ -1,6 +1,7 @@
 {
   "modules": [
-    "easemob-uts-sdk"
+    "easemob-uts-sdk",
+    "easemob-uts-sdk-beta"
   ],
   "nativeModules": []
 }

@@ -373,6 +373,75 @@ const statusMap = {
 if (stateVal == 0) { statusText = '已连接' }
 ```
 
+### 8.5 uvue 页面纵向滚动规范
+
+uni-app x 的 uvue 页面**不支持 CSS `overflow-y` / `overflow: scroll`**（仅支持 `visible`/`hidden`），必须通过 `scroll-view` 实现纵向滚动。
+
+#### ✅ 正确结构
+
+```vue
+<template>
+  <scroll-view class="container" scroll-y="true">
+    <view class="content">
+      <!-- 页面内容 -->
+    </view>
+  </scroll-view>
+</template>
+
+<style>
+  .container {
+    flex: 1;        /* 必须：让 scroll-view 占满全屏 */
+    background-color: #f5f5f5;
+  }
+  .content {
+    padding: 15px;  /* 内容边距放在内层 view */
+  }
+</style>
+```
+
+#### ❌ 常见错误
+
+1. **根容器用 `view`，内部再嵌 `scroll-view`**
+   - `scroll-view` 嵌套在 `view` 里时高度由内容撑开，没有可滚动空间。
+
+2. **使用 `position: fixed` 浮窗**
+   - 真机上 `fixed` 定位元素会拦截触摸事件，导致外层 `scroll-view` 无法滚动。
+
+3. **依赖 CSS `overflow-y: scroll`**
+   - uvue 编译器会忽略或报错，真机完全无效。
+
+#### 日志区域写法
+
+日志应放在页面底部，作为普通 `section`，内部再用固定高度的 `scroll-view` 展示：
+
+```vue
+<view class="section">
+  <text class="section-title">日志</text>
+  <scroll-view class="log-scroll" scroll-y="true" :scroll-top="logScrollTop">
+    <text class="log-text">{{ logs }}</text>
+  </scroll-view>
+</view>
+```
+
+```css
+.log-scroll {
+  height: 150px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  padding: 10px;
+}
+```
+
+#### 修改后必须清缓存
+
+uvue 页面结构修改后，**必须删除编译缓存**再运行，否则旧布局缓存会导致修改不生效：
+
+```bash
+# 删除 HBuilderX 编译缓存
+rm -rf unpackage/dist
+rm -rf unpackage/cache
+```
+
 ---
 
 ## 九、桩函数规范

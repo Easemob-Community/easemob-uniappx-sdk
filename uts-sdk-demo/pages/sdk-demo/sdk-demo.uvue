@@ -1,35 +1,39 @@
 <template>
-	<view class="container">
-		<text class="title">SDK Beta 测试页面</text>
-		<text class="subtitle">Android 初始化 + 登录测试</text>
+	<scroll-view class="container" scroll-y="true">
+		<view class="content">
+			<text class="title">SDK Beta 测试页面</text>
+			<text class="subtitle">Android 初始化 + 登录测试</text>
 
-		<view class="section">
-			<text class="section-title">初始化</text>
-			<input class="input" v-model="appKey" placeholder="输入 AppKey" />
-			<button class="btn" type="primary" @click="handleInit">初始化 SDK</button>
-		</view>
+			<view class="section">
+				<text class="section-title">初始化</text>
+				<input class="input" v-model="appKey" placeholder="输入 AppKey" />
+				<button class="btn" type="primary" @click="handleInit">初始化 SDK</button>
+			</view>
 
-		<view class="section">
-			<text class="section-title">登录</text>
-			<input class="input" v-model="userId" placeholder="输入用户 ID" />
-			<input class="input" v-model="password" placeholder="输入密码" password />
-			<button class="btn" type="primary" @click="handleLogin">登录</button>
-			<button class="btn" type="default" @click="handleLogout">登出</button>
-		</view>
+			<view class="section">
+				<text class="section-title">登录</text>
+				<input class="input" v-model="userId" placeholder="输入用户 ID" />
+				<input class="input" v-model="password" placeholder="输入密码" password />
+				<button class="btn" type="primary" @click="handleLogin">登录</button>
+				<button class="btn" type="default" @click="handleLogout">登出</button>
+			</view>
 
-		<view class="section">
-			<text class="section-title">连接状态</text>
-			<text class="status">状态: {{ connectionStatus }}</text>
-		</view>
+			<view class="section">
+				<text class="section-title">连接状态</text>
+				<text class="status">状态: {{ connectionStatus }}</text>
+			</view>
 
-		<view class="section">
-			<text class="section-title">日志</text>
-			<scroll-view class="log-view" scroll-y>
-				<text class="log-text">{{ logs }}</text>
-			</scroll-view>
-			<button class="btn" type="warn" size="mini" @click="clearLogs">清空日志</button>
+			<view class="section">
+				<view class="log-header">
+					<text class="section-title">日志</text>
+					<button class="log-clear" type="warn" size="mini" @click="clearLogs">清空</button>
+				</view>
+				<scroll-view class="log-scroll" scroll-y="true" :scroll-top="logScrollTop">
+					<text class="log-text">{{ logs }}</text>
+				</scroll-view>
+			</view>
 		</view>
-	</view>
+	</scroll-view>
 </template>
 
 <script setup lang="uts">
@@ -40,7 +44,9 @@
 		initSDK,
 		login,
 		logout,
-		onConnectionStateChanged,
+		onConnected,
+		onDisconnected,
+		onLogout,
 	} from '@/uni_modules/easemob-uts-sdk-beta'
 	// #endif
 
@@ -49,14 +55,20 @@
 	const password = ref('1')
 	const connectionStatus = ref('未连接')
 	const logs = ref('')
+	const logScrollTop = ref(0)
 
 	function addLog(message: string): void {
 		const time = new Date().toLocaleTimeString()
 		logs.value += '[' + time + '] ' + message + '\n'
+		// 自动置底：每次更新后将 scroll-top 设为极大值
+		setTimeout(() => {
+			logScrollTop.value = 99999
+		}, 50)
 	}
 
 	function clearLogs(): void {
 		logs.value = ''
+		logScrollTop.value = 0
 	}
 
 	async function handleInit(): Promise<void> {
@@ -68,20 +80,28 @@
 			addLog('初始化成功')
 
 			// 监听连接状态
-			onConnectionStateChanged((event) => {
-				// 先打印原始值，确认回调是否触发及枚举转换结果
-				addLog('[beta] 连接回调触发，state=' + event.state + ' event=' + event.event)
-				let statusText = '未知'
-				const stateVal = event.state.value as number
-				if (stateVal == 0) {
-					statusText = '已连接'
-				} else if (stateVal == 1) {
-					statusText = '连接中'
-				} else if (stateVal == 2) {
-					statusText = '已断开'
-				}
-				connectionStatus.value = statusText
-				addLog('连接状态变更: ' + statusText)
+			onConnected(() => {
+				console.log('[sdk-demo] onConnected callback executed')
+				setTimeout(() => {
+					connectionStatus.value = '已连接'
+					addLog('[beta] onConnected: 已连接')
+				}, 0)
+			})
+
+			onDisconnected((errorCode) => {
+				console.log('[sdk-demo] onDisconnected callback executed, errorCode=' + errorCode)
+				setTimeout(() => {
+					connectionStatus.value = '已断开'
+					addLog('[beta] onDisconnected: 已断开, errorCode=' + errorCode)
+				}, 0)
+			})
+
+			onLogout((errorCode) => {
+				console.log('[sdk-demo] onLogout callback executed, errorCode=' + errorCode)
+				setTimeout(() => {
+					connectionStatus.value = '已登出'
+					addLog('[beta] onLogout: 被登出, errorCode=' + errorCode)
+				}, 0)
 			})
 		} catch (error) {
 			addLog('初始化失败: ' + error)
@@ -133,7 +153,12 @@
 
 <style>
 	.container {
-		padding: 20px;
+		flex: 1;
+		background-color: #f5f5f5;
+	}
+
+	.content {
+		padding: 15px;
 	}
 
 	.title {
@@ -141,36 +166,40 @@
 		font-weight: bold;
 		text-align: center;
 		margin-bottom: 10px;
+		color: #333333;
 	}
 
 	.subtitle {
 		font-size: 14px;
-		color: #666;
+		color: #666666;
 		text-align: center;
-		margin-bottom: 30px;
+		margin-bottom: 20px;
 	}
 
 	.section {
-		margin-bottom: 25px;
+		background-color: #ffffff;
+		border-radius: 10px;
 		padding: 15px;
-		background-color: #f5f5f5;
-		border-radius: 8px;
+		margin-bottom: 15px;
 	}
 
 	.section-title {
 		font-size: 16px;
 		font-weight: bold;
+		color: #333333;
 		margin-bottom: 10px;
-		display: block;
 	}
 
 	.input {
 		height: 40px;
-		border: 1px solid #ddd;
-		border-radius: 4px;
-		padding: 0 10px;
+		border-width: 1px;
+		border-color: #dddddd;
+		border-radius: 5px;
+		padding-left: 10px;
+		padding-right: 10px;
 		margin-bottom: 10px;
-		background-color: #fff;
+		background-color: #f9f9f9;
+		font-size: 14px;
 	}
 
 	.btn {
@@ -179,24 +208,32 @@
 
 	.status {
 		font-size: 14px;
-		color: #333;
+		color: #333333;
 		padding: 10px;
-		background-color: #fff;
-		border-radius: 4px;
+		background-color: #f9f9f9;
+		border-radius: 5px;
 	}
 
-	.log-view {
-		height: 200px;
-		background-color: #000;
-		border-radius: 4px;
-		padding: 10px;
+	.log-header {
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
 		margin-bottom: 10px;
 	}
 
+	.log-clear {
+		margin: 0;
+	}
+
+	.log-scroll {
+		height: 150px;
+		background-color: #f9f9f9;
+		border-radius: 5px;
+		padding: 10px;
+	}
+
 	.log-text {
-		color: #0f0;
 		font-size: 12px;
-		font-family: monospace;
-		white-space: pre-wrap;
+		color: #666666;
 	}
 </style>

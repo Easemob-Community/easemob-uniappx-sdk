@@ -24,48 +24,6 @@ export type EMLoginConfig = {
   useToken?: boolean;
 }
 
-// ==================== 连接状态 ====================
-
-/** 连接状态 */
-export enum EMConnectionState {
-  /** 已连接 */
-  CONNECTED = 0,
-  /** 连接中 */
-  CONNECTING = 1,
-  /** 已断开 */
-  DISCONNECTED = 2,
-}
-
-/** 连接事件 */
-export enum EMConnectionEvent {
-  /** 成功登录 */
-  LOGIN_SUCCESS = 0,
-  /** 主动退出登录 */
-  LOGOUT = 1,
-  /** 被踢下线 */
-  KICKED_BY_OTHER_DEVICE = 2,
-  /** 登录认证失败 */
-  LOGIN_FAILED = 3,
-  /** 网络异常 */
-  NETWORK_ERROR = 4,
-}
-
-/** 连接状态变更事件数据 */
-export class EMConnectionStateChangedEvent {
-  /** 当前连接状态 */
-  state: EMConnectionState;
-  /** 触发事件 */
-  event: EMConnectionEvent;
-  /** 扩展信息 */
-  ext: string | null;
-
-  constructor(state: EMConnectionState, event: EMConnectionEvent, ext: string | null = null) {
-    this.state = state;
-    this.event = event;
-    this.ext = ext;
-  }
-}
-
 // ==================== 错误信息 ====================
 
 /** SDK 错误信息 */
@@ -78,9 +36,6 @@ export type EMError = {
 
 // ==================== 事件处理器类型 ====================
 
-/** 连接状态变更监听器 */
-export type EMConnectionStateChangedListener = (event: EMConnectionStateChangedEvent) => void;
-
 /** 错误监听器 */
 export type EMErrorListener = (error: EMError) => void;
 
@@ -90,6 +45,17 @@ export type EMTokenWillExpireListener = () => void;
 /** Token 已过期监听器 */
 export type EMTokenExpiredListener = () => void;
 
+/** 连接监听器回调集合（eventMap 模式） */
+export type ConnectionListenerCallbacks = {
+  onConnected?: () => void;
+  onDisconnected?: (errorCode: number) => void;
+  onLogout?: (errorCode: number) => void;
+  onTokenWillExpire?: () => void;
+  onTokenExpired?: () => void;
+  onOfflineMessageSyncStart?: () => void;
+  onOfflineMessageSyncFinish?: () => void;
+}
+
 // ==================== SDK 主接口 ====================
 
 /**
@@ -98,18 +64,24 @@ export type EMTokenExpiredListener = () => void;
 export interface IEMClient {
   // MARK: - 事件监听（已实现）
 
-  /** 注册连接状态变更监听 */
-  onConnectionStateChanged(listener: EMConnectionStateChangedListener | null): void;
+  /** 注册已连接监听 */
+  onConnected(listener: (() => void) | null): void;
+
+  /** 注册连接断开监听 */
+  onDisconnected(listener: ((errorCode: number) => void) | null): void;
+
+  /** 注册被登出监听 */
+  onLogout(listener: ((errorCode: number) => void) | null): void;
 
   // MARK: - 事件监听（桩函数）
 
   /** 注册错误监听（桩函数） */
   onError(listener: EMErrorListener | null): void;
 
-  /** 注册 Token 即将过期监听（桩函数） */
+  /** 注册 Token 即将过期监听 */
   onTokenWillExpire(listener: EMTokenWillExpireListener | null): void;
 
-  /** 注册 Token 已过期监听（桩函数） */
+  /** 注册 Token 已过期监听 */
   onTokenExpired(listener: EMTokenExpiredListener | null): void;
 
   // MARK: - 核心方法（已实现）

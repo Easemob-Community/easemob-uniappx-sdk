@@ -35,6 +35,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import io.dcloud.uniapp.extapi.`$emit` as uni__emit
 import com.hyphenate.chat.EMMessage.ChatType as EMMessageChatType
 import uts.sdk.modules.easemobUtsSdk.FilePickerHelper
 import uts.sdk.modules.easemobUtsSdk.FilePickResult
@@ -89,9 +90,8 @@ open class InnerConnectionListener : EMConnectionListener {
     }
 }
 val listenerMap = Map<String, EMConnectionListener>()
-fun addConnectionListenerImpl(listenerId: String, listener: UTSJSONObject): Unit {
-    val callbacks = ConnectionListenerCallbacks(onConnected = listener["onConnected"] as (() -> Unit)?, onDisconnected = listener["onDisconnected"] as ((errorCode: Number) -> Unit)?, onLogout = listener["onLogout"] as ((errorCode: Number) -> Unit)?, onTokenWillExpire = listener["onTokenWillExpire"] as (() -> Unit)?, onTokenExpired = listener["onTokenExpired"] as (() -> Unit)?, onOfflineMessageSyncStart = listener["onOfflineMessageSyncStart"] as (() -> Unit)?, onOfflineMessageSyncFinish = listener["onOfflineMessageSyncFinish"] as (() -> Unit)?)
-    val androidListener = InnerConnectionListener(callbacks)
+fun addConnectionListenerImpl(listenerId: String, listener: ConnectionListenerCallbacks): Unit {
+    val androidListener = InnerConnectionListener(listener)
     listenerMap.set(listenerId, androidListener)
     EMClient.getInstance().addConnectionListener(androidListener)
 }
@@ -731,7 +731,7 @@ fun logoutSync(unbindToken: Boolean): Number {
 fun logoutEMClient(unbindToken: Boolean, callback: UTSJSONObject): Unit {
     EMClient.getInstance().logout(unbindToken, LogoutCallBack(callback))
 }
-fun getCurrentUser(): String {
+fun queryCurrentUser(): String {
     val user = EMClient.getInstance().getCurrentUser()
     return if (user != null) {
         user
@@ -739,13 +739,13 @@ fun getCurrentUser(): String {
         ""
     }
 }
-fun isLoggedInBefore(): Boolean {
+fun queryIsLoggedInBefore(): Boolean {
     return EMClient.getInstance().isLoggedInBefore()
 }
-fun isConnected(): Boolean {
+fun queryIsConnected(): Boolean {
     return EMClient.getInstance().isConnected()
 }
-fun isLoggedIn(): Boolean {
+fun queryIsLoggedIn(): Boolean {
     return EMClient.getInstance().isLoggedIn()
 }
 open class LoginCallBack : EMCallBack {
@@ -868,7 +868,7 @@ fun registerActivityResultCallback(): Unit {
         UTSAndroid.onAppActivityResult(activityResultCallback!!)
     }
 }
-fun openFilePicker(callback: UTSJSONObject): Unit {
+fun openFilePickerImpl(callback: UTSJSONObject): Unit {
     val callbackId = generatePickerCallbackId()
     filePickerCallbacks.set(callbackId, callback)
     registerActivityResultCallback()
@@ -878,13 +878,74 @@ fun openFilePicker(callback: UTSJSONObject): Unit {
 fun handleFilePickerResult(requestCode: Number, resultCode: Number, data: Intent?): Boolean {
     return FilePickerHelper.handleActivityResult(requestCode as Int, resultCode as Int, data)
 }
+val EM_CONNECTION_CONNECTED = "em:connection:connected"
+val EM_CONNECTION_DISCONNECTED = "em:connection:disconnected"
+val EM_CONNECTION_LOGOUT = "em:connection:logout"
+val EM_CONNECTION_TOKEN_WILL_EXPIRE = "em:connection:token_will_expire"
+val EM_CONNECTION_TOKEN_EXPIRED = "em:connection:token_expired"
+val EM_CONNECTION_OFFLINE_SYNC_START = "em:connection:offline_sync_start"
+val EM_CONNECTION_OFFLINE_SYNC_FINISH = "em:connection:offline_sync_finish"
+val EM_MESSAGE_RECEIVED = "em:message:received"
+val EM_MESSAGE_CMD_RECEIVED = "em:message:cmd_received"
+val EM_MESSAGE_STREAM_RECEIVED = "em:message:stream_received"
+val EM_MESSAGE_READ = "em:message:read"
+val EM_MESSAGE_GROUP_READ = "em:message:group_read"
+val EM_MESSAGE_GROUP_READ_ACK_UPDATED = "em:message:group_read_ack_updated"
+val EM_MESSAGE_DELIVERED = "em:message:delivered"
+val EM_MESSAGE_RECALLED = "em:message:recalled"
+val EM_MESSAGE_CONTENT_CHANGED = "em:message:content_changed"
+val EM_MESSAGE_REACTION_CHANGED = "em:message:reaction_changed"
+val EM_MESSAGE_PIN_CHANGED = "em:message:pin_changed"
+open class EMConnectionEventType (
+    @JsonNotNull
+    open var CONNECTED: String,
+    @JsonNotNull
+    open var DISCONNECTED: String,
+    @JsonNotNull
+    open var LOGOUT: String,
+    @JsonNotNull
+    open var TOKEN_WILL_EXPIRE: String,
+    @JsonNotNull
+    open var TOKEN_EXPIRED: String,
+    @JsonNotNull
+    open var OFFLINE_SYNC_START: String,
+    @JsonNotNull
+    open var OFFLINE_SYNC_FINISH: String,
+) : UTSObject()
+val EMConnectionEvent = EMConnectionEventType(CONNECTED = EM_CONNECTION_CONNECTED, DISCONNECTED = EM_CONNECTION_DISCONNECTED, LOGOUT = EM_CONNECTION_LOGOUT, TOKEN_WILL_EXPIRE = EM_CONNECTION_TOKEN_WILL_EXPIRE, TOKEN_EXPIRED = EM_CONNECTION_TOKEN_EXPIRED, OFFLINE_SYNC_START = EM_CONNECTION_OFFLINE_SYNC_START, OFFLINE_SYNC_FINISH = EM_CONNECTION_OFFLINE_SYNC_FINISH)
+open class EMMessageEventType (
+    @JsonNotNull
+    open var RECEIVED: String,
+    @JsonNotNull
+    open var CMD_RECEIVED: String,
+    @JsonNotNull
+    open var STREAM_RECEIVED: String,
+    @JsonNotNull
+    open var READ: String,
+    @JsonNotNull
+    open var GROUP_READ: String,
+    @JsonNotNull
+    open var GROUP_READ_ACK_UPDATED: String,
+    @JsonNotNull
+    open var DELIVERED: String,
+    @JsonNotNull
+    open var RECALLED: String,
+    @JsonNotNull
+    open var CONTENT_CHANGED: String,
+    @JsonNotNull
+    open var REACTION_CHANGED: String,
+    @JsonNotNull
+    open var PIN_CHANGED: String,
+) : UTSObject()
+val EMMessageEvent = EMMessageEventType(RECEIVED = EM_MESSAGE_RECEIVED, CMD_RECEIVED = EM_MESSAGE_CMD_RECEIVED, STREAM_RECEIVED = EM_MESSAGE_STREAM_RECEIVED, READ = EM_MESSAGE_READ, GROUP_READ = EM_MESSAGE_GROUP_READ, GROUP_READ_ACK_UPDATED = EM_MESSAGE_GROUP_READ_ACK_UPDATED, DELIVERED = EM_MESSAGE_DELIVERED, RECALLED = EM_MESSAGE_RECALLED, CONTENT_CHANGED = EM_MESSAGE_CONTENT_CHANGED, REACTION_CHANGED = EM_MESSAGE_REACTION_CHANGED, PIN_CHANGED = EM_MESSAGE_PIN_CHANGED)
 fun initSDK(config: UTSJSONObject): UTSPromise<Unit> {
     initEMClient(config["appKey"] as String)
     return UTSPromise.resolve()
 }
-fun addConnectionListener(listener: UTSJSONObject): () -> Unit {
+fun addConnectionListener(onConnected: (() -> Unit)?, onDisconnected: ((errorCode: Number) -> Unit)?, onLogout: ((errorCode: Number) -> Unit)?, onTokenWillExpire: (() -> Unit)?, onTokenExpired: (() -> Unit)?, onOfflineMessageSyncStart: (() -> Unit)?, onOfflineMessageSyncFinish: (() -> Unit)?): () -> Unit {
     val id = Date.now().toString(10) + Math.random().toString(36).substring(2, 11)
-    addConnectionListenerImpl(id, listener)
+    val cbs = ConnectionListenerCallbacks(onConnected = onConnected, onDisconnected = onDisconnected, onLogout = onLogout, onTokenWillExpire = onTokenWillExpire, onTokenExpired = onTokenExpired, onOfflineMessageSyncStart = onOfflineMessageSyncStart, onOfflineMessageSyncFinish = onOfflineMessageSyncFinish)
+    addConnectionListenerImpl(id, cbs)
     return fun(){
         return removeConnectionListenerImpl(id)
     }
@@ -892,18 +953,20 @@ fun addConnectionListener(listener: UTSJSONObject): () -> Unit {
 fun removeConnectionListener(listenerId: String): Unit {
     removeConnectionListenerImpl(listenerId)
 }
-fun addMessageListener(listener: UTSJSONObject): () -> Unit {
+fun addMessageListener(onMessageReceived: ((messages: UTSArray<Message>) -> Unit)?, onStreamMessageReceived: ((messages: UTSArray<Message>) -> Unit)?, onCmdMessageReceived: ((messages: UTSArray<Message>) -> Unit)?, onMessageRead: ((messages: UTSArray<Message>) -> Unit)?, onGroupMessageRead: ((groupReadAcks: UTSArray<GroupReadAck>) -> Unit)?, onReadAckForGroupMessageUpdated: (() -> Unit)?, onMessageDelivered: ((messages: UTSArray<Message>) -> Unit)?, onMessageRecalled: ((messages: UTSArray<Message>) -> Unit)?, onMessageRecalledWithExt: ((recallMessageInfo: UTSArray<RecallMessageInfo>) -> Unit)?, onMessageChanged: ((message: Message, change: Any) -> Unit)?, onReactionChanged: ((messageReactionChangeList: UTSArray<MessageReactionChange>) -> Unit)?, onMessageContentChanged: ((messageModified: Message, operatorId: String, operationTime: Long) -> Unit)?, onMessagePinChanged: ((messageId: String, conversationId: String, pinOperation: Number, pinInfo: MessagePinInfo) -> Unit)?): () -> Unit {
     val id = Date.now().toString(10) + Math.random().toString(36).substring(2, 11)
-    val callbacks = MessageListenerCallbacks(onMessageReceived = listener["onMessageReceived"] as ((messages: UTSArray<Message>) -> Unit)?, onStreamMessageReceived = listener["onStreamMessageReceived"] as ((messages: UTSArray<Message>) -> Unit)?, onCmdMessageReceived = listener["onCmdMessageReceived"] as ((messages: UTSArray<Message>) -> Unit)?, onMessageRead = listener["onMessageRead"] as ((messages: UTSArray<Message>) -> Unit)?, onGroupMessageRead = listener["onGroupMessageRead"] as ((groupReadAcks: UTSArray<GroupReadAck>) -> Unit)?, onReadAckForGroupMessageUpdated = listener["onReadAckForGroupMessageUpdated"] as (() -> Unit)?, onMessageDelivered = listener["onMessageDelivered"] as ((messages: UTSArray<Message>) -> Unit)?, onMessageRecalled = listener["onMessageRecalled"] as ((messages: UTSArray<Message>) -> Unit)?, onMessageRecalledWithExt = listener["onMessageRecalledWithExt"] as ((recallMessageInfo: UTSArray<RecallMessageInfo>) -> Unit)?, onMessageChanged = listener["onMessageChanged"] as ((message: Message, change: Any) -> Unit)?, onReactionChanged = listener["onReactionChanged"] as ((messageReactionChangeList: UTSArray<MessageReactionChange>) -> Unit)?, onMessageContentChanged = listener["onMessageContentChanged"] as ((messageModified: Message, operatorId: String, operationTime: Long) -> Unit)?, onMessagePinChanged = listener["onMessagePinChanged"] as ((messageId: String, conversationId: String, pinOperation: Number, pinInfo: MessagePinInfo) -> Unit)?)
+    val callbacks = MessageListenerCallbacks(onMessageReceived = onMessageReceived, onStreamMessageReceived = onStreamMessageReceived, onCmdMessageReceived = onCmdMessageReceived, onMessageRead = onMessageRead, onGroupMessageRead = onGroupMessageRead, onReadAckForGroupMessageUpdated = onReadAckForGroupMessageUpdated, onMessageDelivered = onMessageDelivered, onMessageRecalled = onMessageRecalled, onMessageRecalledWithExt = onMessageRecalledWithExt, onMessageChanged = onMessageChanged, onReactionChanged = onReactionChanged, onMessageContentChanged = onMessageContentChanged, onMessagePinChanged = onMessagePinChanged)
     addMessageListenerImpl(id, callbacks)
     return fun(){
         return removeMessageListenerImpl(id)
     }
 }
-fun loginSDK(userId: String, password: String, callback: UTSJSONObject): Unit {
+fun loginSDK(userId: String, password: String, onSuccess: (() -> Unit)?, onError: ((code: Number, message: String) -> Unit)?): Unit {
+    val callback: UTSJSONObject = _uO("onSuccess" to onSuccess, "onError" to onError)
     loginEMClient(userId, password, callback)
 }
-fun loginSDKWithToken(username: String, token: String, callback: UTSJSONObject): Unit {
+fun loginSDKWithToken(username: String, token: String, onSuccess: (() -> Unit)?, onError: ((code: Number, message: String) -> Unit)?): Unit {
+    val callback: UTSJSONObject = _uO("onSuccess" to onSuccess, "onError" to onError)
     loginWithToken(username, token, callback)
 }
 fun loginSDKWithAgoraToken(username: String, agoraToken: String, callback: UTSJSONObject): Unit {
@@ -912,13 +975,38 @@ fun loginSDKWithAgoraToken(username: String, agoraToken: String, callback: UTSJS
 fun logoutSDKSync(unbindToken: Boolean): Number {
     return logoutSync(unbindToken)
 }
-fun logoutSDK(unbindToken: Boolean, callback: UTSJSONObject = _uO()): Unit {
+fun logoutSDK(unbindToken: Boolean, onSuccess: (() -> Unit)? = null, onError: ((code: Number, message: String) -> Unit)? = null): Unit {
+    val callback: UTSJSONObject = _uO("onSuccess" to onSuccess, "onError" to onError)
     logoutEMClient(unbindToken, callback)
 }
-fun sendTextMessage(content: String, to: String, chatType: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
+fun getCurrentUser(): String {
+    return queryCurrentUser()
+}
+fun isLoggedInBefore(): Boolean {
+    return queryIsLoggedInBefore()
+}
+fun isConnected(): Boolean {
+    return queryIsConnected()
+}
+fun isLoggedIn(): Boolean {
+    return queryIsLoggedIn()
+}
+fun sendTextMessage(content: String, to: String, chatType: String, onSuccess: ((messageInfo: UTSJSONObject) -> Unit)?, onError: ((code: Number, message: String) -> Unit)?, onProgress: ((progress: Number, status: String) -> Unit)? = null, ext: UTSJSONObject? = null): Unit {
+    val callback = UTSJSONObject()
+    callback["onSuccess"] = onSuccess
+    callback["onError"] = onError
+    if (onProgress != null) {
+        callback["onProgress"] = onProgress
+    }
     sendTextMessageImpl(content, to, chatType, callback, ext)
 }
-fun sendImageMessage(filePath: String, sendOriginalImage: Boolean, to: String, chatType: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
+fun sendImageMessage(filePath: String, sendOriginalImage: Boolean, to: String, chatType: String, onSuccess: ((messageInfo: UTSJSONObject) -> Unit)?, onError: ((code: Number, message: String) -> Unit)?, onProgress: ((progress: Number, status: String) -> Unit)? = null, ext: UTSJSONObject? = null): Unit {
+    val callback = UTSJSONObject()
+    callback["onSuccess"] = onSuccess
+    callback["onError"] = onError
+    if (onProgress != null) {
+        callback["onProgress"] = onProgress
+    }
     sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback, ext)
 }
 fun sendImageMessageWithUri(imageUri: Uri, sendOriginalImage: Boolean, to: String, callback: UTSJSONObject): Unit {
@@ -933,7 +1021,13 @@ fun sendVoiceMessage(filePath: String, timeLength: Int, to: String, callback: UT
 fun sendVoiceMessageWithUri(fileUri: Uri, timeLength: Int, to: String, callback: UTSJSONObject): Unit {
     sendVoiceMessageWithUriImpl(fileUri, timeLength, to, callback)
 }
-fun sendVideoMessage(videoFilePath: String, imageThumbPath: String, timeLength: Int, to: String, chatType: String, callback: UTSJSONObject): Unit {
+fun sendVideoMessage(videoFilePath: String, imageThumbPath: String, timeLength: Int, to: String, chatType: String, onSuccess: ((messageInfo: UTSJSONObject) -> Unit)?, onError: ((code: Number, message: String) -> Unit)?, onProgress: ((progress: Number, status: String) -> Unit)? = null): Unit {
+    val callback = UTSJSONObject()
+    callback["onSuccess"] = onSuccess
+    callback["onError"] = onError
+    if (onProgress != null) {
+        callback["onProgress"] = onProgress
+    }
     sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, chatType, callback)
 }
 fun sendVideoMessageWithUri(videoUri: Uri, imageThumbPath: String, timeLength: Int, to: String, chatType: String, callback: UTSJSONObject): Unit {
@@ -948,16 +1042,34 @@ fun sendLocationMessage(latitude: Double, longitude: Double, locationAddress: St
 fun sendLocationMessageSimple(latitude: Double, longitude: Double, locationAddress: String, to: String, callback: UTSJSONObject): Unit {
     sendLocationMessageSimpleImpl(latitude, longitude, locationAddress, to, callback)
 }
-fun sendFileMessage(filePath: String, to: String, chatType: String, callback: UTSJSONObject): Unit {
+fun sendFileMessage(filePath: String, to: String, chatType: String, onSuccess: ((messageInfo: UTSJSONObject) -> Unit)?, onError: ((code: Number, message: String) -> Unit)?, onProgress: ((progress: Number, status: String) -> Unit)? = null): Unit {
+    val callback = UTSJSONObject()
+    callback["onSuccess"] = onSuccess
+    callback["onError"] = onError
+    if (onProgress != null) {
+        callback["onProgress"] = onProgress
+    }
     sendFileMessageImpl(filePath, to, chatType, callback)
 }
 fun sendFileMessageWithUri(fileUri: Uri, to: String, chatType: String, callback: UTSJSONObject): Unit {
     sendFileMessageWithUriImpl(fileUri, to, chatType, callback)
 }
-fun sendCmdMessage(action: String, to: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
+fun sendCmdMessage(action: String, to: String, onSuccess: ((messageInfo: UTSJSONObject) -> Unit)?, onError: ((code: Number, message: String) -> Unit)?, onProgress: ((progress: Number, status: String) -> Unit)? = null, ext: UTSJSONObject? = null): Unit {
+    val callback = UTSJSONObject()
+    callback["onSuccess"] = onSuccess
+    callback["onError"] = onError
+    if (onProgress != null) {
+        callback["onProgress"] = onProgress
+    }
     sendCmdMessageImpl(action, to, callback, ext)
 }
-fun sendCustomMessage(event: String, params: UTSJSONObject, to: String, chatType: String, callback: UTSJSONObject, ext: UTSJSONObject? = null): Unit {
+fun sendCustomMessage(event: String, params: UTSJSONObject, to: String, chatType: String, onSuccess: ((messageInfo: UTSJSONObject) -> Unit)?, onError: ((code: Number, message: String) -> Unit)?, onProgress: ((progress: Number, status: String) -> Unit)? = null, ext: UTSJSONObject? = null): Unit {
+    val callback = UTSJSONObject()
+    callback["onSuccess"] = onSuccess
+    callback["onError"] = onError
+    if (onProgress != null) {
+        callback["onProgress"] = onProgress
+    }
     sendCustomMessageImpl(event, params, to, chatType, callback, ext)
 }
 fun sendCombinedMessage(title: String, summary: String, compatibleText: String, messageIdList: UTSArray<String>, to: String, callback: UTSJSONObject): Unit {
@@ -968,4 +1080,178 @@ fun downloadAttachment(message: Message, callback: UTSJSONObject): Unit {
 }
 fun downloadThumbnail(message: Message, callback: UTSJSONObject): Unit {
     downloadThumbnailImpl(message, callback)
+}
+fun openFilePicker(onSuccess: ((result: FilePickResultData) -> Unit)?, onError: ((code: Number, message: String) -> Unit)?, onCancel: (() -> Unit)?): Unit {
+    val callback = UTSJSONObject()
+    callback["onSuccess"] = onSuccess
+    callback["onError"] = onError
+    callback["onCancel"] = onCancel
+    openFilePickerImpl(callback)
+}
+var eventBusEnabled = false
+var connectionListenerId: String? = null
+var messageListenerId: String? = null
+fun enableEventBus(): Unit {
+    if (eventBusEnabled) {
+        console.log("[Android] EventBus already enabled")
+        return
+    }
+    val connectionCallbacks = ConnectionListenerCallbacks(onConnected = fun(){
+        setTimeout(fun(){
+            uni__emit(EMConnectionEvent.CONNECTED, null)
+        }
+        , 0)
+    }
+    , onDisconnected = fun(errorCode: Number){
+        setTimeout(fun(){
+            uni__emit(EMConnectionEvent.DISCONNECTED, errorCode)
+        }
+        , 0)
+    }
+    , onLogout = fun(errorCode: Number){
+        setTimeout(fun(){
+            uni__emit(EMConnectionEvent.LOGOUT, errorCode)
+        }
+        , 0)
+    }
+    , onTokenWillExpire = fun(){
+        setTimeout(fun(){
+            uni__emit(EMConnectionEvent.TOKEN_WILL_EXPIRE, null)
+        }
+        , 0)
+    }
+    , onTokenExpired = fun(){
+        setTimeout(fun(){
+            uni__emit(EMConnectionEvent.TOKEN_EXPIRED, null)
+        }
+        , 0)
+    }
+    , onOfflineMessageSyncStart = fun(){
+        setTimeout(fun(){
+            uni__emit(EMConnectionEvent.OFFLINE_SYNC_START, null)
+        }
+        , 0)
+    }
+    , onOfflineMessageSyncFinish = fun(){
+        setTimeout(fun(){
+            uni__emit(EMConnectionEvent.OFFLINE_SYNC_FINISH, null)
+        }
+        , 0)
+    }
+    )
+    val connId = Date.now().toString(10) + Math.random().toString(36).substring(2, 11)
+    connectionListenerId = connId
+    addConnectionListenerImpl(connId, connectionCallbacks)
+    val messageCallbacks = MessageListenerCallbacks(onMessageReceived = fun(messages: UTSArray<Message>){
+        val json = JSON.stringify(messages)
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.RECEIVED, json)
+        }
+        , 0)
+    }
+    , onCmdMessageReceived = fun(messages: UTSArray<Message>){
+        val json = JSON.stringify(messages)
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.CMD_RECEIVED, json)
+        }
+        , 0)
+    }
+    , onStreamMessageReceived = fun(messages: UTSArray<Message>){
+        val json = JSON.stringify(messages)
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.STREAM_RECEIVED, json)
+        }
+        , 0)
+    }
+    , onMessageRead = fun(messages: UTSArray<Message>){
+        val json = JSON.stringify(messages)
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.READ, json)
+        }
+        , 0)
+    }
+    , onGroupMessageRead = fun(groupReadAcks: UTSArray<GroupReadAck>){
+        val json = JSON.stringify(groupReadAcks)
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.GROUP_READ, json)
+        }
+        , 0)
+    }
+    , onReadAckForGroupMessageUpdated = fun(){
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.GROUP_READ_ACK_UPDATED, null)
+        }
+        , 0)
+    }
+    , onMessageDelivered = fun(messages: UTSArray<Message>){
+        val json = JSON.stringify(messages)
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.DELIVERED, json)
+        }
+        , 0)
+    }
+    , onMessageRecalled = fun(messages: UTSArray<Message>){
+        val json = JSON.stringify(messages)
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.RECALLED, json)
+        }
+        , 0)
+    }
+    , onMessageRecalledWithExt = fun(recallMessageInfo: UTSArray<RecallMessageInfo>){
+        val json = JSON.stringify(recallMessageInfo)
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.RECALLED, json)
+        }
+        , 0)
+    }
+    , onMessageChanged = fun(message: Message, change: Any){
+        val json = JSON.stringify(message)
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.CONTENT_CHANGED, json)
+        }
+        , 0)
+    }
+    , onReactionChanged = fun(messageReactionChangeList: UTSArray<MessageReactionChange>){
+        val json = JSON.stringify(messageReactionChangeList)
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.REACTION_CHANGED, json)
+        }
+        , 0)
+    }
+    , onMessageContentChanged = fun(messageModified: Message, operatorId: String, operationTime: Long){
+        val json = JSON.stringify(messageModified)
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.CONTENT_CHANGED, json)
+        }
+        , 0)
+    }
+    , onMessagePinChanged = fun(messageId: String, conversationId: String, pinOperation: Number, pinInfo: MessagePinInfo){
+        setTimeout(fun(){
+            uni__emit(EMMessageEvent.PIN_CHANGED, messageId)
+        }
+        , 0)
+    }
+    )
+    val msgId = Date.now().toString(10) + Math.random().toString(36).substring(2, 11) + "_msg"
+    messageListenerId = msgId
+    addMessageListenerImpl(msgId, messageCallbacks)
+    eventBusEnabled = true
+    console.log("[Android] EventBus enabled")
+}
+fun disableEventBus(): Unit {
+    if (!eventBusEnabled) {
+        return
+    }
+    val connIdToRemove = connectionListenerId
+    if (connIdToRemove != null) {
+        removeConnectionListenerImpl(connIdToRemove)
+        connectionListenerId = null
+    }
+    val msgIdToRemove = messageListenerId
+    if (msgIdToRemove != null) {
+        removeMessageListenerImpl(msgIdToRemove)
+        messageListenerId = null
+    }
+    eventBusEnabled = false
+    console.log("[Android] EventBus disabled")
 }

@@ -13,14 +13,14 @@ import io.dcloud.uts.UTSAndroid
 import kotlin.properties.Delegates
 import io.dcloud.uniapp.extapi.chooseImage as uni_chooseImage
 import io.dcloud.uniapp.extapi.chooseVideo as uni_chooseVideo
+import uts.sdk.modules.easemobUtsSdk.sendFileMessage
+import uts.sdk.modules.easemobUtsSdk.openFilePicker
+import uts.sdk.modules.easemobUtsSdk.FilePickResultData
 import uts.sdk.modules.easemobUtsSdk.sendTextMessage
 import uts.sdk.modules.easemobUtsSdk.sendImageMessage
 import uts.sdk.modules.easemobUtsSdk.sendVideoMessage
-import uts.sdk.modules.easemobUtsSdk.sendFileMessage
 import uts.sdk.modules.easemobUtsSdk.sendCmdMessage
 import uts.sdk.modules.easemobUtsSdk.sendCustomMessage
-import uts.sdk.modules.easemobUtsSdk.openFilePicker
-import uts.sdk.modules.easemobUtsSdk.FilePickResultData
 open class GenPagesMessageMessage : BasePage {
     constructor(__ins: ComponentInternalInstance, __renderer: String?) : super(__ins, __renderer) {}
     companion object {
@@ -29,7 +29,7 @@ open class GenPagesMessageMessage : BasePage {
             val __ins = getCurrentInstance()!!
             val _ctx = __ins.proxy as GenPagesMessageMessage
             val _cache = __ins.renderCache
-            val targetId = ref("")
+            val targetId = ref("pfh2")
             val chatType = ref("single")
             val messageContent = ref("")
             val logContent = ref("")
@@ -78,38 +78,30 @@ open class GenPagesMessageMessage : BasePage {
                 if (ext != null) {
                     addLog("扩展字段: " + JSON.stringify(ext))
                 }
-                sendTextMessage(content, to, chatType.value, _uO("onSuccess" to fun(messageInfo: UTSJSONObject){
+                sendTextMessage(content, to, chatType.value, fun(messageInfo: UTSJSONObject){
                     console.log("[MessagePage] 消息发送成功回调触发")
-                    if (messageInfo != null) {
-                        val msgId = messageInfo.getString("msgId") ?: "unknown"
-                        val msgType = messageInfo.getString("type") ?: "unknown"
-                        val chatTypeStr = messageInfo.getString("chatType") ?: "unknown"
-                        val timestamp = messageInfo.getNumber("timestamp") ?: 0
-                        val msgExt = messageInfo["ext"] as UTSJSONObject?
-                        console.log("[MessagePage] 消息ID:", msgId)
-                        console.log("[MessagePage] 消息类型:", msgType)
-                        console.log("[MessagePage] 聊天类型:", chatTypeStr)
-                        console.log("[MessagePage] 时间戳:", timestamp)
-                        addLog("消息发送成功, ID: " + msgId)
-                        addLog("消息类型: " + msgType + ", 聊天类型: " + chatTypeStr)
-                        if (msgExt != null) {
-                            addLog("扩展字段: " + JSON.stringify(msgExt))
-                        }
-                    } else {
-                        console.log("[MessagePage] messageInfo为null或undefined")
-                        addLog("消息发送成功(无详情)")
+                    val msgId = (messageInfo["msgId"] as String?) ?: "unknown"
+                    val msgType = (messageInfo["type"] as String?) ?: "unknown"
+                    val chatTypeStr = (messageInfo["chatType"] as String?) ?: "unknown"
+                    val msgExt = messageInfo["ext"] as UTSJSONObject?
+                    console.log("[MessagePage] 消息 ID:", msgId)
+                    console.log("[MessagePage] 消息类型:", msgType)
+                    console.log("[MessagePage] 聊天类型:", chatTypeStr)
+                    addLog("消息发送成功, ID: " + msgId)
+                    addLog("消息类型: " + msgType + ", 聊天类型: " + chatTypeStr)
+                    if (msgExt != null) {
+                        addLog("扩展字段: " + JSON.stringify(msgExt))
                     }
                     messageContent.value = ""
                 }
-                , "onError" to fun(code: Number, message: String){
-                    console.log("[MessagePage] 消息发送失败回调触发: code=" + code + ", message=" + message)
+                , fun(code: Number, message: String){
+                    console.log("[MessagePage] 消息发送失败: code=" + code + ", message=" + message)
                     addLog("消息发送失败: code=" + code + ", message=" + message)
                 }
-                , "onProgress" to fun(progress: Number, status: String){
-                    console.log("[MessagePage] 消息发送进度回调触发: progress=" + progress + ", status=" + status)
-                    addLog("发送进度: " + progress + "%, status=" + status)
+                , fun(progress: Number, status: String){
+                    console.log("[MessagePage] 发送进度: progress=" + progress + ", status=" + status)
                 }
-                ), ext)
+                , ext)
             }
             val handleSend = ::gen_handleSend_fn
             fun gen_handleChooseImage_fn(sourceType: String): Unit {
@@ -131,26 +123,26 @@ open class GenPagesMessageMessage : BasePage {
                     if (paths != null && paths.length > 0) {
                         val imagePath = paths[0]!!
                         addLog("已选择图片: " + imagePath)
-                        sendImageMessage(imagePath, sendOriginalImage.value, targetId.value.trim(), chatType.value, _uO("onSuccess" to fun(messageInfo: UTSJSONObject){
+                        sendImageMessage(imagePath, sendOriginalImage.value, targetId.value.trim(), chatType.value, fun(messageInfo: UTSJSONObject){
                             console.log("[MessagePage] 图片发送成功回调触发")
-                            val msgId = messageInfo.getString("msgId") ?: "unknown"
-                            val msgType = messageInfo.getString("type") ?: "unknown"
-                            val chatTypeStr = messageInfo.getString("chatType") ?: "unknown"
+                            val msgId = (messageInfo["msgId"] as String?) ?: "unknown"
+                            val msgType = (messageInfo["type"] as String?) ?: "unknown"
+                            val chatTypeStr = (messageInfo["chatType"] as String?) ?: "unknown"
                             console.log("[MessagePage] 图片消息ID:", msgId)
                             console.log("[MessagePage] 消息类型:", msgType)
                             console.log("[MessagePage] 聊天类型:", chatTypeStr)
                             addLog("图片发送成功, ID: " + msgId)
                             addLog("消息类型: " + msgType + ", 聊天类型: " + chatTypeStr)
                         }
-                        , "onError" to fun(code: Number, message: String){
+                        , fun(code: Number, message: String){
                             console.log("[MessagePage] 图片发送失败回调触发: code=" + code + ", message=" + message)
                             addLog("图片发送失败: code=" + code + ", message=" + message)
                         }
-                        , "onProgress" to fun(progress: Number, status: String){
+                        , fun(progress: Number, status: String){
                             console.log("[MessagePage] 图片发送进度回调触发: progress=" + progress)
                             addLog("图片上传进度: " + progress + "%")
                         }
-                        ))
+                        )
                     }
                 }
                 , fail = fun(err){
@@ -177,26 +169,26 @@ open class GenPagesMessageMessage : BasePage {
                     if (videoPath != null) {
                         addLog("已选择视频: " + videoPath)
                         addLog("视频时长: " + duration + "秒")
-                        sendVideoMessage(videoPath, videoThumbPath.value, duration, targetId.value.trim(), chatType.value, _uO("onSuccess" to fun(messageInfo: UTSJSONObject){
+                        sendVideoMessage(videoPath, videoThumbPath.value, duration, targetId.value.trim(), chatType.value, fun(messageInfo: UTSJSONObject){
                             console.log("[MessagePage] 视频发送成功回调触发")
-                            val msgId = messageInfo.getString("msgId") ?: "unknown"
-                            val msgType = messageInfo.getString("type") ?: "unknown"
-                            val chatTypeStr = messageInfo.getString("chatType") ?: "unknown"
+                            val msgId = (messageInfo["msgId"] as String?) ?: "unknown"
+                            val msgType = (messageInfo["type"] as String?) ?: "unknown"
+                            val chatTypeStr = (messageInfo["chatType"] as String?) ?: "unknown"
                             console.log("[MessagePage] 视频消息ID:", msgId)
                             console.log("[MessagePage] 消息类型:", msgType)
                             console.log("[MessagePage] 聊天类型:", chatTypeStr)
                             addLog("视频发送成功, ID: " + msgId)
                             addLog("消息类型: " + msgType + ", 聊天类型: " + chatTypeStr)
                         }
-                        , "onError" to fun(code: Number, message: String){
+                        , fun(code: Number, message: String){
                             console.log("[MessagePage] 视频发送失败回调触发: code=" + code + ", message=" + message)
                             addLog("视频发送失败: code=" + code + ", message=" + message)
                         }
-                        , "onProgress" to fun(progress: Number, status: String){
+                        , fun(progress: Number, status: String){
                             console.log("[MessagePage] 视频发送进度回调触发: progress=" + progress)
                             addLog("视频上传进度: " + progress + "%")
                         }
-                        ))
+                        )
                     }
                 }
                 , fail = fun(err){
@@ -211,40 +203,40 @@ open class GenPagesMessageMessage : BasePage {
                     return
                 }
                 addLog("正在打开文件选择器...")
-                openFilePicker(_uO("onSuccess" to fun(result: FilePickResultData){
+                openFilePicker(fun(result: FilePickResultData){
                     console.log("[MessagePage] 文件选择成功回调触发")
                     addLog("已选择文件: " + result.fileName)
                     addLog("文件大小: " + result.fileSize + " 字节")
                     addLog("文件类型: " + result.mimeType)
-                    sendFileMessage(result.filePath, targetId.value.trim(), chatType.value, _uO("onSuccess" to fun(messageInfo: UTSJSONObject){
+                    sendFileMessage(result.filePath, targetId.value.trim(), chatType.value, fun(messageInfo: UTSJSONObject){
                         console.log("[MessagePage] 文件发送成功回调触发")
-                        val msgId = messageInfo.getString("msgId") ?: "unknown"
-                        val msgType = messageInfo.getString("type") ?: "unknown"
-                        val chatTypeStr = messageInfo.getString("chatType") ?: "unknown"
+                        val msgId = (messageInfo["msgId"] as String?) ?: "unknown"
+                        val msgType = (messageInfo["type"] as String?) ?: "unknown"
+                        val chatTypeStr = (messageInfo["chatType"] as String?) ?: "unknown"
                         console.log("[MessagePage] 文件消息ID:", msgId)
                         console.log("[MessagePage] 消息类型:", msgType)
                         console.log("[MessagePage] 聊天类型:", chatTypeStr)
                         addLog("文件发送成功, ID: " + msgId)
                         addLog("消息类型: " + msgType + ", 聊天类型: " + chatTypeStr)
                     }
-                    , "onError" to fun(code: Number, message: String){
+                    , fun(code: Number, message: String){
                         console.log("[MessagePage] 文件发送失败回调触发: code=" + code + ", message=" + message)
                         addLog("文件发送失败: code=" + code + ", message=" + message)
                     }
-                    , "onProgress" to fun(progress: Number, status: String){
+                    , fun(progress: Number, status: String){
                         console.log("[MessagePage] 文件发送进度回调触发: progress=" + progress)
                         addLog("文件上传进度: " + progress + "%")
                     }
-                    ))
+                    )
                 }
-                , "onError" to fun(code: Number, message: String){
+                , fun(code: Number, message: String){
                     console.log("[MessagePage] 文件选择失败: code=" + code + ", message=" + message)
                     addLog("文件选择失败: code=" + code + ", message=" + message)
                 }
-                , "onCancel" to fun(){
+                , fun(){
                     addLog("用户取消文件选择")
                 }
-                ))
+                )
             }
             val handleChooseFile = ::gen_handleChooseFile_fn
             fun gen_handleSendCmd_fn(): Unit {
@@ -261,11 +253,11 @@ open class GenPagesMessageMessage : BasePage {
                 }
                 ) + ": " + to)
                 addLog("Action: " + action)
-                sendCmdMessage(action, to, _uO("onSuccess" to fun(messageInfo: UTSJSONObject){
+                sendCmdMessage(action, to, fun(messageInfo: UTSJSONObject){
                     console.log("[MessagePage] CMD消息发送成功回调触发")
                     if (messageInfo != null) {
-                        val msgId = messageInfo.getString("msgId") ?: "unknown"
-                        val msgType = messageInfo.getString("type") ?: "unknown"
+                        val msgId = (messageInfo["msgId"] as String?) ?: "unknown"
+                        val msgType = (messageInfo["type"] as String?) ?: "unknown"
                         console.log("[MessagePage] CMD消息ID:", msgId)
                         console.log("[MessagePage] 消息类型:", msgType)
                         addLog("CMD消息发送成功, ID: " + msgId)
@@ -275,15 +267,15 @@ open class GenPagesMessageMessage : BasePage {
                         addLog("CMD消息发送成功(无详情)")
                     }
                 }
-                , "onError" to fun(code: Number, message: String){
+                , fun(code: Number, message: String){
                     console.log("[MessagePage] CMD消息发送失败回调触发: code=" + code + ", message=" + message)
                     addLog("CMD消息发送失败: code=" + code + ", message=" + message)
                 }
-                , "onProgress" to fun(progress: Number, status: String){
+                , fun(progress: Number, status: String){
                     console.log("[MessagePage] CMD消息发送进度回调触发: progress=" + progress + ", status=" + status)
                     addLog("发送进度: " + progress + "%, status=" + status)
                 }
-                ))
+                )
             }
             val handleSendCmd = ::gen_handleSendCmd_fn
             fun gen_handleSendTaobaoOrder_fn(): Unit {
@@ -302,11 +294,11 @@ open class GenPagesMessageMessage : BasePage {
                 ) + ": " + to)
                 addLog("Event: " + event)
                 addLog("订单ID: " + orderParams["orderId"])
-                sendCustomMessage(event, orderParams, to, chatType.value, _uO("onSuccess" to fun(messageInfo: UTSJSONObject){
+                sendCustomMessage(event, orderParams, to, chatType.value, fun(messageInfo: UTSJSONObject){
                     console.log("[MessagePage] 自定义消息发送成功回调触发")
                     if (messageInfo != null) {
-                        val msgId = messageInfo.getString("msgId") ?: "unknown"
-                        val msgType = messageInfo.getString("type") ?: "unknown"
+                        val msgId = (messageInfo["msgId"] as String?) ?: "unknown"
+                        val msgType = (messageInfo["type"] as String?) ?: "unknown"
                         console.log("[MessagePage] 自定义消息ID:", msgId)
                         console.log("[MessagePage] 消息类型:", msgType)
                         addLog("自定义消息发送成功, ID: " + msgId)
@@ -316,15 +308,15 @@ open class GenPagesMessageMessage : BasePage {
                         addLog("自定义消息发送成功(无详情)")
                     }
                 }
-                , "onError" to fun(code: Number, message: String){
+                , fun(code: Number, message: String){
                     console.log("[MessagePage] 自定义消息发送失败回调触发: code=" + code + ", message=" + message)
                     addLog("自定义消息发送失败: code=" + code + ", message=" + message)
                 }
-                , "onProgress" to fun(progress: Number, status: String){
+                , fun(progress: Number, status: String){
                     console.log("[MessagePage] 自定义消息发送进度回调触发: progress=" + progress + ", status=" + status)
                     addLog("发送进度: " + progress + "%, status=" + status)
                 }
-                ))
+                )
             }
             val handleSendTaobaoOrder = ::gen_handleSendTaobaoOrder_fn
             onLoad(fun(_options){

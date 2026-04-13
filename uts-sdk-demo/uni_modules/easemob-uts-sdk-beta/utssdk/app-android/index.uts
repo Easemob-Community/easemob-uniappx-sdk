@@ -12,47 +12,49 @@ import {
   IEMClient,
   EMInitConfig,
   EMLoginConfig,
-  EMConnectionState,
-  EMConnectionEvent,
-  EMConnectionStateChangedEvent,
   EMError,
-  EMConnectionStateChangedListener,
   EMErrorListener,
   EMTokenWillExpireListener,
-  EMTokenExpiredListener
+  EMTokenExpiredListener,
+  ConnectionListenerCallbacks
 } from '../interface.uts';
 
 // ==================== 事件处理器实现 ====================
 
 class EMConnectionListenerImpl extends EMConnectionListener {
   @UTSJS.keepAlive
-  onConnectionStateChanged: EMConnectionStateChangedListener | null = null;
+  eventMap: ConnectionListenerCallbacks = {};
 
   override onConnected(): void {
-    const eventData = new EMConnectionStateChangedEvent(
-      EMConnectionState.CONNECTED,
-      EMConnectionEvent.LOGIN_SUCCESS
-    );
-    this.onConnectionStateChanged?.(eventData);
+    console.log('[Android] native onConnected fired, hasCallback=' + (this.eventMap.onConnected != null));
+    this.eventMap.onConnected?.();
   }
 
   override onDisconnected(errorCode: Int): void {
-    let event = EMConnectionEvent.NETWORK_ERROR;
-    if (errorCode == 206) {
-      event = EMConnectionEvent.KICKED_BY_OTHER_DEVICE;
-    } else if (errorCode == 202 || errorCode == 204) {
-      event = EMConnectionEvent.LOGIN_FAILED;
-    }
-    const eventData = new EMConnectionStateChangedEvent(
-      EMConnectionState.DISCONNECTED,
-      event,
-      errorCode.toString()
-    );
-    this.onConnectionStateChanged?.(eventData);
+    console.log('[Android] native onDisconnected fired, errorCode=' + errorCode + ', hasCallback=' + (this.eventMap.onDisconnected != null));
+    this.eventMap.onDisconnected?.(errorCode);
   }
 
-  override onTokenWillExpire(): void {}
-  override onTokenExpired(): void {}
+  override onLogout(errorCode: Int): void {
+    console.log('[Android] native onLogout fired, errorCode=' + errorCode + ', hasCallback=' + (this.eventMap.onLogout != null));
+    this.eventMap.onLogout?.(errorCode);
+  }
+
+  override onTokenWillExpire(): void {
+    this.eventMap.onTokenWillExpire?.();
+  }
+
+  override onTokenExpired(): void {
+    this.eventMap.onTokenExpired?.();
+  }
+
+  override onOfflineMessageSyncStart(): void {
+    this.eventMap.onOfflineMessageSyncStart?.();
+  }
+
+  override onOfflineMessageSyncFinish(): void {
+    this.eventMap.onOfflineMessageSyncFinish?.();
+  }
 }
 
 // ==================== 回调工厂（核心：用普通成员属性持有闭包，彻底避免 Promise resolve/reject 类型转译问题）====================
@@ -93,6 +95,17 @@ class EMClientImpl implements IEMClient {
   private static _instance: EMClientImpl | null = null;
   private _listener: EMConnectionListenerImpl | null = null;
   private _isInitialized = false;
+
+  @UTSJS.keepAlive
+  private _onConnected: (() => void) | null = null;
+  @UTSJS.keepAlive
+  private _onDisconnected: ((errorCode: number) => void) | null = null;
+  @UTSJS.keepAlive
+  private _onLogout: ((errorCode: number) => void) | null = null;
+  @UTSJS.keepAlive
+  private _onTokenWillExpire: (() => void) | null = null;
+  @UTSJS.keepAlive
+  private _onTokenExpired: (() => void) | null = null;
 
   private constructor() {}
 
@@ -190,18 +203,44 @@ class EMClientImpl implements IEMClient {
     console.log('[Android] EMClient SDK destroyed');
   }
 
-  @UTSJS.keepAlive
-  onConnectionStateChanged(listener: EMConnectionStateChangedListener | null): void {
+  onConnected(listener: (() => void) | null): void {
+    this._onConnected = listener;
     if (this._listener != null) {
-      this._listener.onConnectionStateChanged = listener;
+      this._listener.eventMap.onConnected = listener;
+    }
+  }
+
+  onDisconnected(listener: ((errorCode: number) => void) | null): void {
+    this._onDisconnected = listener;
+    if (this._listener != null) {
+      this._listener.eventMap.onDisconnected = listener;
+    }
+  }
+
+  onLogout(listener: ((errorCode: number) => void) | null): void {
+    this._onLogout = listener;
+    if (this._listener != null) {
+      this._listener.eventMap.onLogout = listener;
+    }
+  }
+
+  onTokenWillExpire(listener: EMTokenWillExpireListener | null): void {
+    this._onTokenWillExpire = listener;
+    if (this._listener != null) {
+      this._listener.eventMap.onTokenWillExpire = listener;
+    }
+  }
+
+  onTokenExpired(listener: EMTokenExpiredListener | null): void {
+    this._onTokenExpired = listener;
+    if (this._listener != null) {
+      this._listener.eventMap.onTokenExpired = listener;
     }
   }
 
   // MARK: - 桩函数
 
   onError(_listener: EMErrorListener | null): void {}
-  onTokenWillExpire(_listener: EMTokenWillExpireListener | null): void {}
-  onTokenExpired(_listener: EMTokenExpiredListener | null): void {}
   getVersion(): string { return 'unknown'; }
   isConnected(): boolean { return false; }
   isLoggedIn(): boolean { return false; }
@@ -226,14 +265,28 @@ export function destroy(): void {
   EMClientImpl.getInstance().destroy();
 }
 
-export function onConnectionStateChanged(listener: EMConnectionStateChangedListener | null): void {
-  EMClientImpl.getInstance().onConnectionStateChanged(listener);
+export function onConnected(listener: (() => void) | null): void {
+  EMClientImpl.getInstance().onConnected(listener);
+}
+
+export function onDisconnected(listener: ((errorCode: number) => void) | null): void {
+  EMClientImpl.getInstance().onDisconnected(listener);
+}
+
+export function onLogout(listener: ((errorCode: number) => void) | null): void {
+  EMClientImpl.getInstance().onLogout(listener);
+}
+
+export function onTokenWillExpire(listener: EMTokenWillExpireListener | null): void {
+  EMClientImpl.getInstance().onTokenWillExpire(listener);
+}
+
+export function onTokenExpired(listener: EMTokenExpiredListener | null): void {
+  EMClientImpl.getInstance().onTokenExpired(listener);
 }
 
 // 桩函数导出
 export function onError(_listener: EMErrorListener | null): void {}
-export function onTokenWillExpire(_listener: EMTokenWillExpireListener | null): void {}
-export function onTokenExpired(_listener: EMTokenExpiredListener | null): void {}
 export function getVersion(): string { return 'unknown'; }
 export function isConnected(): boolean { return false; }
 export function isLoggedIn(): boolean { return false; }

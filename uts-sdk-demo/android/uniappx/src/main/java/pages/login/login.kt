@@ -11,8 +11,6 @@ import io.dcloud.uts.Map
 import io.dcloud.uts.Set
 import io.dcloud.uts.UTSAndroid
 import kotlin.properties.Delegates
-import uts.sdk.modules.easemobUtsSdk.initSDK
-import uts.sdk.modules.easemobUtsSdk.addConnectionListener
 import uts.sdk.modules.easemobUtsSdk.addMessageListener
 import uts.sdk.modules.easemobUtsSdk.Message
 import uts.sdk.modules.easemobUtsSdk.loginSDK
@@ -29,8 +27,8 @@ open class GenPagesLoginLogin : BasePage {
             val __ins = getCurrentInstance()!!
             val _ctx = __ins.proxy as GenPagesLoginLogin
             val _cache = __ins.renderCache
-            val username = ref("")
-            val password = ref("")
+            val username = ref("hfp")
+            val password = ref("1")
             val isLoggingIn = ref(false)
             val isLoggedIn = ref(false)
             val isConnected = ref(false)
@@ -66,20 +64,20 @@ open class GenPagesLoginLogin : BasePage {
                 }
                 isLoggingIn.value = true
                 addLog("开始登录：" + username.value)
-                loginSDK(username.value, password.value, _uO("onSuccess" to fun(){
+                loginSDK(username.value, password.value, fun(): Unit {
                     addLog("登录成功")
                     isLoggingIn.value = false
+                    isLoggedIn.value = true
+                    currentUser.value = username.value
                     updateStatus()
                 }
-                , "onError" to fun(code: Number, message: String){
+                , fun(code: Number, message: String): Unit {
                     addLog("登录失败：code=" + code + ", message=" + message)
                     isLoggingIn.value = false
+                    isLoggedIn.value = false
                     updateStatus()
                 }
-                , "onProgress" to fun(code: Number, message: String){
-                    addLog("登录进度：code=" + code + ", message=" + message)
-                }
-                ))
+                )
             }
             val handleLogin = ::gen_handleLogin_fn
             fun gen_goToMessage_fn(): Unit {
@@ -88,22 +86,25 @@ open class GenPagesLoginLogin : BasePage {
             val goToMessage = ::gen_goToMessage_fn
             fun gen_handleLogout_fn(): Unit {
                 addLog("开始登出...")
-                logoutSDK(true, _uO("onSuccess" to fun(){
+                logoutSDK(true, fun(): Unit {
                     addLog("登出成功")
+                    isLoggedIn.value = false
+                    isConnected.value = false
+                    currentUser.value = ""
                     updateStatus()
                 }
-                , "onError" to fun(code: Number, message: String){
+                , fun(code: Number, message: String): Unit {
                     addLog("登出失败：code=" + code + ", message=" + message)
                     updateStatus()
                 }
-                ))
+                )
             }
             val handleLogout = ::gen_handleLogout_fn
             onLoad(fun(_options){
                 addLog("登录页面加载")
                 updateStatus()
-                unsubscribeMessage = addMessageListener(_uO("onMessageReceived" to fun(messages: UTSArray<Message>){
-                    messages.forEach(fun(msg: Message){
+                unsubscribeMessage = addMessageListener(fun(messages: UTSArray<Message>): Unit {
+                    messages.forEach(fun(msg: Message): Unit {
                         addLog("收到消息: 来自=" + msg.from + ", 类型=" + msg.body.type)
                         if (msg.body.type === "txt") {
                             addLog("内容: " + (msg.body.message ?: ""))
@@ -115,7 +116,7 @@ open class GenPagesLoginLogin : BasePage {
                     }
                     )
                 }
-                ))
+                , null, null, null, null, null, null, null, null, null, null, null, null)
             }
             )
             onUnload(fun(){

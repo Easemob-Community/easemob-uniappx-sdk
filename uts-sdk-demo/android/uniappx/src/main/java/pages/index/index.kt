@@ -25,12 +25,17 @@ open class GenPagesIndexIndex : BasePage {
                 uni_navigateTo(NavigateToOptions(url = "/pages/login/login"))
             }
             val goToLogin = ::gen_goToLogin_fn
+            fun gen_goToSDKDemo_fn(): Unit {
+                uni_navigateTo(NavigateToOptions(url = "/pages/sdk-demo/sdk-demo"))
+            }
+            val goToSDKDemo = ::gen_goToSDKDemo_fn
             return fun(): Any? {
                 return _cE("view", _uM("class" to "container"), _uA(
                     _cE("image", _uM("class" to "logo", "src" to "/static/logo.png")),
                     _cE("text", _uM("class" to "title"), _tD(unref(title)), 1),
                     _cE("view", _uM("class" to "button-area"), _uA(
-                        _cE("button", _uM("class" to "btn", "type" to "primary", "onClick" to goToLogin), "前往登录")
+                        _cE("button", _uM("class" to "btn", "type" to "primary", "onClick" to goToLogin), "前往登录"),
+                        _cE("button", _uM("class" to "btn", "type" to "default", "onClick" to goToSDKDemo), "SDK 测试页面")
                     ))
                 ))
             }

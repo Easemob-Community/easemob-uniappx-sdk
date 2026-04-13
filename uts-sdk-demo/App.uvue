@@ -1,95 +1,10 @@
 <script setup lang="uts">
-	import {
-		initSDK,
-		enableEventBus
-	} from "./uni_modules/easemob-uts-sdk"
-	
-	// 事件常量（uts-proxy 不支持常量导出，需本地定义）
-	const EM_CONNECTION_CONNECTED = 'em:connection:connected'
-	const EM_CONNECTION_DISCONNECTED = 'em:connection:disconnected'
-	const EM_CONNECTION_LOGOUT = 'em:connection:logout'
-	const EM_CONNECTION_TOKEN_WILL_EXPIRE = 'em:connection:token_will_expire'
-	const EM_CONNECTION_TOKEN_EXPIRED = 'em:connection:token_expired'
-	const EM_CONNECTION_OFFLINE_SYNC_START = 'em:connection:offline_sync_start'
-	const EM_CONNECTION_OFFLINE_SYNC_FINISH = 'em:connection:offline_sync_finish'
-	const EM_MESSAGE_RECEIVED = 'em:message:received'
-	const EM_MESSAGE_CMD_RECEIVED = 'em:message:cmd_received'
-	const EM_MESSAGE_READ = 'em:message:read'
-	const EM_MESSAGE_DELIVERED = 'em:message:delivered'
-	const EM_MESSAGE_RECALLED = 'em:message:recalled'
 	// #ifdef APP-ANDROID || APP-HARMONY
 	let firstBackTime = 0
 	// #endif
 
 	onLaunch(() => {
 		console.log('App Launch')
-		
-		// 初始化 SDK
-		initSDK({ appKey: 'easemob-demo#support' })
-		
-		// 启用事件总线（双平台统一，内部用 uni.$emit 广播事件）
-		enableEventBus()
-		
-		// ==================== 示例 1：连接事件监听 ====================
-		
-		uni.$on(EM_CONNECTION_CONNECTED, (data : any) => {
-			console.log('[EventBus] 已连接到服务器')
-		})
-		
-		uni.$on(EM_CONNECTION_DISCONNECTED, (data : any) => {
-			console.log('[EventBus] 连接断开, errorCode:', data)
-		})
-		
-		uni.$on(EM_CONNECTION_LOGOUT, (data : any) => {
-			console.log('[EventBus] 被登出, errorCode:', data)
-		})
-		
-		uni.$on(EM_CONNECTION_TOKEN_WILL_EXPIRE, (data : any) => {
-			console.log('[EventBus] Token 即将过期')
-		})
-		
-		uni.$on(EM_CONNECTION_TOKEN_EXPIRED, (data : any) => {
-			console.log('[EventBus] Token 已过期')
-		})
-		
-		uni.$on(EM_CONNECTION_OFFLINE_SYNC_START, (data : any) => {
-			console.log('[EventBus] 开始同步离线消息')
-		})
-		
-		uni.$on(EM_CONNECTION_OFFLINE_SYNC_FINISH, (data : any) => {
-			console.log('[EventBus] 离线消息同步完成')
-		})
-		
-		// ==================== 示例 2：消息事件监听（数据经 JSON 中转） ====================
-		
-		uni.$on(EM_MESSAGE_RECEIVED, (data : any) => {
-			const messages = JSON.parse(data as string) as any[]
-			console.log('[EventBus] 收到消息, 数量:', messages.length)
-			messages.forEach((msg : any) => {
-				const msgObj = msg as UTSJSONObject
-				console.log(`[EventBus] 来自: ${msgObj['from']}, 类型: ${(msgObj['body'] as UTSJSONObject)['type']}`)
-			})
-		})
-		
-		uni.$on(EM_MESSAGE_CMD_RECEIVED, (data : any) => {
-			const messages = JSON.parse(data as string) as any[]
-			console.log('[EventBus] 收到 CMD 消息, 数量:', messages.length)
-		})
-		
-		uni.$on(EM_MESSAGE_READ, (data : any) => {
-			const messages = JSON.parse(data as string) as any[]
-			console.log('[EventBus] 消息已读, 数量:', messages.length)
-		})
-		
-		uni.$on(EM_MESSAGE_DELIVERED, (data : any) => {
-			const messages = JSON.parse(data as string) as any[]
-			console.log('[EventBus] 消息已送达, 数量:', messages.length)
-		})
-		
-		uni.$on(EM_MESSAGE_RECALLED, (data : any) => {
-			const messages = JSON.parse(data as string) as any[]
-			console.log('[EventBus] 消息被撤回, 数量:', messages.length)
-		})
 	})
 
 	onAppShow(() => {
