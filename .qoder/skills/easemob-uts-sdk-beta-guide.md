@@ -17,13 +17,15 @@
 | `utssdk/interface.uts` | 所有公共类型、枚举、接口定义（唯一类型来源） |
 | `utssdk/index.uts` | 跨平台主入口，条件编译分发，**统一导出类型** |
 | `utssdk/app-android/index.uts` | Android 平台实现，只导出函数，**不重复 re-export 类型** |
-| `utssdk/app-ios/index.uts` | iOS 平台桩函数实现，只导出函数，**不重复 re-export 类型** |
+| `utssdk/app-ios/index.uts` | iOS 平台实现，只导出函数，**不重复 re-export 类型** |
+| `utssdk/app-ios/em_bridge.swift` | iOS 原生桥接层，实现 `EMClientDelegate` 及独立回调函数 |
 | `android/.../index.kt` | HBuilderX 自动转译产物，**禁止手动维护** |
 
 ### 关键约束
 
 - **类型只在 `utssdk/index.uts` 统一导出一次**，平台文件（`app-android/index.uts`、`app-ios/index.uts`）末尾**绝对不能**再 re-export 同名类型，否则 Kotlin 转译时枚举/类名会产生 `__1` 后缀，导致页面层 `Unresolved reference` 错误。
 - **`android/` 目录是编译产物**，每次 HBuilderX「重新生成本地资源」会覆盖，所有修改必须从 UTS 源码层（`utssdk/`）根治。
+- **iOS 的 `em_bridge.swift` 是原生桥接文件**，由 UTS 编译器自动识别，无需 `declare module` 或 `declare class`。
 
 ---
 
@@ -444,17 +446,248 @@ rm -rf unpackage/cache
 
 ---
 
-## 九、桩函数规范
+## 九、iOS 实现规范
+
+iOS 平台已实现完整功能（初始化、登录、登出、连接监听、状态查询），采用 **UTS + Swift 桥接** 的混合架构。
+
+### 9.1 文件结构
+
+```
+utssdk/app-ios/
+├── config.json          # CocoaPods 依赖配置
+├── index.uts            # UTS 层：封装类、导出函数
+└── em_bridge.swift      # Swift 桥接层：EMClientDelegate + 独立回调函数
+```
+
+### 9.2 Swift 桥接层（em_bridge.swift）
+
+#### 核心设计
+
+- 使用 `fileprivate class EMDelegateNative: NSObject, EMClientDelegate` 实现原生代理
+- 使用模块级单例 `private var _emDelegate: EMDelegateNative?` 持有代理实例
+- 暴露**独立函数**给 UTS 调用（无需 `declare`）
+
+```swift
+import HyphenateChat
+
+fileprivate class EMDelegateNative: NSObject, EMClientDelegate {
+    var onConnectedCb: (() -> Void)?
+    var onDisconnectedCb: ((NSNumber) -> Void)?
+    var onLogoutCb: ((NSNumber) -> Void)?
+    var onTokenWillExpireCb: (() -> Void)?
+    var onTokenExpiredCb: (() -> Void)?
+
+    public func connectionStateDidChange(_ aConnectionState: EMConnectionState) {
+        if aConnectionState == EMConnectionState.connected {
+            self.onConnectedCb?()
+        } else {
+            self.onDisconnectedCb?(0)
+        }
+    }
+
+    public func userAccountDidForced(toLogout aError: EMError?) {
+        if let error = aError {
+            let code = error.code.rawValue as NSNumber
+            self.onLogoutCb?(code)
+        }
+    }
+
+    public func tokenWillExpire(_ aErrorCode: EMErrorCode) {
+        self.onTokenWillExpireCb?()
+    }
+
+    public func tokenDidExpire(_ aErrorCode: EMErrorCode) {
+        self.onTokenExpiredCb?()
+    }
+}
+
+private var _emDelegate: EMDelegateNative?
+
+func emBridgeSetupDelegate() {
+    let d = EMDelegateNative()
+    _emDelegate = d
+    EMClient.shared().add(d, delegateQueue: nil)
+}
+
+func emBridgeTeardownDelegate() {
+    if let d = _emDelegate {
+        EMClient.shared().removeDelegate(d)
+        _emDelegate = nil
+    }
+}
+
+func emBridgeSetOnConnected(callback: (() -> Void)?) {
+    _emDelegate?.onConnectedCb = callback
+}
+
+func emBridgeSetOnDisconnected(callback: ((NSNumber) -> Void)?) {
+    _emDelegate?.onDisconnectedCb = callback
+}
+
+func emBridgeSetOnLogout(callback: ((NSNumber) -> Void)?) {
+    _emDelegate?.onLogoutCb = callback
+}
+
+func emBridgeSetOnTokenWillExpire(callback: (() -> Void)?) {
+    _emDelegate?.onTokenWillExpireCb = callback
+}
+
+func emBridgeSetOnTokenExpired(callback: (() -> Void)?) {
+    _emDelegate?.onTokenExpiredCb = callback
+}
+```
+
+#### 关键约束
+
+- **回调参数类型必须用 `NSNumber`**，不能用 `Int` 或 `number`。UTS 侧接收为 `number`。
+- **Swift 独立函数无需 `declare`**，UTS 编译器会自动识别同目录下的 `.swift` 文件。
+- **代理类用 `fileprivate`**，避免与 UTS 侧类型名冲突。
+
+### 9.3 UTS iOS 层（app-ios/index.uts）
+
+#### 导入规范
+
+```typescript
+// ✅ 正确：从 HyphenateChat framework 导入
+import { EMClient, EMOptions, EMClientDelegate, EMError, EMErrorCode, EMConnectionState } from 'HyphenateChat';
+
+// ✅ 正确：从 interface.uts 导入类型
+import { IEMClient, EMErrorListener, EMTokenWillExpireListener, EMTokenExpiredListener } from '../interface.uts';
+```
+
+#### Promise 封装模式
+
+iOS SDK 使用 completion handler 回调，UTS 侧用 Promise 封装：
+
+```typescript
+login(config: UTSJSONObject): Promise<void> {
+  return new Promise((resolve, reject) => {
+    try {
+      const userId = config['userId'] as string;
+      const password = config['password'] as string;
+      const useToken = (config['useToken'] as boolean) ?? false;
+
+      const completion = (username: string, error: EMError | null): void => {
+        if (error != null) {
+          const code = error!.code.rawValue as number;
+          const msg = error!.errorDescription ?? 'Login failed';
+          reject(new Error(`Login failed: ${code} - ${msg}`));
+        } else {
+          resolve();
+        }
+      };
+
+      if (useToken) {
+        EMClient.shared().login(withUsername = userId, token = password, completion = completion);
+      } else {
+        EMClient.shared().login(withUsername = userId, password = password, completion = completion);
+      }
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+```
+
+#### 命名参数调用
+
+iOS Swift API 在 UTS 中调用时，**必须带参数标签**（named parameters）：
+
+```typescript
+// ✅ 正确：带参数标签
+EMClient.shared().login(withUsername = userId, password = password, completion = completion);
+EMClient.shared().initializeSDK(with = options);
+EMClient.shared().logout(true, completion = completion);
+
+// ❌ 错误：不带标签或位置参数
+EMClient.shared().login(userId, password, completion);
+```
+
+#### 事件监听实现
+
+```typescript
+@UTSJS.keepAlive
+onConnected(listener: (() => void) | null): void {
+  emBridgeSetOnConnected(callback = listener);
+}
+
+@UTSJS.keepAlive
+onDisconnected(listener: ((errorCode: number) => void) | null): void {
+  emBridgeSetOnDisconnected(callback = listener);
+}
+```
+
+#### 状态查询
+
+```typescript
+getVersion(): string {
+  return EMClient.shared().version;
+}
+
+isConnected(): boolean {
+  return EMClient.shared().isConnected;
+}
+
+isLoggedIn(): boolean {
+  return EMClient.shared().isLoggedIn;
+}
+
+getCurrentUser(): string | null {
+  return EMClient.shared().currentUsername;
+}
+```
+
+### 9.4 已验证可用的 iOS API 列表
+
+以下 API 已在真机/模拟器上验证可用：
+
+- `initSDK(config: UTSJSONObject): Promise<void>`
+- `login(config: UTSJSONObject): Promise<void>`
+- `logout(): Promise<void>`
+- `destroy(): void`
+- `onConnected(listener: (() => void) | null): void`
+- `onDisconnected(listener: ((errorCode: number) => void) | null): void`
+- `onLogout(listener: ((errorCode: number) => void) | null): void`
+- `onTokenWillExpire(listener: EMTokenWillExpireListener | null): void`
+- `onTokenExpired(listener: EMTokenExpiredListener | null): void`
+- `getVersion(): string`
+- `isConnected(): boolean`
+- `isLoggedIn(): boolean`
+- `getCurrentUser(): string | null`
+
+### 9.5 iOS 导出结构
+
+```typescript
+// app-ios/index.uts
+export function initSDK(config: UTSJSONObject): Promise<void> { ... }
+export function login(config: UTSJSONObject): Promise<void> { ... }
+export function logout(): Promise<void> { ... }
+export function destroy(): void { ... }
+export function onConnected(listener: (() => void) | null): void { ... }
+export function onDisconnected(listener: ((errorCode: number) => void) | null): void { ... }
+export function onLogout(listener: ((errorCode: number) => void) | null): void { ... }
+export function onTokenWillExpire(listener: EMTokenWillExpireListener | null): void { ... }
+export function onTokenExpired(listener: EMTokenExpiredListener | null): void { ... }
+export function getVersion(): string { ... }
+export function isConnected(): boolean { ... }
+export function isLoggedIn(): boolean { ... }
+export function getCurrentUser(): string | null { ... }
+
+// 类型已在 utssdk/index.uts 统一导出，此处不重复 re-export
+```
+
+---
+
+## 十、桩函数规范
 
 iOS 平台及暂未实现的 Android 功能，用空函数占位，不影响编译：
 
 ```typescript
 // 桩函数：参数加下划线前缀，避免 unused 警告
 export function onError(_listener: EMErrorListener | null): void {}
-export function getVersion(): string { return 'unknown'; }
-export function isConnected(): boolean { return false; }
-export function getCurrentUser(): string | null { return null; }
 ```
+
+**注意**：iOS 的 `onError` 目前是桩函数，因为环信 iOS SDK 的 `EMClientDelegate` 没有直接的 `onError` 统一回调。
 
 ---
 
@@ -472,12 +705,14 @@ export function getCurrentUser(): string | null { return null; }
 
 ---
 
-## 十一、新增 API 标准流程
+## 十二、新增 API 标准流程
 
 1. 在 `interface.uts` 定义类型/接口
 2. 在 `app-android/index.uts` 实现（`EMClientImpl` 方法 + 顶层导出函数）
-3. 在 `app-ios/index.uts` 添加桩函数
-4. 在 `utssdk/index.uts` 的两个平台条件编译块中添加导出
-5. **检查**：`app-android/index.uts` 末尾没有重复 re-export 类型
-6. **检查**：导出函数参数如为对象，使用 `UTSJSONObject`
-7. 重新生成本地资源验证编译
+3. 在 `app-ios/index.uts` 实现（`EMClientImpl` 方法 + 顶层导出函数）
+4. 如需 iOS 原生桥接，在 `app-ios/em_bridge.swift` 中添加代理方法或独立函数
+5. 在 `utssdk/index.uts` 的两个平台条件编译块中添加导出
+6. **检查**：`app-android/index.uts` 和 `app-ios/index.uts` 末尾都没有重复 re-export 类型
+7. **检查**：导出函数参数如为对象，使用 `UTSJSONObject`
+8. **检查**：iOS Swift API 调用时带参数标签（named parameters）
+9. 重新生成本地资源验证编译

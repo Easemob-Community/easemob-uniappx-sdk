@@ -1,7 +1,7 @@
 /**
  * Easemob IM SDK Beta - 接口定义（精简版）
  * Android: 初始化 + 登录 + 连接监听
- * iOS: 仅桩函数
+ * iOS: 初始化 + 登录 + 登出 + 连接监听 + 状态查询（已验证可用）
  */
 
 // ==================== 初始化配置 ====================
@@ -89,10 +89,10 @@ export interface IEMClient {
   /** 初始化 SDK */
   initSDK(config: UTSJSONObject): Promise<void>;
 
-  /** 登录（Android 已实现，iOS 桩函数） */
+  /** 登录（Android/iOS 均已实现） */
   login(config: UTSJSONObject): Promise<void>;
 
-  /** 登出（Android 已实现，iOS 桩函数） */
+  /** 登出（Android/iOS 均已实现） */
   logout(): Promise<void>;
 
   /** 销毁 SDK 实例 */
@@ -100,15 +100,15 @@ export interface IEMClient {
 
   // MARK: - 核心方法（桩函数）
 
-  /** 获取 SDK 版本号（桩函数） */
+  /** 获取 SDK 版本号（iOS 已实现） */
   getVersion(): string;
 
-  /** 判断是否已连接（桩函数） */
+  /** 判断是否已连接（iOS 已实现） */
   isConnected(): boolean;
 
-  /** 判断是否已登录（桩函数） */
+  /** 判断是否已登录（iOS 已实现） */
   isLoggedIn(): boolean;
 
-  /** 获取当前登录用户 ID（桩函数） */
+  /** 获取当前登录用户 ID（iOS 已实现） */
   getCurrentUser(): string | null;
 }

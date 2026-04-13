@@ -50,7 +50,8 @@ uni_modules/easemob-uts-sdk/
 │   │   └── core/               # 核心模块
 │   │       └── init.uts        # SDK 初始化
 │   └── app-ios/
-│       ├── index.uts           # iOS 实现
+│       ├── index.uts           # iOS UTS 层实现
+│       ├── em_bridge.swift     # iOS Swift 桥接层（EMClientDelegate 等原生代理）
 │       └── config.json         # iOS 依赖配置
 ```
 
@@ -67,7 +68,8 @@ uni_modules/easemob-uts-sdk/
 | auth/login.uts | 登录/登出实现 | 低 |
 | core/init.uts | SDK 初始化 | 低 |
 | MessageHelper.kt | Kotlin 辅助类（解决UTS调用限制） | 中 |
-| app-ios/index.uts | iOS 桥接实现 | 中 |
+| app-ios/index.uts | iOS UTS 层实现，调用 Swift 桥接函数 | 中 |
+| app-ios/em_bridge.swift | iOS Swift 桥接层，实现原生代理和独立回调函数 | 中 |
 
 ### 模块划分说明
 
@@ -240,10 +242,62 @@ console.log('[EaseMobIM] Debug info:', value)
 // Xcode 断点调试
 // 1. HBuilderX 运行到 iOS
 // 2. 在 Xcode 中打开生成的工程
-// 3. 在编译后的 Swift 代码中打断点
+// 3. 可在 em_bridge.swift 和编译后的 Swift 代码中打断点
 ```
 
-### 3. 常见问题排查
+### 3. iOS Swift 桥接层（em_bridge.swift）
+
+#### 为什么需要 em_bridge.swift？
+
+iOS 环信 SDK 的 `EMClientDelegate` 是一个 Objective-C/Swift 协议，包含多个回调方法（如 `connectionStateDidChange`、`tokenDidExpire`、`userAccountDidForcedToLogout` 等）。UTS 编译器虽然可以直接 import `HyphenateChat` 的类，但**无法在 UTS 层直接实现 Swift/ObjC 协议并注册为代理**（存在类型系统和编译限制）。
+
+因此采用 **UTS + Swift 混合桥接** 架构：
+- `em_bridge.swift`：纯 Swift 文件，实现 `EMClientDelegate`，管理代理单例，暴露独立函数给 UTS
+- `app-ios/index.uts`：调用 Swift 暴露的独立函数，用 Promise 封装异步操作
+
+#### 桥接层设计原则
+
+1. **代理类用 `fileprivate`**：避免与 UTS 侧类型名冲突
+2. **模块级单例持有代理**：`private var _emDelegate: EMDelegateNative?`
+3. **暴露独立函数**：UTS 编译器自动识别同目录下的 `.swift` 文件，无需 `declare`
+4. **回调参数用 `NSNumber`**：Swift→UTS 传递数字时必须用 `NSNumber`，UTS 侧接收为 `number`
+
+#### 典型函数列表
+
+```swift
+func emBridgeSetupDelegate()                          // 注册代理
+func emBridgeTeardownDelegate()                        // 移除代理
+func emBridgeSetOnConnected(callback: (() -> Void)?)   // 设置连接成功回调
+func emBridgeSetOnDisconnected(callback: ((NSNumber) -> Void)?)  // 设置断开回调
+func emBridgeSetOnLogout(callback: ((NSNumber) -> Void)?)        // 设置登出回调
+func emBridgeSetOnTokenWillExpire(callback: (() -> Void)?)       // Token 即将过期
+func emBridgeSetOnTokenExpired(callback: (() -> Void)?)          // Token 已过期
+```
+
+#### UTS 侧调用方式
+
+```uts
+import { EMClient, EMOptions } from 'HyphenateChat';
+
+// initSDK 中初始化并注册代理
+EMClient.shared().initializeSDK(with = options);
+emBridgeSetupDelegate();
+
+// 设置监听
+onConnected(listener: (() => void) | null): void {
+  emBridgeSetOnConnected(callback = listener);
+}
+```
+
+#### 新增 iOS 代理方法时的标准流程
+
+1. 在 `em_bridge.swift` 的 `EMDelegateNative` 中实现代理方法
+2. 添加新的 callback 属性（如 `var onNewEventCb: ((NSNumber) -> Void)?`）
+3. 添加新的桥接函数（如 `func emBridgeSetOnNewEvent(...)`）
+4. 在 `app-ios/index.uts` 的 `EMClientImpl` 中调用该桥接函数
+5. 在 `app-ios/index.uts` 末尾导出对应的公开函数
+
+### 4. 常见问题排查
 
 #### 问题：SDK 初始化失败
 

@@ -2,7 +2,7 @@
 	<scroll-view class="container" scroll-y="true">
 		<view class="content">
 			<text class="title">SDK Beta 测试页面</text>
-			<text class="subtitle">Android 初始化 + 登录测试</text>
+			<text class="subtitle">Android / iOS 初始化 + 登录测试</text>
 
 			<view class="section">
 				<text class="section-title">初始化</text>
@@ -39,7 +39,6 @@
 <script setup lang="uts">
 	import { ref } from 'vue'
 
-	// #ifdef APP-ANDROID
 	import {
 		initSDK,
 		login,
@@ -48,7 +47,6 @@
 		onDisconnected,
 		onLogout,
 	} from '@/uni_modules/easemob-uts-sdk-beta'
-	// #endif
 
 	const appKey = ref('easemob-demo#support')
 	const userId = ref('hfp')
@@ -72,7 +70,6 @@
 	}
 
 	async function handleInit(): Promise<void> {
-		// #ifdef APP-ANDROID
 		try {
 			addLog('开始初始化...')
 			const config = { appKey: appKey.value, autoLogin: false }
@@ -106,15 +103,9 @@
 		} catch (error) {
 			addLog('初始化失败: ' + error)
 		}
-		// #endif
-
-		// #ifndef APP-ANDROID
-		addLog('当前仅支持 Android 平台')
-		// #endif
 	}
 
 	async function handleLogin(): Promise<void> {
-		// #ifdef APP-ANDROID
 		try {
 			addLog('开始登录...')
 			const config = {
@@ -127,15 +118,9 @@
 		} catch (error) {
 			addLog('登录失败: ' + error)
 		}
-		// #endif
-
-		// #ifndef APP-ANDROID
-		addLog('当前仅支持 Android 平台')
-		// #endif
 	}
 
 	async function handleLogout(): Promise<void> {
-		// #ifdef APP-ANDROID
 		try {
 			addLog('开始登出...')
 			await logout()
@@ -143,11 +128,6 @@
 		} catch (error) {
 			addLog('登出失败: ' + error)
 		}
-		// #endif
-
-		// #ifndef APP-ANDROID
-		addLog('当前仅支持 Android 平台')
-		// #endif
 	}
 </script>
 

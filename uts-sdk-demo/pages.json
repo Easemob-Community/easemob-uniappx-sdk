@@ -7,18 +7,6 @@
 			}
 		},
 		{
-			"path": "pages/login/login",
-			"style": {
-				"navigationBarTitleText": "登录"
-			}
-		},
-		{
-			"path": "pages/message/message",
-			"style": {
-				"navigationBarTitleText": "发送消息"
-			}
-		},
-		{
 			"path": "pages/sdk-demo/sdk-demo",
 			"style": {
 				"navigationBarTitleText": "SDK 测试"

@@ -8,11 +8,7 @@
 export {
   EMInitConfig,
   EMLoginConfig,
-  EMConnectionState,
-  EMConnectionEvent,
-  EMConnectionStateChangedEvent,
   EMError,
-  EMConnectionStateChangedListener,
   EMErrorListener,
   EMTokenWillExpireListener,
   EMTokenExpiredListener,

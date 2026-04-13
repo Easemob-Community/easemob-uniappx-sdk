@@ -1,47 +1,24 @@
 /**
- * Easemob IM SDK Beta - iOS 平台实现（精简版）
- * 仅实现初始化 + 连接监听，其他为桩函数
+ * Easemob IM SDK Beta - iOS 平台实现
+ * 实现初始化 + 登录 + 登出 + 连接监听 + 状态查询
  */
 
-import { EMClient, EMOptions, EMClientDelegate } from 'HyphenateChat';
+import { EMClient, EMOptions, EMClientDelegate, EMError, EMErrorCode, EMConnectionState } from 'HyphenateChat';
 import {
   IEMClient,
-  EMError,
   EMErrorListener,
   EMTokenWillExpireListener,
   EMTokenExpiredListener,
-  ConnectionListenerCallbacks
 } from '../interface.uts';
 
-// ==================== 事件处理器实现 ====================
-
-@UTSiOS.keyword("fileprivate")
-class EMClientDelegateImpl extends EMClientDelegate {
-  @UTSJS.keepAlive
-  eventMap: ConnectionListenerCallbacks = {};
-
-  override connectionStateDidChange(
-    @argumentLabel('') state: number,
-    @argumentLabel('') event: number
-  ): void {
-    if (state == 0) {
-      this.eventMap.onConnected?.();
-    } else if (state == 2) {
-      this.eventMap.onDisconnected?.(0);
-    }
-  }
-
-  override userAccountDidLoginFromOtherDevice(): void {
-    this.eventMap.onDisconnected?.(0);
-  }
-}
+// em_bridge.swift 中的独立函数由 UTS 编译器自动识别，无需 declare
 
 // ==================== SDK 实现类 ====================
 
 class EMClientImpl implements IEMClient {
   private static _instance: EMClientImpl | null = null;
   private _client: EMClient | null = null;
-  private _delegate: EMClientDelegateImpl | null = null;
+  private _isInitialized = false;
 
   private constructor() {}
 
@@ -52,11 +29,17 @@ class EMClientImpl implements IEMClient {
     return this._instance!;
   }
 
-  // MARK: - 已实现：初始化 + 连接监听
+  // MARK: - 核心方法
 
   initSDK(config: UTSJSONObject): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
+        if (this._isInitialized) {
+          console.log('[iOS] EMClient SDK already initialized');
+          resolve();
+          return;
+        }
+
         const appKey = config['appKey'] as string;
         const autoLogin = (config['autoLogin'] as boolean) ?? false;
         const options = new EMOptions(appkey = appKey);
@@ -64,10 +47,10 @@ class EMClientImpl implements IEMClient {
 
         EMClient.shared().initializeSDK(with = options);
 
-        this._delegate = new EMClientDelegateImpl();
-        EMClient.shared().addDelegate(this._delegate!, delegateQueue = null);
+        emBridgeSetupDelegate();
         this._client = EMClient.shared();
 
+        this._isInitialized = true;
         console.log('[iOS] EMClient SDK initialized');
         resolve();
       } catch (error) {
@@ -77,78 +60,116 @@ class EMClientImpl implements IEMClient {
     });
   }
 
+  login(config: UTSJSONObject): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const userId = config['userId'] as string;
+        const password = config['password'] as string;
+        const useToken = (config['useToken'] as boolean) ?? false;
+
+        const completion = (username: string, error: EMError | null): void => {
+          if (error != null) {
+            const code = error!.code.rawValue as number;
+            const msg = error!.errorDescription ?? 'Login failed';
+            console.error('[iOS] Login failed:', code, msg);
+            reject(new Error(`Login failed: ${code} - ${msg}`));
+          } else {
+            console.log('[iOS] Login success:', username);
+            resolve();
+          }
+        };
+
+        if (useToken) {
+          EMClient.shared().login(withUsername = userId, token = password, completion = completion);
+        } else {
+          EMClient.shared().login(withUsername = userId, password = password, completion = completion);
+        }
+      } catch (error) {
+        console.error('[iOS] Login error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  logout(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const completion = (error: EMError | null): void => {
+          if (error != null) {
+            const code = error!.code.rawValue as number;
+            const msg = error!.errorDescription ?? 'Logout failed';
+            console.error('[iOS] Logout failed:', code, msg);
+            reject(new Error(`Logout failed: ${code} - ${msg}`));
+          } else {
+            console.log('[iOS] Logout success');
+            resolve();
+          }
+        };
+
+        EMClient.shared().logout(true, completion = completion);
+      } catch (error) {
+        console.error('[iOS] Logout error:', error);
+        reject(error);
+      }
+    });
+  }
+
   destroy(): void {
-    if (this._delegate != null) {
-      this._client?.removeDelegate(this._delegate!);
-      this._delegate = null;
-    }
+    emBridgeTeardownDelegate();
     this._client = null;
+    this._isInitialized = false;
     console.log('[iOS] EMClient SDK destroyed');
   }
 
+  // MARK: - 事件监听
+
   @UTSJS.keepAlive
   onConnected(listener: (() => void) | null): void {
-    if (this._delegate != null) {
-      this._delegate.eventMap.onConnected = listener;
-    }
+    emBridgeSetOnConnected(callback = listener);
   }
 
   @UTSJS.keepAlive
   onDisconnected(listener: ((errorCode: number) => void) | null): void {
-    if (this._delegate != null) {
-      this._delegate.eventMap.onDisconnected = listener;
-    }
+    emBridgeSetOnDisconnected(callback = listener);
   }
 
   @UTSJS.keepAlive
   onLogout(listener: ((errorCode: number) => void) | null): void {
-    if (this._delegate != null) {
-      this._delegate.eventMap.onLogout = listener;
-    }
+    emBridgeSetOnLogout(callback = listener);
   }
 
   @UTSJS.keepAlive
   onTokenWillExpire(listener: EMTokenWillExpireListener | null): void {
-    if (this._delegate != null) {
-      this._delegate.eventMap.onTokenWillExpire = listener;
-    }
+    emBridgeSetOnTokenWillExpire(callback = listener);
   }
 
   @UTSJS.keepAlive
   onTokenExpired(listener: EMTokenExpiredListener | null): void {
-    if (this._delegate != null) {
-      this._delegate.eventMap.onTokenExpired = listener;
-    }
+    emBridgeSetOnTokenExpired(callback = listener);
   }
 
-  // MARK: - 桩函数（iOS 暂未实现）
-
-  login(_config: UTSJSONObject): Promise<void> {
-    return Promise.reject(new Error('iOS login not implemented'));
-  }
-
-  logout(): Promise<void> {
-    return Promise.reject(new Error('iOS logout not implemented'));
-  }
-
-  onError(_listener: EMErrorListener | null): void {
-    // 桩函数：待实现
-  }
+  // MARK: - 状态查询
 
   getVersion(): string {
-    return 'unknown'; // 桩函数：待实现
+    return EMClient.shared().version;
   }
 
   isConnected(): boolean {
-    return false; // 桩函数：待实现
+    return EMClient.shared().isConnected;
   }
 
   isLoggedIn(): boolean {
-    return false; // 桩函数：待实现
+    return EMClient.shared().isLoggedIn;
   }
 
   getCurrentUser(): string | null {
-    return null; // 桩函数：待实现
+    return EMClient.shared().currentUsername;
+  }
+
+  // MARK: - 桩函数
+
+  onError(_listener: EMErrorListener | null): void {
+    // 桩函数：待实现
   }
 }
 
@@ -156,6 +177,14 @@ class EMClientImpl implements IEMClient {
 
 export function initSDK(config: UTSJSONObject): Promise<void> {
   return EMClientImpl.getInstance().initSDK(config);
+}
+
+export function login(config: UTSJSONObject): Promise<void> {
+  return EMClientImpl.getInstance().login(config);
+}
+
+export function logout(): Promise<void> {
+  return EMClientImpl.getInstance().logout();
 }
 
 export function destroy(): void {
@@ -182,17 +211,22 @@ export function onTokenExpired(listener: EMTokenExpiredListener | null): void {
   EMClientImpl.getInstance().onTokenExpired(listener);
 }
 
-// 桩函数导出（iOS 暂未实现）
-export function login(_config: UTSJSONObject): Promise<void> {
-  return Promise.reject(new Error('iOS login not implemented'));
-}
-export function logout(): Promise<void> {
-  return Promise.reject(new Error('iOS logout not implemented'));
-}
 export function onError(_listener: EMErrorListener | null): void {}
-export function getVersion(): string { return 'unknown'; }
-export function isConnected(): boolean { return false; }
-export function isLoggedIn(): boolean { return false; }
-export function getCurrentUser(): string | null { return null; }
+
+export function getVersion(): string {
+  return EMClientImpl.getInstance().getVersion();
+}
+
+export function isConnected(): boolean {
+  return EMClientImpl.getInstance().isConnected();
+}
+
+export function isLoggedIn(): boolean {
+  return EMClientImpl.getInstance().isLoggedIn();
+}
+
+export function getCurrentUser(): string | null {
+  return EMClientImpl.getInstance().getCurrentUser();
+}
 
 // 类型已在 utssdk/index.uts 统一导出，此处不重复 re-export
