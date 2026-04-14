@@ -19,6 +19,9 @@ import {
   ConnectionListenerCallbacks,
   Message,
   MessageBody,
+  SendTextMessageConfig,
+  SendCmdMessageConfig,
+  SendCustomMessageConfig,
 } from '../interface.uts';
 
 // ==================== 事件处理器实现 ====================
@@ -72,7 +75,7 @@ import EMCustomMessageBody from 'com.hyphenate.chat.EMCustomMessageBody';
 import EMMessageListener from 'com.hyphenate.EMMessageListener';
 import MutableList from 'kotlin.collections.MutableList';
 import EMMessageChatType from 'com.hyphenate.chat.EMMessage.ChatType';
-import { MessageHelper, setMessageExtFromJson } from 'uts.sdk.modules.easemobUtsSdkBeta';
+import { MessageHelper, setMessageExtFromJson, createCustomMessageBody } from 'uts.sdk.modules.easemobUtsSdkBeta';
 
 
 type MessageListenerCallbacks = {
@@ -350,9 +353,21 @@ export class EMClientImpl implements EasemobClient {
 
   // MARK: - 桩函数
 
-  sendTextMessage(content: string, to: string, chatType: string, ext: UTSJSONObject | null): Promise<Message> {
+  sendTextMessage(config: SendTextMessageConfig): Promise<Message> {
     return new Promise((resolve, reject) => {
       try {
+        const content = config.content;
+        const to = config.to;
+        const chatType = config.chatType;
+        const ext = config.ext ?? null;
+        if (content.length === 0) {
+          reject(new Error('content 不能为空'));
+          return;
+        }
+        if (to.length === 0) {
+          reject(new Error('to 不能为空'));
+          return;
+        }
         const message = EMMessage.createTextSendMessage(content, to);
         if (chatType === 'group') {
           message.setChatType(EMMessageChatType.GroupChat);
@@ -377,6 +392,102 @@ export class EMClientImpl implements EasemobClient {
         EMClient.getInstance().chatManager().sendMessage(message);
       } catch (error) {
         console.error('[Android] sendTextMessage error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  sendCmdMessage(config: SendCmdMessageConfig): Promise<Message> {
+    return new Promise((resolve, reject) => {
+      try {
+        const action = config.action;
+        const to = config.to;
+        const chatType = config.chatType;
+        const ext = config.ext ?? null;
+        if (action.length === 0) {
+          reject(new Error('action 不能为空'));
+          return;
+        }
+        if (to.length === 0) {
+          reject(new Error('to 不能为空'));
+          return;
+        }
+        const message = EMMessage.createSendMessage(EMMessage.Type.CMD);
+        message.setTo(to);
+        const body = new EMCmdMessageBody(action);
+        message.addBody(body);
+        if (chatType === 'group') {
+          message.setChatType(EMMessageChatType.GroupChat);
+        } else if (chatType === 'chatroom') {
+          message.setChatType(EMMessageChatType.ChatRoom);
+        } else {
+          message.setChatType(EMMessageChatType.Chat);
+        }
+        if (ext != null) {
+          const extJson = JSON.stringify(ext);
+          setMessageExtFromJson(message, extJson);
+        }
+        const callback = makeCallBack(
+          (): void => {
+            resolve(convertEMMessage(message));
+          },
+          (code: number, messageStr: string): void => {
+            reject(new Error(`Send cmd message failed: ${code} - ${messageStr}`));
+          }
+        );
+        MessageHelper.setMessageStatusCallback(message, callback);
+        EMClient.getInstance().chatManager().sendMessage(message);
+      } catch (error) {
+        console.error('[Android] sendCmdMessage error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  sendCustomMessage(config: SendCustomMessageConfig): Promise<Message> {
+    return new Promise((resolve, reject) => {
+      try {
+        const event = config.event;
+        const params = config.params ?? new UTSJSONObject();
+        const to = config.to;
+        const chatType = config.chatType;
+        const ext = config.ext ?? null;
+        if (event.length === 0) {
+          reject(new Error('event 不能为空'));
+          return;
+        }
+        if (to.length === 0) {
+          reject(new Error('to 不能为空'));
+          return;
+        }
+        const message = EMMessage.createSendMessage(EMMessage.Type.CUSTOM);
+        message.setTo(to);
+        const paramsJson = JSON.stringify(params ?? {});
+        const customBody = createCustomMessageBody(event, paramsJson);
+        message.addBody(customBody);
+        if (chatType === 'group') {
+          message.setChatType(EMMessageChatType.GroupChat);
+        } else if (chatType === 'chatroom') {
+          message.setChatType(EMMessageChatType.ChatRoom);
+        } else {
+          message.setChatType(EMMessageChatType.Chat);
+        }
+        if (ext != null) {
+          const extJson = JSON.stringify(ext);
+          setMessageExtFromJson(message, extJson);
+        }
+        const callback = makeCallBack(
+          (): void => {
+            resolve(convertEMMessage(message));
+          },
+          (code: number, messageStr: string): void => {
+            reject(new Error(`Send custom message failed: ${code} - ${messageStr}`));
+          }
+        );
+        MessageHelper.setMessageStatusCallback(message, callback);
+        EMClient.getInstance().chatManager().sendMessage(message);
+      } catch (error) {
+        console.error('[Android] sendCustomMessage error:', error);
         reject(error);
       }
     });

@@ -132,8 +132,39 @@ export interface EasemobClient {
   getCurrentUser(): string | null;
 
   /** 发送文本消息 */
-  sendTextMessage(content: string, to: string, chatType: string, ext?: UTSJSONObject | null): Promise<Message>;
+  sendTextMessage(config: SendTextMessageConfig): Promise<Message>;
+
+  /** 发送 CMD 消息 */
+  sendCmdMessage(config: SendCmdMessageConfig): Promise<Message>;
+
+  /** 发送自定义消息 */
+  sendCustomMessage(config: SendCustomMessageConfig): Promise<Message>;
 }
+
+/** 发送文本消息配置 */
+export type SendTextMessageConfig = {
+  content: string;
+  to: string;
+  chatType: string;
+  ext?: UTSJSONObject | null;
+};
+
+/** 发送 CMD 消息配置 */
+export type SendCmdMessageConfig = {
+  action: string;
+  to: string;
+  chatType: string;
+  ext?: UTSJSONObject | null;
+};
+
+/** 发送自定义消息配置 */
+export type SendCustomMessageConfig = {
+  event: string;
+  params?: UTSJSONObject;
+  to: string;
+  chatType: string;
+  ext?: UTSJSONObject | null;
+};
 
 /**
  * 创建 Easemob IM SDK 客户端实例

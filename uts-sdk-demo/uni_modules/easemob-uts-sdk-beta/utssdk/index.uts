@@ -14,6 +14,9 @@ export {
   EMTokenExpiredListener,
   EasemobClient,
   CreateEasemobClient,
+  SendTextMessageConfig,
+  SendCmdMessageConfig,
+  SendCustomMessageConfig,
 } from './interface.uts';
 
 // ==================== 平台相关导出 ====================

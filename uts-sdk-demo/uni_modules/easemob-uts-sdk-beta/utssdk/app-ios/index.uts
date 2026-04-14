@@ -16,6 +16,9 @@ import {
   EMTokenWillExpireListener,
   EMTokenExpiredListener,
   Message,
+  SendTextMessageConfig,
+  SendCmdMessageConfig,
+  SendCustomMessageConfig,
 } from '../interface.uts';
 
 // em_bridge.swift 中的独立函数由 UTS 编译器自动识别，无需 declare
@@ -191,9 +194,21 @@ export class EMClientImpl implements EasemobClient {
     // 桩函数：待实现
   }
 
-  sendTextMessage(_content: string, _to: string, _chatType: string, _ext: UTSJSONObject | null): Promise<Message> {
+  sendTextMessage(_config: SendTextMessageConfig): Promise<Message> {
     return new Promise((resolve, reject) => {
       reject(new Error('sendTextMessage is not implemented on iOS yet'));
+    });
+  }
+
+  sendCmdMessage(_config: SendCmdMessageConfig): Promise<Message> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('sendCmdMessage is not implemented on iOS yet'));
+    });
+  }
+
+  sendCustomMessage(_config: SendCustomMessageConfig): Promise<Message> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('sendCustomMessage is not implemented on iOS yet'));
     });
   }
 }
