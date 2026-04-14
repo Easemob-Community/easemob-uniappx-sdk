@@ -5,7 +5,8 @@
 
 import { EMClient, EMOptions, EMClientDelegate, EMError, EMErrorCode, EMConnectionState } from 'HyphenateChat';
 import {
-  IEMClient,
+  EasemobClient,
+  EMInitConfig,
   EMErrorListener,
   EMTokenWillExpireListener,
   EMTokenExpiredListener,
@@ -15,7 +16,7 @@ import {
 
 // ==================== SDK 实现类 ====================
 
-class EMClientImpl implements IEMClient {
+export class EMClientImpl implements EasemobClient {
   private static _instance: EMClientImpl | null = null;
   private _client: EMClient | null = null;
   private _isInitialized = false;
@@ -29,35 +30,22 @@ class EMClientImpl implements IEMClient {
     return this._instance!;
   }
 
-  // MARK: - 核心方法
-
-  initSDK(config: UTSJSONObject): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        if (this._isInitialized) {
-          console.log('[iOS] EMClient SDK already initialized');
-          resolve();
-          return;
-        }
-
-        const appKey = config['appKey'] as string;
-        const autoLogin = (config['autoLogin'] as boolean) ?? false;
-        const options = new EMOptions(appkey = appKey);
-        options.isAutoLogin = autoLogin;
-
-        EMClient.shared().initializeSDK(with = options);
-
-        emBridgeSetupDelegate();
-        this._client = EMClient.shared();
-
-        this._isInitialized = true;
-        console.log('[iOS] EMClient SDK initialized');
-        resolve();
-      } catch (error) {
-        console.error('[iOS] EMClient SDK init failed:', error);
-        reject(error);
-      }
-    });
+  static create(config: EMInitConfig): EasemobClient {
+    const instance = EMClientImpl.getInstance();
+    if (!instance._isInitialized) {
+      const appKey = config.appKey!;
+      const autoLogin = config.autoLogin ?? false;
+      const options = new EMOptions(appkey = appKey);
+      options.isAutoLogin = autoLogin;
+      EMClient.shared().initializeSDK(with = options);
+      emBridgeSetupDelegate();
+      instance._client = EMClient.shared();
+      instance._isInitialized = true;
+      console.log('[iOS] EMClient SDK initialized');
+    } else {
+      console.log('[iOS] EMClient SDK already initialized');
+    }
+    return instance;
   }
 
   login(config: UTSJSONObject): Promise<void> {
@@ -175,58 +163,6 @@ class EMClientImpl implements IEMClient {
 
 // ==================== 导出 ====================
 
-export function initSDK(config: UTSJSONObject): Promise<void> {
-  return EMClientImpl.getInstance().initSDK(config);
+export function create(config: EMInitConfig): EasemobClient {
+  return EMClientImpl.create(config);
 }
-
-export function login(config: UTSJSONObject): Promise<void> {
-  return EMClientImpl.getInstance().login(config);
-}
-
-export function logout(): Promise<void> {
-  return EMClientImpl.getInstance().logout();
-}
-
-export function destroy(): void {
-  EMClientImpl.getInstance().destroy();
-}
-
-export function onConnected(listener: (() => void) | null): void {
-  EMClientImpl.getInstance().onConnected(listener);
-}
-
-export function onDisconnected(listener: ((errorCode: number) => void) | null): void {
-  EMClientImpl.getInstance().onDisconnected(listener);
-}
-
-export function onLogout(listener: ((errorCode: number) => void) | null): void {
-  EMClientImpl.getInstance().onLogout(listener);
-}
-
-export function onTokenWillExpire(listener: EMTokenWillExpireListener | null): void {
-  EMClientImpl.getInstance().onTokenWillExpire(listener);
-}
-
-export function onTokenExpired(listener: EMTokenExpiredListener | null): void {
-  EMClientImpl.getInstance().onTokenExpired(listener);
-}
-
-export function onError(_listener: EMErrorListener | null): void {}
-
-export function getVersion(): string {
-  return EMClientImpl.getInstance().getVersion();
-}
-
-export function isConnected(): boolean {
-  return EMClientImpl.getInstance().isConnected();
-}
-
-export function isLoggedIn(): boolean {
-  return EMClientImpl.getInstance().isLoggedIn();
-}
-
-export function getCurrentUser(): string | null {
-  return EMClientImpl.getInstance().getCurrentUser();
-}
-
-// 类型已在 utssdk/index.uts 统一导出，此处不重复 re-export

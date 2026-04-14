@@ -12,61 +12,17 @@ export {
   EMErrorListener,
   EMTokenWillExpireListener,
   EMTokenExpiredListener,
-  IEMClient,
+  EasemobClient,
+  CreateEasemobClient,
 } from './interface.uts';
 
 // ==================== 平台相关导出 ====================
 
 // #ifdef APP-IOS
-export {
-  initSDK,
-  destroy,
-  login,
-  logout,
-  onConnected,
-  onDisconnected,
-  onLogout,
-  onError,
-  onTokenWillExpire,
-  onTokenExpired,
-  getVersion,
-  isConnected,
-  isLoggedIn,
-  getCurrentUser,
-} from './app-ios/index.uts';
+export { create } from './app-ios/index.uts';
 // #endif
 
 // #ifdef APP-ANDROID
-export {
-  initSDK,
-  destroy,
-  login,
-  logout,
-  onConnected,
-  onDisconnected,
-  onLogout,
-  onError,
-  onTokenWillExpire,
-  onTokenExpired,
-  getVersion,
-  isConnected,
-  isLoggedIn,
-  getCurrentUser,
-} from './app-android/index.uts';
+export { create } from './app-android/index.uts';
 // #endif
 
-// #ifdef APP-HARMONY
-export {
-  initSDK,
-  destroy,
-  login,
-  logout,
-  onError,
-  onTokenWillExpire,
-  onTokenExpired,
-  getVersion,
-  isConnected,
-  isLoggedIn,
-  getCurrentUser,
-} from './app-harmony/index.uts';
-// #endif

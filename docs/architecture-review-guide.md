@@ -60,33 +60,15 @@
 ```
 utssdk/
 ├── interface.uts              # 跨平台类型定义（接口契约）
-├── index.uts                  # 跨平台入口（条件编译导出）
+├── index.uts                  # 跨平台入口（条件编译导出 create）
 ├── unierror.uts               # 错误码定义
-├── common/
-│   └── event-constants.uts    # 事件常量定义（uni.$emit 事件名）
 ├── app-android/
-│   ├── index.uts              # Android 平台入口（API 导出）
-│   ├── core/init.uts          # SDK 初始化
-│   ├── auth/login.uts         # 登录/登出
-│   ├── message/
-│   │   ├── listener.uts       # 消息监听
-│   │   └── sender.uts         # 消息发送
-│   ├── connection/listener.uts# 连接监听
-│   ├── file/picker.uts        # 文件选择
-│   ├── MessageHelper.kt       # Kotlin 辅助类
-│   └── FilePickerHelper.kt    # 文件选择辅助类
+│   ├── index.uts              # Android 平台入口：export class EMClientImpl + export function create
+│   └── ...
 └── app-ios/
-    ├── index.uts              # iOS 平台入口
-    ├── core/init.uts          # SDK 初始化
-    ├── auth/login.uts         # 登录/登出
-    ├── message/
-    │   ├── listener.uts       # 消息监听
-    │   ├── sender.uts         # 消息发送
-    │   └── EMMessageBridge.swift  # Swift 桥接类
-    ├── connection/listener.uts# 连接监听
-    ├── file/picker.uts        # 文件选择
-    ├── auth/EMAuthBridge.swift    # 认证桥接
-    └── file/FilePickerHelper.swift# 文件选择辅助
+    ├── index.uts              # iOS 平台入口：export class EMClientImpl + export function create
+    ├── em_bridge.swift        # Swift 桥接层：EMClientDelegate + 独立回调函数
+    └── ...
 ```
 
 ---
@@ -341,9 +323,9 @@ app-android/          app-ios/
 
 | 问题 | 当前实现 | 痛点描述 |
 |------|----------|----------|
-| **初始化方式** | `initSDK(config)` 函数式 | 无返回值，无法链式调用 |
-| **监听挂载** | `uni.$on('em_connected', ...)` | 需在 App.uvue 中提前挂载，与 SDK 生命周期解耦 |
-| **消息发送** | 回调函数式 `sendTextMessage(..., { onSuccess, onError })` | 无法使用 async/await，代码嵌套深 |
+| **初始化方式** | `create(config)` 返回 `EasemobClient` 实例 | 单例模式，支持链式调用 |
+| **监听挂载** | `easemob.onConnected(callback)` | 与 SDK 生命周期绑定 |
+| **消息发送** | 回调函数式 / Promise 化 | 视功能模块而定 |
 | **iOS 轮询** | `setInterval` 轮询查询结果 | 性能开销，代码复杂 |
 
 ### 9.2 参考方案：即构 ZIM SDK 设计
@@ -351,79 +333,98 @@ app-android/          app-ios/
 **即构的优雅设计：**
 
 ```typescript
-// 1. 单例初始化
 const zim = ZIM.create({ appID: 123, appSign: 'xxx' });
-// 或获取已有实例
-const zim = ZIM.getInstance();
 
-// 2. 实例方法挂载监听（与 SDK 生命周期绑定）
 zim.onConnectionStateChanged((data) => {
   console.log('连接状态变更', data);
 });
 
-zim.onPeerMessageReceived((data) => {
-  console.log('收到消息', data);
-});
-
-// 3. Promise 化 API
 await zim.login('userID', { userName: 'xxx', token: '' });
+```
 
-await zim.sendMessage(message, 'toUserID', 0, config, {
-  onMessageAttached: (msg) => console.log('消息已附加'),
-  onMessageUploadingProgress: (msg, current, total) => console.log('上传进度', current/total)
-});
+**环信当前实现（已对齐即构风格）：**
+
+```typescript
+import { create, type EasemobClient } from '@/uni_modules/easemob-uts-sdk-beta'
+
+const easemob = create({ appKey: 'easemob-demo#support', autoLogin: false })
+
+easemob.onConnected(() => {
+  console.log('已连接')
+})
+
+easemob.onDisconnected((errorCode) => {
+  console.log('已断开', errorCode)
+})
+
+await easemob.login({ userId: 'xxx', password: 'xxx' })
+await easemob.logout()
 ```
 
 **即构架构优势：**
-- **单例模式**：`create()` / `getInstance()` 管理实例生命周期
+- **单例模式**：`create()` 管理实例生命周期
 - **实例监听**：监听与实例绑定，无需全局事件总线
 - **Promise 化**：`async/await` 支持，代码更简洁
 - **原生回调**：iOS 端直接使用 SDK 委托回调，无需轮询
 
-### 9.3 改造方案（渐进式）
+### 9.3 改造方案（已完成）
 
-#### 阶段 1：新增 EMClient 类（保持兼容）
+#### 阶段 1：实例化 API 模式（已完成）
 
 ```typescript
-// utssdk/app-ios/EMClient.uts
-export class EMClient {
-  private static _instance: EMClient | null = null;
-  private _eventHandler: EMEventHandlerImpl;
-  
-  static create(config: EMInitConfig): EMClient {
+// utssdk/interface.uts
+export interface EasemobClient {
+  login(config: UTSJSONObject): Promise<void>;
+  logout(): Promise<void>;
+  onConnected(listener: (() => void) | null): void;
+  onDisconnected(listener: ((errorCode: number) => void) | null): void;
+  // ...
+}
+
+export type CreateEasemobClient = (config: EMInitConfig) => EasemobClient;
+```
+
+```typescript
+// utssdk/app-ios/index.uts
+export class EMClientImpl implements EasemobClient {
+  private static _instance: EMClientImpl | null = null;
+  private _isInitialized = false;
+
+  private constructor() {}
+
+  static getInstance(): EMClientImpl {
     if (this._instance == null) {
-      initEMClient(config.appKey);
-      this._instance = new EMClient();
+      this._instance = new EMClientImpl();
     }
-    return this._instance;
-  }
-  
-  static getInstance(): EMClient {
     return this._instance!;
   }
-  
-  // 实例方法监听（替代 uni.$on）
-  @UTSJS.keepAlive
-  onConnected(callback: (() => void) | null): void {
-    this._eventHandler.eventMap.onConnected = callback;
+
+  static create(config: EMInitConfig): EasemobClient {
+    const instance = EMClientImpl.getInstance();
+    if (!instance._isInitialized) {
+      const appKey = config.appKey!;  // Swift 侧非空断言
+      const autoLogin = config.autoLogin ?? false;
+      // 初始化逻辑...
+      instance._isInitialized = true;
+    }
+    return instance;
   }
-  
-  @UTSJS.keepAlive
-  onMessageReceived(callback: ((messages: Message[]) => void) | null): void {
-    this._eventHandler.eventMap.onMessageReceived = callback;
-  }
-  
-  // Promise 化登录（评估可行性）
-  login(userId: string, password: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      loginEMClient(userId, password, 
-        () => resolve(), 
-        (code, msg) => reject(new UniError('em-login-error', code, msg))
-      );
-    });
-  }
+
+  login(config: UTSJSONObject): Promise<void> { ... }
+  logout(): Promise<void> { ... }
+  onConnected(listener: (() => void) | null): void { ... }
+}
+
+export function create(config: EMInitConfig): EasemobClient {
+  return EMClientImpl.create(config);
 }
 ```
+
+**关键实现细节：**
+- 类定义时必须 `export class EMClientImpl`，UTS 不支持 `export { Class as Alias }`
+- `static create` 内直接初始化，不调用实例的 `private` 方法（避免 Swift/Kotlin 访问权限错误）
+- 导出方式用 `export function create()` 包装，uts-proxy 解析更稳定
+- iOS 侧必填字段用 `!` 非空断言，因为 Swift 转译后类型属性会变成可选
 
 #### 阶段 2：改造 iOS Bridge（长期规划）
 
@@ -448,57 +449,47 @@ class EMMessageBridge: NSObject, EMMessageManagerDelegate {
 
 ### 9.4 可行性评估
 
-| 改造项 | 可行性 | 工作量 | 优先级 |
-|--------|--------|--------|--------|
-| 单例初始化 (`EMClient.create`) | ✅ 高 | 2小时 | P0 |
-| 实例方法监听 (`client.onXxx`) | ✅ 高 | 4小时 | P0 |
-| Promise 化登录/登出 | ✅ 中 | 2小时 | P1 |
-| Promise 化消息发送 | ⚠️ 低 | 1-2天 | P2（需改造 Swift Bridge）|
-| 原生回调替代轮询 | ⚠️ 低 | 2-3天 | P2（依赖 SDK 支持）|
+| 改造项 | 状态 | 说明 |
+|--------|------|------|
+| 单例初始化 (`create`) | ✅ 已完成 | `create(config)` 返回 `EasemobClient` 实例 |
+| 实例方法监听 (`client.onXxx`) | ✅ 已完成 | `onConnected`/`onDisconnected`/`onLogout` 已实例化 |
+| Promise 化登录/登出 | ✅ 已完成 | `login`/`logout` 返回 `Promise<void>` |
+| Promise 化消息发送 | ⚠️ 低 | 1-2天（需改造 Swift Bridge）|
+| 原生回调替代轮询 | ⚠️ 低 | 2-3天（依赖 SDK 支持）|
 
 ### 9.5 实施计划
 
-**当前分支**：`feat/emclient-singleton`
+**当前状态**：实例化 API 模式已上线
 
-```
-Week 1: EMClient 单例 + 实例监听 ✅ 已完成
-  - [x] 创建 EMClient.uts（iOS + Android 双平台）
-  - [x] 实现 create/getInstance 单例模式
-  - [x] 实现 onConnected/onDisconnected/onMessageReceived 等实例监听
-  - [x] 保持旧 API 兼容（index.uts 同时导出新旧 API）
-  - [ ] 编写迁移示例
-
-Week 2: Promise 化（可选）
-  - [ ] 评估 login/logout Promise 化
-  - [ ] 评估消息发送 Promise 化可行性
-
-Week 3+: 原生回调改造（长期）
-  - [ ] 调研环信 iOS SDK 委托回调支持
-  - [ ] 设计 UTS ↔ Swift 回调桥接方案
-  - [ ] 替代轮询机制
-```
-
-**已完成文件**：
-- `utssdk/app-ios/EMClient.uts` - iOS 平台单例实现
-- `utssdk/app-android/EMClient.uts` - Android 平台单例实现
+- [x] `utssdk/interface.uts` - 定义 `EasemobClient` 接口和 `CreateEasemobClient` 类型
+- [x] `utssdk/app-ios/index.uts` - 实现 `export class EMClientImpl` + `export function create`
+- [x] `utssdk/app-android/index.uts` - 实现 `export class EMClientImpl` + `export function create`
+- [x] `utssdk/index.uts` - 统一导出 `create` 和类型
+- [x] `pages/sdk-demo/sdk-demo.uvue` - 迁移为实例化调用方式
+- [x] 解决 `private` 访问权限编译错误
+- [x] 解决 `export { Class as Alias }` 语法不支持问题
+- [x] 解决 `config as UTSJSONObject` iOS 运行时崩溃问题
+- [x] 解决 Swift 可选类型 `String?` 非空断言问题
 
 ### 9.6 参考对比
 
 | 维度 | 当前环信 UTS SDK | 即构 ZIM UTS SDK |
 |------|------------------|------------------|
-| **初始化** | `initSDK(config)` 函数 | `ZIM.create(config)` 单例 |
-| **监听挂载** | `uni.$on('em_xxx', ...)` 全局 | `zim.onXxx(callback)` 实例 |
+| **初始化** | `create(config)` 返回实例 | `ZIM.create(config)` 单例 |
+| **监听挂载** | `easemob.onXxx(callback)` 实例 | `zim.onXxx(callback)` 实例 |
 | **消息发送** | 回调函数式 | Promise + 回调混合 |
 | **iOS 回调** | 轮询模式 | 原生委托回调 |
-| **类型定义** | 简单 UTSJSONObject | 完整 TypeScript 接口 |
+| **类型定义** | `interface EasemobClient` + `type EMInitConfig` | 完整 TypeScript 接口 |
 
 ---
 
-> **文档版本**：v1.2  
-> **更新日期**：2026-04-13  
+> **文档版本**：v1.3  
+> **更新日期**：2026-04-14  
 > **更新内容**：
-> - 新增架构演进规划章节，参考即构 ZIM SDK 设计
-> - 完成 EMClient 单例类双平台实现（iOS + Android）
+> - 架构演进规划章节更新：实例化 API 模式已正式上线
+> - 新增 `EasemobClient` 实例化接口设计细节
+> - 补充 UTS 编译限制：`export { Class as Alias }`、`private` 访问权限、`config as UTSJSONObject` 崩溃、`String?` 非空断言
+> - 移除已废弃的 `EMClient.uts` 文件引用，当前实现集中在 `app-ios/index.uts` 和 `app-android/index.uts`
 
 ---
 
@@ -511,8 +502,8 @@ Week 3+: 原生回调改造（长期）
 | `utssdk/interface.uts` | 类型定义 | 接口设计是否合理 |
 | `utssdk/app-android/index.uts` | Android 入口 | API 导出完整性 |
 | `utssdk/app-ios/index.uts` | iOS 入口 | 与 Android 一致性 |
-| `utssdk/app-android/EMClient.uts` | Android 单例类 | 新架构实现 |
-| `utssdk/app-ios/EMClient.uts` | iOS 单例类 | 新架构实现 |
+| `utssdk/app-android/index.uts` | Android 单例类 | 新架构实现 |
+| `utssdk/app-ios/index.uts` | iOS 单例类 | 新架构实现 |
 | `utssdk/app-android/message/sender.uts` | Android 消息发送 | 回调处理逻辑 |
 | `utssdk/app-ios/message/EMMessageBridge.swift` | iOS 消息桥接 | 轮询实现细节 |
 | `utssdk/common/event-constants.uts` | 事件常量 | 命名规范 |

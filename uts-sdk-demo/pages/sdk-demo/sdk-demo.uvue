@@ -40,12 +40,8 @@
 	import { ref } from 'vue'
 
 	import {
-		initSDK,
-		login,
-		logout,
-		onConnected,
-		onDisconnected,
-		onLogout,
+		create,
+		type EasemobClient,
 	} from '@/uni_modules/easemob-uts-sdk-beta'
 
 	const appKey = ref('easemob-demo#support')
@@ -54,6 +50,8 @@
 	const connectionStatus = ref('未连接')
 	const logs = ref('')
 	const logScrollTop = ref(0)
+
+	let easemob: EasemobClient | null = null
 
 	function addLog(message: string): void {
 		const time = new Date().toLocaleTimeString()
@@ -73,11 +71,11 @@
 		try {
 			addLog('开始初始化...')
 			const config = { appKey: appKey.value, autoLogin: false }
-			await initSDK(config)
+			easemob = create(config)
 			addLog('初始化成功')
 
 			// 监听连接状态
-			onConnected(() => {
+			easemob.onConnected(() => {
 				console.log('[sdk-demo] onConnected callback executed')
 				setTimeout(() => {
 					connectionStatus.value = '已连接'
@@ -85,7 +83,7 @@
 				}, 0)
 			})
 
-			onDisconnected((errorCode) => {
+			easemob.onDisconnected((errorCode) => {
 				console.log('[sdk-demo] onDisconnected callback executed, errorCode=' + errorCode)
 				setTimeout(() => {
 					connectionStatus.value = '已断开'
@@ -93,7 +91,7 @@
 				}, 0)
 			})
 
-			onLogout((errorCode) => {
+			easemob.onLogout((errorCode) => {
 				console.log('[sdk-demo] onLogout callback executed, errorCode=' + errorCode)
 				setTimeout(() => {
 					connectionStatus.value = '已登出'
@@ -113,7 +111,7 @@
 				password: password.value,
 				useToken: false
 			}
-			await login(config)
+			await easemob!.login(config)
 			addLog('登录成功')
 		} catch (error) {
 			addLog('登录失败: ' + error)
@@ -123,7 +121,7 @@
 	async function handleLogout(): Promise<void> {
 		try {
 			addLog('开始登出...')
-			await logout()
+			await easemob!.logout()
 			addLog('登出成功')
 		} catch (error) {
 			addLog('登出失败: ' + error)

@@ -26,6 +26,7 @@
 - **类型只在 `utssdk/index.uts` 统一导出一次**，平台文件（`app-android/index.uts`、`app-ios/index.uts`）末尾**绝对不能**再 re-export 同名类型，否则 Kotlin 转译时枚举/类名会产生 `__1` 后缀，导致页面层 `Unresolved reference` 错误。
 - **`android/` 目录是编译产物**，每次 HBuilderX「重新生成本地资源」会覆盖，所有修改必须从 UTS 源码层（`utssdk/`）根治。
 - **iOS 的 `em_bridge.swift` 是原生桥接文件**，由 UTS 编译器自动识别，无需 `declare module` 或 `declare class`。
+- **API 风格已统一为实例化模式**：`create(config)` 返回 `EasemobClient` 实例，通过实例调用方法。
 
 ---
 
@@ -53,7 +54,7 @@ export interface EMInitConfig {
 所有接受配置对象的导出函数，**参数类型必须是 `UTSJSONObject`**，在函数内部读取字段：
 
 ```typescript
-// ✅ 正确
+// ✅ 正确（旧 API 风格）
 export function initSDK(config: UTSJSONObject): Promise<void> {
   const appKey = config['appKey'] as string;
   const autoLogin = (config['autoLogin'] as boolean) ?? false;
@@ -65,6 +66,8 @@ export function initSDK(config: EMInitConfig): Promise<void> { ... }
 ```
 
 **原因**：UTS 页面侧的对象字面量 `{ appKey: 'xxx' }` 在转译后是 `UTSJSONObject`，不是任何具名类/接口实例。
+
+**例外**：实例化模式的 `static create(config: EMInitConfig)` 内部可直接用 `config.appKey!` 访问（因为类型在 UTS 层已明确，且 Swift 侧需要非空断言）。
 
 ### 2.3 枚举：只在 `interface.uts` 定义，只在 `index.uts` 导出一次
 
@@ -236,10 +239,26 @@ class EMConnectionListenerImpl extends EMConnectionListener {
 
 ---
 
-## 六、单例模式规范
+## 六、单例模式与实例化 API 规范
+
+### 6.1 当前推荐模式（即构风格）
 
 ```typescript
-class EMClientImpl implements IEMClient {
+// interface.uts
+export interface EasemobClient {
+  login(config: UTSJSONObject): Promise<void>;
+  logout(): Promise<void>;
+  onConnected(listener: (() => void) | null): void;
+  onDisconnected(listener: ((errorCode: number) => void) | null): void;
+  // ...
+}
+
+export type CreateEasemobClient = (config: EMInitConfig) => EasemobClient;
+```
+
+```typescript
+// app-ios/index.uts
+export class EMClientImpl implements EasemobClient {
   private static _instance: EMClientImpl | null = null;
   private _isInitialized = false;
 
@@ -251,8 +270,55 @@ class EMClientImpl implements IEMClient {
     }
     return this._instance!;
   }
-  // ...
+
+  static create(config: EMInitConfig): EasemobClient {
+    const instance = EMClientImpl.getInstance();
+    if (!instance._isInitialized) {
+      const appKey = config.appKey!;  // Swift 侧需要非空断言
+      const autoLogin = config.autoLogin ?? false;
+      const options = new EMOptions(appkey = appKey);
+      options.isAutoLogin = autoLogin;
+      EMClient.shared().initializeSDK(with = options);
+      emBridgeSetupDelegate();
+      instance._isInitialized = true;
+    }
+    return instance;
+  }
+
+  // 实例方法...
+  login(config: UTSJSONObject): Promise<void> { ... }
+  logout(): Promise<void> { ... }
+  onConnected(listener: (() => void) | null): void { ... }
 }
+
+export function create(config: EMInitConfig): EasemobClient {
+  return EMClientImpl.create(config);
+}
+```
+
+### 6.2 关键约束
+
+- **类定义时必须 `export class`**，UTS 不支持 `export { Class as Alias }` 语法
+- **静态方法 `create` 内直接初始化**，不要调用实例的 `private` 方法（Swift/Kotlin 编译后会报访问权限错误）
+- **导出方式用 `export function create()` 包装**，不要用 `export const create = EMClientImpl.create`（uts-proxy 解析不稳定）
+- **必填字段在 iOS 侧用 `!` 非空断言**，因为 Swift 转译后类型属性会变成 `String?`
+
+### 6.3 页面使用方式
+
+```typescript
+import { create, type EasemobClient } from '@/uni_modules/easemob-uts-sdk-beta'
+
+const easemob = create({ appKey: 'easemob-demo#support', autoLogin: false })
+
+easemob.onConnected(() => {
+  console.log('已连接')
+})
+
+easemob.onDisconnected((errorCode) => {
+  console.log('已断开', errorCode)
+})
+
+await easemob.login({ userId: 'xxx', password: 'xxx' })
 ```
 
 ---
@@ -267,25 +333,22 @@ import EMClient from 'com.hyphenate.chat.EMClient';
 // ...
 
 // 2. 从 interface.uts 导入类型（不重复导出！）
-import { IEMClient, EMConnectionState, ... } from '../interface.uts';
+import { EasemobClient, EMConnectionState, ... } from '../interface.uts';
 
-// 3. 内部类实现（class，不 export）
+// 3. 内部类实现
 class EMConnectionListenerImpl extends EMConnectionListener { ... }
 class EMCallBackImpl extends EMCallBack { ... }
 function makeCallBack(...): EMCallBackImpl { ... }
-class EMClientImpl implements IEMClient { ... }
 
-// 4. 导出函数（必须用 export function，不用 export class）
-export function initSDK(config: UTSJSONObject): Promise<void> {
-  return EMClientImpl.getInstance().initSDK(config);
+// 4. 导出实现类（必须用 export class）
+export class EMClientImpl implements EasemobClient { ... }
+
+// 5. 导出 create 函数（函数包装，避免 uts-proxy 解析问题）
+export function create(config: EMInitConfig): EasemobClient {
+  return EMClientImpl.create(config);
 }
-export function login(config: UTSJSONObject): Promise<void> { ... }
-export function logout(): Promise<void> { ... }
-// 桩函数
-export function onError(_listener: EMErrorListener | null): void {}
-// ...
 
-// 5. 末尾注释（不重复导出类型）
+// 6. 末尾注释（不重复导出类型）
 // 类型已在 utssdk/index.uts 统一导出，此处不重复 re-export，避免转译时产生 __1 别名冲突
 ```
 
@@ -296,20 +359,17 @@ export function onError(_listener: EMErrorListener | null): void {}
 export {
   EMInitConfig, EMLoginConfig,
   EMConnectionState, EMConnectionEvent, EMConnectionStateChangedEvent,
-  EMError, EMConnectionStateChangedListener, IEMClient,
+  EMError, EMConnectionStateChangedListener, EasemobClient, CreateEasemobClient,
   // ...
 } from './interface.uts';
 
 // 2. 平台函数条件编译导出
 // #ifdef APP-ANDROID
-export {
-  initSDK, login, logout, destroy,
-  onConnectionStateChanged, onError, ...
-} from './app-android/index.uts';
+export { create } from './app-android/index.uts';
 // #endif
 
 // #ifdef APP-IOS
-export { ... } from './app-ios/index.uts';
+export { create } from './app-ios/index.uts';
 // #endif
 ```
 
@@ -320,15 +380,10 @@ export { ... } from './app-ios/index.uts';
 ### 8.1 导入规范
 
 ```typescript
-// #ifdef APP-ANDROID
 import {
-  initSDK,
-  login,
-  logout,
-  onConnectionStateChanged,
-  // ❌ 不要导入枚举 EMConnectionState，在页面侧用数值比较
+  create,
+  type EasemobClient,
 } from '@/uni_modules/easemob-uts-sdk-beta'
-// #endif
 ```
 
 ### 8.2 禁止在页面导入枚举
@@ -641,7 +696,7 @@ getCurrentUser(): string | null {
 
 以下 API 已在真机/模拟器上验证可用：
 
-- `initSDK(config: UTSJSONObject): Promise<void>`
+- `create(config: EMInitConfig): EasemobClient`
 - `login(config: UTSJSONObject): Promise<void>`
 - `logout(): Promise<void>`
 - `destroy(): void`
@@ -659,21 +714,11 @@ getCurrentUser(): string | null {
 
 ```typescript
 // app-ios/index.uts
-export function initSDK(config: UTSJSONObject): Promise<void> { ... }
-export function login(config: UTSJSONObject): Promise<void> { ... }
-export function logout(): Promise<void> { ... }
-export function destroy(): void { ... }
-export function onConnected(listener: (() => void) | null): void { ... }
-export function onDisconnected(listener: ((errorCode: number) => void) | null): void { ... }
-export function onLogout(listener: ((errorCode: number) => void) | null): void { ... }
-export function onTokenWillExpire(listener: EMTokenWillExpireListener | null): void { ... }
-export function onTokenExpired(listener: EMTokenExpiredListener | null): void { ... }
-export function getVersion(): string { ... }
-export function isConnected(): boolean { ... }
-export function isLoggedIn(): boolean { ... }
-export function getCurrentUser(): string | null { ... }
+export class EMClientImpl implements EasemobClient { ... }
 
-// 类型已在 utssdk/index.uts 统一导出，此处不重复 re-export
+export function create(config: EMInitConfig): EasemobClient {
+  return EMClientImpl.create(config);
+}
 ```
 
 ---
@@ -702,17 +747,20 @@ export function onError(_listener: EMErrorListener | null): void {}
 | `override fun onDisconnected` 签名不匹配 | UTS 里写了 `number` 类型 | 改为 `Int` |
 | `Unresolved reference 'Application'` | 显式导入了 Android 系统类 | 删除，使用 `UTSAndroid.getAppContext()` |
 | `index.kt` 修改后被覆盖 | HBuilderX 重新生成本地资源会覆盖 kt | 只改 UTS 源码，不改 kt |
+| `'_initSDK' is inaccessible due to 'private' protection level` | 外部函数调用了类的 `private` 实例方法 | 将初始化逻辑移到 `static create()` 内 |
+| `expected member name or initializer call after type name` | UTS 不支持 `export { Class as Alias }` | 类定义时直接 `export class` |
+| `value of optional type 'String?' must be unwrapped` | Swift 转译后类型属性变成可选 | 使用 `config.appKey!` 非空断言 |
 
 ---
 
 ## 十二、新增 API 标准流程
 
 1. 在 `interface.uts` 定义类型/接口
-2. 在 `app-android/index.uts` 实现（`EMClientImpl` 方法 + 顶层导出函数）
-3. 在 `app-ios/index.uts` 实现（`EMClientImpl` 方法 + 顶层导出函数）
+2. 在 `app-android/index.uts` 实现（`export class EMClientImpl` + `export function create`）
+3. 在 `app-ios/index.uts` 实现（`export class EMClientImpl` + `export function create`）
 4. 如需 iOS 原生桥接，在 `app-ios/em_bridge.swift` 中添加代理方法或独立函数
-5. 在 `utssdk/index.uts` 的两个平台条件编译块中添加导出
+5. 在 `utssdk/index.uts` 的条件编译块中导出 `create`
 6. **检查**：`app-android/index.uts` 和 `app-ios/index.uts` 末尾都没有重复 re-export 类型
-7. **检查**：导出函数参数如为对象，使用 `UTSJSONObject`
-8. **检查**：iOS Swift API 调用时带参数标签（named parameters）
+7. **检查**：iOS Swift API 调用时带参数标签（named parameters）
+8. **检查**：`static create` 内直接访问私有属性，不调用 `private` 实例方法
 9. 重新生成本地资源验证编译

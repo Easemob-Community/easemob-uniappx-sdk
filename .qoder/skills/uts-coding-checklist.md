@@ -31,6 +31,7 @@
 - [ ] `export { xxx } from './xxx.uts'` 的 re-export 语法 **不被 uts-proxy 解析**（仅对类型/class/常量可用）
 - [ ] `export type` 必须直接声明，不能从其他文件 re-export
 - [ ] 不支持 `export { xxx as yyy }` 别名导出语法
+- [ ] **类定义时必须 `export class Xxx`**，不支持 `export { Xxx as Yyy }` 语法
 
 ### 2.3 iOS 特殊限制
 - [ ] iOS 编译器将整个 UTS 插件视为单一 Swift 模块，不同 `.uts` 文件中不得有同名函数
@@ -48,6 +49,7 @@
 - [ ] **禁止** 在调用方构造含闭包的 UTSJSONObject 字面量（如 `{onSuccess: () => {...}} as UTSJSONObject`）
 - [ ] 公共 API 必须接收独立函数参数，函数体内用 `new UTSJSONObject()` + 属性赋值重组
 - [ ] setInterval 闭包内 **禁止** 访问 UTSJSONObject 中存储的闭包
+- [ ] **禁止** 将 `type` 类型强转为 `UTSJSONObject`（如 `config as UTSJSONObject`），iOS 运行时可能崩溃
 
 ### 3.2 回调生命周期
 - [ ] 异步/多次回调的导出函数必须加 `@UTSJS.keepAlive` 装饰器
@@ -66,6 +68,8 @@
 - [ ] 函数返回类型禁用内联对象字面量，必须定义 class 或使用 UTSJSONObject
 - [ ] `type` 关键字定义的类型不能与 `const` 常量同名
 - [ ] setInterval 的回调引用变量必须用 `let` 声明（非 `const`），且可变函数变量用 `?.invoke()` 调用
+- [ ] **Swift 转译后类型属性会变成可选**，必填字段在 iOS 侧需用 `!` 非空断言（如 `config.appKey!`）
+- [ ] **Android 侧不需要 `!` 断言**，可直接用 `config.appKey`
 
 ---
 
@@ -177,10 +181,12 @@ timer = setInterval((): void => {
 ### 7.2 新增功能开发流程
 
 1. 如需新增接口，先在 `interface.uts` 中定义（如适用）
-2. 在 `app-android/index.uts` 实现 Android 端
-3. 在 `app-ios/index.uts` 实现 iOS 端
+2. 在 `app-android/index.uts` 实现 Android 端（`export class EMClientImpl` + `export function create`）
+3. 在 `app-ios/index.uts` 实现 iOS 端（`export class EMClientImpl` + `export function create`）
 4. 在 `index.uts` 中添加跨平台分发
 5. **必须**：双端同步检查，确保 API 签名一致
+6. **必须**：`static create` 内直接初始化，不调用 `private` 实例方法
+7. **必须**：iOS 侧必填字段使用 `!` 非空断言
 
 ---
 

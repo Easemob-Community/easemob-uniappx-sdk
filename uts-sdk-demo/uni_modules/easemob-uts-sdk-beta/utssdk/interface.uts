@@ -59,9 +59,9 @@ export type ConnectionListenerCallbacks = {
 // ==================== SDK 主接口 ====================
 
 /**
- * Easemob IM SDK 主接口
+ * Easemob IM SDK 客户端实例接口
  */
-export interface IEMClient {
+export interface EasemobClient {
   // MARK: - 事件监听（已实现）
 
   /** 注册已连接监听 */
@@ -86,9 +86,6 @@ export interface IEMClient {
 
   // MARK: - 核心方法（已实现）
 
-  /** 初始化 SDK */
-  initSDK(config: UTSJSONObject): Promise<void>;
-
   /** 登录（Android/iOS 均已实现） */
   login(config: UTSJSONObject): Promise<void>;
 
@@ -112,3 +109,8 @@ export interface IEMClient {
   /** 获取当前登录用户 ID（iOS 已实现） */
   getCurrentUser(): string | null;
 }
+
+/**
+ * 创建 Easemob IM SDK 客户端实例
+ */
+export type CreateEasemobClient = (config: EMInitConfig) => EasemobClient;

@@ -9,7 +9,7 @@ import EMCallBack from 'com.hyphenate.EMCallBack';
 import EMConnectionListener from 'com.hyphenate.EMConnectionListener';
 
 import {
-  IEMClient,
+  EasemobClient,
   EMInitConfig,
   EMLoginConfig,
   EMError,
@@ -91,7 +91,7 @@ function makeCallBack(
 
 // ==================== SDK 实现类 ====================
 
-class EMClientImpl implements IEMClient {
+export class EMClientImpl implements EasemobClient {
   private static _instance: EMClientImpl | null = null;
   private _listener: EMConnectionListenerImpl | null = null;
   private _isInitialized = false;
@@ -116,36 +116,23 @@ class EMClientImpl implements IEMClient {
     return this._instance!;
   }
 
-  // MARK: - 已实现：初始化 + 登录 + 连接监听
-
-  initSDK(config: UTSJSONObject): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        if (this._isInitialized) {
-          console.log('[Android] EMClient SDK already initialized');
-          resolve();
-          return;
-        }
-
-        const appKey = config['appKey'] as string;
-        const autoLogin = (config['autoLogin'] as boolean) ?? false;
-        const options = new EMOptions();
-        options.setAppKey(appKey);
-        options.setAutoLogin(autoLogin);
-
-        EMClient.getInstance().init(UTSAndroid.getAppContext()!, options);
-
-        this._listener = new EMConnectionListenerImpl();
-        EMClient.getInstance().addConnectionListener(this._listener!);
-
-        this._isInitialized = true;
-        console.log('[Android] EMClient SDK initialized');
-        resolve();
-      } catch (error) {
-        console.error('[Android] EMClient SDK init failed:', error);
-        reject(error);
-      }
-    });
+  static create(config: EMInitConfig): EasemobClient {
+    const instance = EMClientImpl.getInstance();
+    if (!instance._isInitialized) {
+      const appKey = config.appKey!;
+      const autoLogin = config.autoLogin ?? false;
+      const options = new EMOptions();
+      options.setAppKey(appKey);
+      options.setAutoLogin(autoLogin);
+      EMClient.getInstance().init(UTSAndroid.getAppContext()!, options);
+      instance._listener = new EMConnectionListenerImpl();
+      EMClient.getInstance().addConnectionListener(instance._listener!);
+      instance._isInitialized = true;
+      console.log('[Android] EMClient SDK initialized');
+    } else {
+      console.log('[Android] EMClient SDK already initialized');
+    }
+    return instance;
   }
 
   login(config: UTSJSONObject): Promise<void> {
@@ -249,47 +236,6 @@ class EMClientImpl implements IEMClient {
 
 // ==================== 导出 ====================
 
-export function initSDK(config: UTSJSONObject): Promise<void> {
-  return EMClientImpl.getInstance().initSDK(config);
+export function create(config: EMInitConfig): EasemobClient {
+  return EMClientImpl.create(config);
 }
-
-export function login(config: UTSJSONObject): Promise<void> {
-  return EMClientImpl.getInstance().login(config);
-}
-
-export function logout(): Promise<void> {
-  return EMClientImpl.getInstance().logout();
-}
-
-export function destroy(): void {
-  EMClientImpl.getInstance().destroy();
-}
-
-export function onConnected(listener: (() => void) | null): void {
-  EMClientImpl.getInstance().onConnected(listener);
-}
-
-export function onDisconnected(listener: ((errorCode: number) => void) | null): void {
-  EMClientImpl.getInstance().onDisconnected(listener);
-}
-
-export function onLogout(listener: ((errorCode: number) => void) | null): void {
-  EMClientImpl.getInstance().onLogout(listener);
-}
-
-export function onTokenWillExpire(listener: EMTokenWillExpireListener | null): void {
-  EMClientImpl.getInstance().onTokenWillExpire(listener);
-}
-
-export function onTokenExpired(listener: EMTokenExpiredListener | null): void {
-  EMClientImpl.getInstance().onTokenExpired(listener);
-}
-
-// 桩函数导出
-export function onError(_listener: EMErrorListener | null): void {}
-export function getVersion(): string { return 'unknown'; }
-export function isConnected(): boolean { return false; }
-export function isLoggedIn(): boolean { return false; }
-export function getCurrentUser(): string | null { return null; }
-
-// 类型已在 utssdk/index.uts 统一导出，此处不重复 re-export，避免转译时产生 __1 别名冲突
