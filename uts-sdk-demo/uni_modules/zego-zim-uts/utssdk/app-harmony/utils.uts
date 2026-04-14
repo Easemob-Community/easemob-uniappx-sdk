@@ -1,0 +1,258 @@
+import {
+    ZIMConversation as NZIMConversation,
+    ZIMConversationChangeInfo as NZIMConversationChangeInfo,
+    ZIMConversationSearchInfo as NZIMConversationSearchInfo,
+    ZIMFriendInfo as NZIMFriendInfo,
+    ZIMGroupApplicationInfo as NZIMGroupApplicationInfo,
+    ZIMGroupAttributesUpdateInfo as NZIMGroupAttributesUpdateInfo,
+    ZIMGroupFullInfo as NZIMGroupFullInfo,
+    ZIMGroupMemberInfo as NZIMGroupMemberInfo,
+    ZIMGroupMemberSimpleInfo as NZIMGroupMemberSimpleInfo,
+    ZIMGroupSearchInfo as NZIMGroupSearchInfo,
+    ZIMMessage as NZIMMessage,
+    ZIMMessageRootRepliedInfo as NZIMMessageRootRepliedInfo,
+    ZIMMessageSentStatusChangeInfo as NZIMMessageSentStatusChangeInfo,
+    ZIMMessagePinStatusChangeInfo as NZIMMessagePinStatusChangeInfo,
+    ZIMRoomAttributesUpdateInfo as NZIMRoomAttributesUpdateInfo,
+    ZIMRoomMemberAttributesInfo as NZIMRoomMemberAttributesInfo,
+    ZIMRoomMemberAttributesOperatedInfo as NZIMRoomMemberAttributesOperatedInfo,
+    ZIMRoomMemberAttributesUpdateInfo as NZIMRoomMemberAttributesUpdateInfo,
+} from '@zego/ZIM';
+
+import {
+    ZIMConversation,
+    ZIMConversationChangeInfo,
+    ZIMConversationSearchInfo,
+    ZIMFriendInfo,
+    ZIMGroupApplicationInfo,
+    ZIMGroupAttributesUpdateInfo,
+    ZIMGroupFullInfo,
+    ZIMGroupInfo,
+    ZIMGroupMemberInfo,
+    ZIMGroupMemberSimpleInfo,
+    ZIMGroupMuteInfo,
+    ZIMGroupSearchInfo,
+    ZIMGroupVerifyInfo,
+    ZIMMessage,
+    ZIMMessageRootRepliedInfo,
+    ZIMMessageSentStatusChangeInfo,
+    ZIMMessagePinStatusChangeInfo,
+    ZIMRoomAttributesUpdateInfo,
+    ZIMRoomMemberAttributesInfo,
+    ZIMRoomMemberAttributesOperatedInfo,
+    ZIMRoomMemberAttributesUpdateInfo,
+} from '../interface.uts';
+
+export const oMap = (json?: UTSJSONObject): Record<string, string> => {
+    const map: Record<string, string> = {};
+    if (json != null && json != undefined) {
+        UTSJSONObject.keys(json).forEach((k) => {
+            map[k] = json.getString(k, '');
+        });
+    }
+    return map;
+};
+
+export const mMap = (map: Record<string, string>): UTSJSONObject => {
+    return JSON.parseObject(JSON.stringify(map))!;
+};
+
+export const mZIMConversation = (info: NZIMConversation): ZIMConversation => {
+    const map: ZIMConversation = { ...info };
+
+    if (info.lastMessage != null && info.lastMessage != undefined) {
+        map.lastMessage = mZIMMessage(info.lastMessage);
+    }
+
+    return map;
+};
+
+export const mZIMConversationList = (infos: NZIMConversation[]): ZIMConversation[] => {
+    return infos.map((v): ZIMConversation => mZIMConversation(v));
+};
+
+export const mZIMConversationChangeInfoList = (infos: NZIMConversationChangeInfo[]): ZIMConversationChangeInfo[] => {
+    return infos.map((v) => {
+        return { event: v.event, conversation: mZIMConversation(v.conversation) } as ZIMConversationChangeInfo;
+    });
+};
+
+export const mZIMConversationSearchInfoList = (infos: NZIMConversationSearchInfo[]): ZIMConversationSearchInfo[] => {
+    return infos.map((v) => {
+        return {
+            conversationID: v.conversationID,
+            conversationType: v.conversationType,
+            totalMessageCount: v.totalMessageCount,
+            messageList: mZIMMessageList(v.messageList),
+        } as ZIMConversationSearchInfo;
+    });
+};
+
+export const oZIMMessage = (info: ZIMMessage): NZIMMessage => {
+    return { ...info } as NZIMMessage;
+};
+
+export const oZIMMessageList = (infos: ZIMMessage[]): NZIMMessage[] => {
+    return infos.map((v): NZIMMessage => oZIMMessage(v));
+};
+
+export const mZIMMessage = (info: NZIMMessage): ZIMMessage => {
+    return JSON.parseObject<ZIMMessage>(JSON.stringify(info))!;
+};
+
+export const mZIMMessageList = (infos: NZIMMessage[]): ZIMMessage[] => {
+    return infos.map((v): ZIMMessage => mZIMMessage(v));
+};
+
+export const mZIMMessageRootRepliedInfo = (info: NZIMMessageRootRepliedInfo): ZIMMessageRootRepliedInfo => {
+    const map: ZIMMessageRootRepliedInfo = { ...info };
+
+    if (info.message != null && info.message != undefined) {
+        map.message = mZIMMessage(info.message);
+    }
+
+    return map;
+};
+
+export const mZIMMessageSentStatusChangeInfoList = (
+    infos: NZIMMessageSentStatusChangeInfo[],
+): ZIMMessageSentStatusChangeInfo[] => {
+    return infos.map((v) => {
+        return {
+            reason: v.reason,
+            status: v.status,
+            message: mZIMMessage(v.message),
+        } as ZIMMessageSentStatusChangeInfo;
+    });
+};
+
+export const mZIMMessagePinStatusChangeInfoList = (
+    infos: NZIMMessagePinStatusChangeInfo[],
+): ZIMMessagePinStatusChangeInfo[] => {
+    return infos.map((v) => {
+        return {
+            pinStatus: v.pinStatus,
+            message: mZIMMessage(v.message),
+        } as ZIMMessagePinStatusChangeInfo;
+    });
+};
+
+export const mZIMGroupFullInfo = (info: NZIMGroupFullInfo): ZIMGroupFullInfo => {
+    return {
+        baseInfo: info.baseInfo as ZIMGroupInfo,
+        groupAlias: info.groupAlias,
+        groupNotice: info.groupNotice,
+        groupAttributes: mMap(info.groupAttributes),
+        notificationStatus: info.notificationStatus,
+        createTime: info.createTime,
+        maxMemberCount: info.maxMemberCount,
+        mutedInfo: info.mutedInfo as ZIMGroupMuteInfo,
+        verifyInfo: info.verifyInfo as ZIMGroupVerifyInfo,
+    } as ZIMGroupFullInfo;
+};
+
+export const mZIMGroupMemberInfo = (info: NZIMGroupMemberInfo): ZIMGroupMemberInfo => {
+    return JSON.parseObject<ZIMGroupMemberInfo>(JSON.stringify(info))!;
+};
+
+export const mZIMGroupMemberInfoList = (infos: NZIMGroupMemberInfo[]): ZIMGroupMemberInfo[] => {
+    return infos.map((v): ZIMGroupMemberInfo => mZIMGroupMemberInfo(v));
+};
+
+export const mZIMGroupMemberSimpleInfo = (info: NZIMGroupMemberSimpleInfo): ZIMGroupMemberSimpleInfo => {
+    return { ...info } as ZIMGroupMemberSimpleInfo;
+};
+
+export const mZIMGroupMemberSimpleInfoList = (infos: NZIMGroupMemberSimpleInfo[]): ZIMGroupMemberSimpleInfo[] => {
+    return infos.map((v): ZIMGroupMemberSimpleInfo => mZIMGroupMemberSimpleInfo(v));
+};
+
+export const mZIMGroupApplicationInfoList = (infos: NZIMGroupApplicationInfo[]): ZIMGroupApplicationInfo[] => {
+    return infos.map((v) => {
+        const map: ZIMGroupApplicationInfo = { ...v };
+
+        if (v.operatedUser != null && v.operatedUser != undefined) {
+            map.operatedUser = mZIMGroupMemberSimpleInfo(v.operatedUser);
+        }
+
+        return map;
+    });
+};
+
+export const mZIMGroupSearchInfoList = (infos: NZIMGroupSearchInfo[]): ZIMGroupSearchInfo[] => {
+    return infos.map((v) => {
+        return {
+            groupInfo: v.groupInfo as ZIMGroupInfo,
+            userList: mZIMGroupMemberInfoList(v.userList),
+        } as ZIMGroupSearchInfo;
+    });
+};
+
+export const mZIMGroupAttributesUpdateInfoList = (
+    infos: NZIMGroupAttributesUpdateInfo[],
+): ZIMGroupAttributesUpdateInfo[] => {
+    return infos.map((v) => {
+        return {
+            action: v.action,
+            groupAttributes: mMap(v.groupAttributes),
+        } as ZIMGroupAttributesUpdateInfo;
+    });
+};
+
+export const mZIMRoomAttributesUpdateInfoList = (
+    infos: NZIMRoomAttributesUpdateInfo[],
+): ZIMRoomAttributesUpdateInfo[] => {
+    return infos.map((v) => {
+        return {
+            action: v.action,
+            roomAttributes: mMap(v.roomAttributes),
+        } as ZIMRoomAttributesUpdateInfo;
+    });
+};
+
+export const mZIMRoomMemberAttributesInfo = (info: NZIMRoomMemberAttributesInfo): ZIMRoomMemberAttributesInfo => {
+    return { userID: info.userID, attributes: mMap(info.attributes) } as ZIMRoomMemberAttributesInfo;
+};
+
+export const mZIMRoomMemberAttributesInfoList = (
+    infos: NZIMRoomMemberAttributesInfo[],
+): ZIMRoomMemberAttributesInfo[] => {
+    return infos.map((v): ZIMRoomMemberAttributesInfo => mZIMRoomMemberAttributesInfo(v));
+};
+
+export const mZIMRoomMemberAttributesOperatedInfoList = (
+    infos: NZIMRoomMemberAttributesOperatedInfo[],
+): ZIMRoomMemberAttributesOperatedInfo[] => {
+    return infos.map((v) => {
+        return {
+            errorKeys: v.errorKeys,
+            attributesInfo: mZIMRoomMemberAttributesInfo(v.attributesInfo),
+        } as ZIMRoomMemberAttributesOperatedInfo;
+    });
+};
+
+export const mZIMRoomMemberAttributesUpdateInfoList = (
+    infos: NZIMRoomMemberAttributesUpdateInfo[],
+): ZIMRoomMemberAttributesUpdateInfo[] => {
+    return infos.map((v) => {
+        return {
+            attributesInfo: mZIMRoomMemberAttributesInfo(v.attributesInfo),
+        } as ZIMRoomMemberAttributesUpdateInfo;
+    });
+};
+
+export const mZIMFriendInfo = (info: NZIMFriendInfo): ZIMFriendInfo => {
+    return {
+        userID: info.userID,
+        userName: info.userName,
+        userAvatarUrl: info.userAvatarUrl,
+        wording: info.wording,
+        friendAlias: info.friendAlias,
+        friendAttributes: mMap(info.friendAttributes),
+        createTime: info.createTime,
+    } as ZIMFriendInfo;
+};
+
+export const mZIMFriendInfoList = (infos: NZIMFriendInfo[]): ZIMFriendInfo[] => {
+    return infos.map((v): ZIMFriendInfo => mZIMFriendInfo(v));
+};

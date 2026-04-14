@@ -1,0 +1,2480 @@
+export type ZIMGeofencingType =
+    // None
+    | 0
+    // Include
+    | 1
+    // Exclude
+    | 2;
+export type ZIMPlatformType =
+    // Win
+    | 1
+    // IPhoneOS
+    | 2
+    // Android
+    | 3
+    // MacOS
+    | 4
+    // Linux
+    | 5
+    // Web
+    | 6
+    // MiniProgram
+    | 7
+    // IPadOS
+    | 9
+    // OHOS
+    | 10
+    // Unknown
+    | 32;
+export type ZIMCXHandleType =
+    // Generic
+    | 1
+    // PhoneNumber
+    | 2
+    // EmailAddress
+    | 3;
+export type ZIMConnectionState =
+    // Disconnected
+    | 0
+    // Connecting
+    | 1
+    // Connected
+    | 2
+    // Reconnecting
+    | 3;
+export type ZIMConnectionEvent =
+    // Success
+    | 0
+    // ActiveLogin
+    | 1
+    // LoginTimeout
+    | 2
+    // LoginInterrupted
+    | 3
+    // KickedOut
+    | 4;
+export type ZIMUserOnlineStatus =
+    // Online
+    | 0
+    // Offline
+    | 1
+    // Logout
+    | 2
+    // Unknown
+    | 99;
+export type ZIMConversationType =
+    // Unknown
+    | -1
+    // Peer
+    | 0
+    // Room
+    | 1
+    // Group
+    | 2;
+export type ZIMConversationEvent =
+    // Added
+    | 0
+    // Updated
+    | 1
+    // Disabled
+    | 2
+    // Deleted
+    | 3;
+export type ZIMConversationNotificationStatus =
+    // Notify
+    | 1
+    // DoNotDisturb
+    | 2;
+export type ZIMConversationPinnedFilter =
+    // All
+    | 0
+    // OnlyPinned
+    | 1
+    // OnlyUnpinned
+    | 2;
+export type ZIMConversationSyncState =
+    // Started
+    | 0
+    // Finished
+    | 1
+    // Failed
+    | 2;
+export type ZIMMessagePriority =
+    // Low
+    | 1
+    // Medium
+    | 2
+    // High
+    | 3;
+export type ZIMMessageType =
+    // Unknown
+    | 0
+    // Command
+    | 2
+    // Barrage
+    | 20
+    // Text
+    | 1
+    // Multiple
+    | 10
+    // Image
+    | 11
+    // File
+    | 12
+    // Audio
+    | 13
+    // Video
+    | 14
+    // Combine
+    | 100
+    // Custom
+    | 200
+    // Revoke
+    | 31
+    // Tips
+    | 32;
+export type ZIMMessageSentStatus =
+    // Sending
+    | 0
+    // Success
+    | 1
+    // Failed
+    | 2;
+export type ZIMMessageDirection =
+    // Send
+    | 0
+    // Receive
+    | 1;
+export type ZIMMessageOrder =
+    // Descending
+    | 0
+    // Ascending
+    | 1;
+export type ZIMMessageRepliedInfoState =
+    // Normal
+    | 0
+    // Deleted
+    | 1
+    // NotFound
+    | 2;
+export type ZIMMessageReceiptStatus =
+    // None
+    | 0
+    // Processing
+    | 1
+    // Done
+    | 2
+    // Expired
+    | 3
+    // Failed
+    | 4;
+export type ZIMMessageRevokeStatus =
+    // Unknown
+    | -1
+    // SelfRevoke
+    | 0
+    // SystemRevoke
+    | 1
+    // ServiceAPIRevoke
+    | 2
+    // GroupAdminRevoke
+    | 3
+    // GroupOwnerRevoke
+    | 4;
+export type ZIMRevokeType =
+    // TwoWay
+    | 0
+    // OneWay
+    | 1;
+export type ZIMMessagePinStatus =
+    // NotPinned
+    | 0
+    // Pinned
+    | 1
+    // Updated
+    | 2;
+export type ZIMMessageMentionedType =
+    // MentionMe
+    | 1
+    // MentionAll
+    | 2
+    // MentionAllAndMe
+    | 3;
+export type ZIMMessageDeleteType =
+    // MessageListDeleted
+    | 0
+    // ConversationAllMessagesDeleted
+    | 1
+    // AllConversationMessagesDeleted
+    | 2;
+export type ZIMMediaFileType =
+    // OriginalFile
+    | 1
+    // LargeImage
+    | 2
+    // Thumbnail
+    | 3
+    // VideoFirstFrame
+    | 4;
+export type ZIMTipsMessageEvent =
+    // Unknown
+    | 0
+    // GroupCreated
+    | 1
+    // GroupDismissed
+    | 2
+    // GroupJoined
+    | 3
+    // GroupInvited
+    | 4
+    // GroupLeft
+    | 5
+    // GroupKickedOut
+    | 6
+    // GroupInfoChanged
+    | 7
+    // GroupMemberInfoChanged
+    | 8
+    // GroupMessagePinned
+    | 9;
+export type ZIMTipsMessageChangeInfoType =
+    // GroupDataChanged
+    | 1
+    // GroupNoticeChanged
+    | 2
+    // GroupNameChanged
+    | 3
+    // GroupAvatarUrlChanged
+    | 4
+    // GroupMuteChanged
+    | 5
+    // GroupOwnerTransferred
+    | 10
+    // GroupMemberRoleChanged
+    | 11
+    // GroupMemberMuteChanged
+    | 12
+    // GroupMessagePinInfoChanged
+    | 21;
+export type ZIMRoomState =
+    // Disconnected
+    | 0
+    // Connecting
+    | 1
+    // Connected
+    | 2;
+export type ZIMRoomEvent =
+    // Success
+    | 0
+    // NetworkInterrupted
+    | 1
+    // NetworkDisconnected
+    | 2
+    // RoomNotExist
+    | 3
+    // ActiveCreate
+    | 4
+    // CreateFailed
+    | 5
+    // ActiveEnter
+    | 6
+    // EnterFailed
+    | 7
+    // KickedOut
+    | 8
+    // ConnectTimeout
+    | 9
+    // KickedOutByOtherDevice
+    | 10;
+export type ZIMRoomAttributesUpdateAction =
+    // Set
+    | 0
+    // Delete
+    | 1;
+export type ZIMGroupMessageNotificationStatus =
+    // Notify
+    | 1
+    // Disturb
+    | 2;
+export type ZIMGroupState =
+    // Quit
+    | 0
+    // Enter
+    | 1;
+export type ZIMGroupEvent =
+    // Created
+    | 1
+    // Dismissed
+    | 2
+    // Joined
+    | 3
+    // Invited
+    | 4
+    // Left
+    | 5
+    // KickedOut
+    | 6;
+export type ZIMGroupMemberState =
+    // Quit
+    | 0
+    // Enter
+    | 1;
+export type ZIMGroupMemberEvent =
+    // Joined
+    | 1
+    // Left
+    | 2
+    // KickedOut
+    | 4
+    // Invited
+    | 5;
+export type ZIMGroupMemberRole =
+    // Owner
+    | 1
+    // Member
+    | 3;
+export type ZIMGroupAttributesUpdateAction =
+    // Set
+    | 0
+    // Delete
+    | 1;
+export type ZIMGroupMuteMode =
+    // None
+    | 0
+    // Normal
+    | 1
+    // All
+    | 2
+    // Custom
+    | 3;
+export type ZIMGroupJoinMode =
+    // Any
+    | 0
+    // Auth
+    | 1
+    // Forbid
+    | 2;
+export type ZIMGroupInviteMode =
+    // Any
+    | 0
+    // Admin
+    | 1;
+export type ZIMGroupBeInviteMode =
+    // None
+    | 0
+    // Auth
+    | 1;
+export type ZIMGroupEnterType =
+    // Unknown
+    | 0
+    // Created
+    | 1
+    // JoinApply
+    | 2
+    // Joined
+    | 3
+    // Invited
+    | 4
+    // InviteApply
+    | 5;
+export type ZIMGroupApplicationType =
+    // None
+    | 0
+    // Join
+    | 1
+    // Invite
+    | 2
+    // BeInvite
+    | 3;
+export type ZIMGroupApplicationState =
+    // Waiting
+    | 1
+    // Accepted
+    | 2
+    // Rejected
+    | 3
+    // Expired
+    | 4
+    // Disabled
+    | 5;
+export type ZIMGroupApplicationListChangeAction =
+    // Added
+    0;
+export type ZIMCallInvitationMode =
+    // Unknown
+    | -1
+    // General
+    | 0
+    // Advanced
+    | 1;
+export type ZIMCallState =
+    // Unknown
+    | -1
+    // Started
+    | 1
+    // Ended
+    | 2;
+export type ZIMCallUserState =
+    // Unknown
+    | -1
+    // Inviting
+    | 0
+    // Accepted
+    | 1
+    // Rejected
+    | 2
+    // Cancelled
+    | 3
+    // Offline
+    | 4
+    // Received
+    | 5
+    // Timeout
+    | 6
+    // Quit
+    | 7
+    // Ended
+    | 8
+    // NotYetReceived
+    | 9
+    // BeCancelled
+    | 10;
+export type ZIMBlacklistChangeAction =
+    // Added
+    | 0
+    // Removed
+    | 1;
+export type ZIMUserRelationType =
+    // SingleNo
+    | 1
+    // SingleHave
+    | 2
+    // BothAllNo
+    | 3
+    // BothSelfHave
+    | 4
+    // BothOtherHave
+    | 5
+    // BothAllHave
+    | 6;
+export type ZIMFriendRelationCheckType =
+    // Both
+    | 0
+    // Single
+    | 1;
+export type ZIMFriendDeleteType =
+    // Both
+    | 0
+    // Single
+    | 1;
+export type ZIMFriendListChangeAction =
+    // Added
+    | 0
+    // Deleted
+    | 1;
+export type ZIMFriendApplicationType =
+    // None
+    | 0
+    // Received
+    | 1
+    // Sent
+    | 2
+    // Both
+    | 3;
+export type ZIMFriendApplicationState =
+    // Waiting
+    | 1
+    // Accepted
+    | 2
+    // Rejected
+    | 3
+    // Expired
+    | 4
+    // Disabled
+    | 5;
+export type ZIMFriendApplicationListChangeAction =
+    // Added
+    0;
+
+export type ZIMError = {
+    code: number;
+    message: string;
+};
+export type ZIMAppConfig = {
+    appID: number;
+    appSign: string;
+};
+/**
+ * Native 平台时可设置属性：logPath、logSize
+ *
+ * Web 和小程序平台时可设置属性：logLevel
+ */
+export type ZIMLogConfig = {
+    logPath?: string;
+    logSize?: number;
+    logLevel?: 'debug' | 'info' | 'warn' | 'error' | 'report' | 'disable';
+};
+export type ZIMLoginConfig = {
+    token: string;
+    userName: string;
+    customStatus: string;
+    isOfflineLogin: boolean;
+};
+export type ZIMCacheConfig = {
+    cachePath: string;
+};
+export type ZIMUserInfo = {
+    userID: string;
+    userName: string;
+    userAvatarUrl: string;
+    userExtendedData: string;
+};
+export type ZIMUserFullInfo = {
+    baseInfo: ZIMUserInfo;
+    extendedData: string;
+};
+export type ZIMErrorUserInfo = {
+    userID: string;
+    reason: number;
+};
+export type ZIMUserStatus = {
+    userID: string;
+    customStatus: string;
+    onlineStatus: ZIMUserOnlineStatus;
+    onlinePlatforms: ZIMPlatformType[];
+    lastUpdateTime: number;
+    lastOnlineStatusUpdateTime: number;
+    lastCustomStatusUpdateTime: number;
+};
+export type ZIMUserStatusSubscription = {
+    userStatus: ZIMUserStatus;
+    subscribeExpiredTime: number;
+};
+export type ZIMTokenRenewedResult = {
+    token: string;
+};
+export type ZIMUsersInfoQueriedResult = {
+    userList: ZIMUserFullInfo[];
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMUserNameUpdatedResult = {
+    userName: string;
+};
+export type ZIMUserAvatarUrlUpdatedResult = {
+    userAvatarUrl: string;
+};
+export type ZIMUserExtendedDataUpdatedResult = {
+    extendedData: string;
+};
+export type ZIMUserCustomStatusUpdatedResult = {
+    customStatus: string;
+};
+export type ZIMUserOfflinePushRule = {
+    onlinePlatforms: ZIMPlatformType[];
+    notToReceiveOfflinePushPlatforms: ZIMPlatformType[];
+};
+export type ZIMUserRule = {
+    offlinePushRule: ZIMUserOfflinePushRule;
+};
+export type ZIMUserOfflinePushRuleUpdatedResult = {
+    offlinePushRule: ZIMUserOfflinePushRule;
+};
+export type ZIMSelfUserInfo = {
+    userRule: ZIMUserRule;
+    userStatus: ZIMUserStatus;
+    userFullInfo: ZIMUserFullInfo;
+};
+export type ZIMSelfUserInfoQueriedResult = {
+    selfUserInfo: ZIMSelfUserInfo;
+};
+export type ZIMUsersInfoQueryConfig = {
+    isQueryFromServer: boolean;
+};
+export type ZIMUserStatusSubscribeConfig = {
+    subscriptionDuration: number;
+};
+export type ZIMSubscribedUserStatusQueryConfig = {
+    userIDs?: string[];
+};
+export type ZIMUsersStatusSubscribedResult = {
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMUsersStatusUnsubscribedResult = {
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMUsersStatusQueriedResult = {
+    userStatusList: ZIMUserStatus[];
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMSubscribedUserStatusListQueriedResult = {
+    userStatusSubscriptionList: ZIMUserStatusSubscription[];
+};
+export type ZIMConversationBaseInfo = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+};
+export type ZIMConversation = {
+    conversationID: string;
+    conversationName: string;
+    conversationAlias: string;
+    conversationAvatarUrl: string;
+    type: ZIMConversationType;
+    unreadMessageCount: number;
+    orderKey: number;
+    notificationStatus: ZIMConversationNotificationStatus;
+    isPinned: boolean;
+    pinnedTime: number;
+    draft: string;
+    marks: number[];
+    mentionedInfoList: ZIMMessageMentionedInfo[];
+    lastMessage?: ZIMMessage;
+    /**
+     * 群会话属性
+     */
+    isDisabled?: boolean;
+    mutedExpiredTime?: number;
+};
+export type ZIMMessageRepliedInfo = {
+    state: ZIMMessageRepliedInfoState;
+    messageSeq: number;
+    messageID: string;
+    senderUserID: string;
+    sentTime: number;
+    messageInfo: ZIMMessageLiteInfo;
+};
+export type ZIMMessageRootRepliedInfo = {
+    state: ZIMMessageRepliedInfoState;
+    repliedCount: number;
+    senderUserID: string;
+    sentTime: number;
+    message?: ZIMMessage;
+};
+export type ZIMMessageRootRepliedCountInfo = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+    count: number;
+    messageID: string;
+};
+export type ZIMMessagePinStatusChangeInfo = {
+    pinStatus: ZIMMessagePinStatus;
+    message: ZIMMessage;
+};
+export type ZIMMessageReceivedInfo = {
+    isOfflineMessage: boolean;
+};
+export type ZIMMessageMentionedInfo = {
+    type: ZIMMessageMentionedType;
+    fromUserID: string;
+    messageID: string;
+    messageSeq: number;
+};
+export type ZIMConversationChangeInfo = {
+    event: ZIMConversationEvent;
+    conversation: ZIMConversation;
+};
+export type ZIMMessageLiteInfo = {
+    type: ZIMMessageType;
+
+    /****** 消息类型对应的属性 ******/
+
+    /**
+     * 1：文本，200：自定义
+     */
+    message?: string;
+
+    /**
+     * 100：合并
+     */
+    title?: string;
+    summary?: string;
+
+    /**
+     * 200：自定义
+     */
+    subType?: number;
+    searchedContent?: string;
+
+    /**
+     * 10：组合
+     */
+    messageInfoList?: ZIMMessageLiteInfo[];
+
+    /**
+     * 11-14：媒体文件
+     *
+     * fileLocalPath: Web 平台时为 File 对象，其他平台为 String
+     */
+    fileLocalPath?: any;
+    fileDownloadUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+
+    /**
+     * 11：图片
+     */
+    thumbnailDownloadUrl?: string;
+    thumbnailLocalPath?: string;
+    largeImageDownloadUrl?: string;
+    largeImageLocalPath?: string;
+    originalImageWidth?: number;
+    originalImageHeight?: number;
+    thumbnailWidth?: number;
+    thumbnailHeight?: number;
+    largeImageWidth?: number;
+    largeImageHeight?: number;
+
+    /**
+     * 13：音频
+     */
+    audioDuration?: number;
+
+    /**
+     * 14：视频
+     */
+    videoDuration?: number;
+    videoFirstFrameDownloadUrl?: string;
+    videoFirstFrameLocalPath?: string;
+    videoFirstFrameWidth?: number;
+    videoFirstFrameHeight?: number;
+};
+export type ZIMMessage = {
+    /****** 发送消息时可赋值的属性 ******/
+
+    type: ZIMMessageType;
+    extendedData?: string;
+    localExtendedData?: string;
+    mentionedUserIDs?: string[];
+    isMentionAll?: boolean;
+
+    /****** 消息类型对应的属性 ******/
+
+    /**
+     * 1：文本，2：信令，20：弹幕，200：自定义
+     */
+    message?: string | number[];
+
+    /**
+     * 100：合并
+     */
+    title?: string;
+    summary?: string;
+    messageList?: ZIMMessage[];
+    combineID?: string;
+
+    /**
+     * 200：自定义
+     */
+    subType?: number;
+    searchedContent?: string;
+
+    /**
+     * 10：组合
+     */
+    messageInfoList?: ZIMMessageLiteInfo[];
+
+    /**
+     * 11-14：媒体文件
+     *
+     * fileLocalPath: Web 平台时为 File 对象，其他平台为 String
+     */
+    fileLocalPath?: any;
+    fileDownloadUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+    fileUID?: string;
+
+    /**
+     * 11：图片
+     */
+    thumbnailDownloadUrl?: string;
+    thumbnailLocalPath?: string;
+    largeImageDownloadUrl?: string;
+    largeImageLocalPath?: string;
+    originalImageWidth?: number;
+    originalImageHeight?: number;
+    thumbnailWidth?: number;
+    thumbnailHeight?: number;
+    largeImageWidth?: number;
+    largeImageHeight?: number;
+
+    /**
+     * 13：音频
+     */
+    audioDuration?: number;
+
+    /**
+     * 14：视频
+     */
+    videoDuration?: number;
+    videoFirstFrameDownloadUrl?: string;
+    videoFirstFrameLocalPath?: string;
+    videoFirstFrameWidth?: number;
+    videoFirstFrameHeight?: number;
+
+    /**
+     * 31：撤回
+     */
+    revokeType?: ZIMRevokeType;
+    revokeStatus?: ZIMMessageRevokeStatus;
+    revokeTimestamp?: number;
+    operatedUserID?: string;
+    revokeExtendedData?: string;
+    originalMessageType?: ZIMMessageType;
+    originalTextMessageContent?: string;
+
+    /**
+     * 32：Tips
+     */
+    event?: ZIMTipsMessageEvent;
+    operatedUser?: ZIMGroupMemberSimpleInfo;
+    targetUserList?: ZIMGroupMemberSimpleInfo[];
+    changeInfo?: ZIMTipsMessageChangeInfo;
+
+    /****** 公共只读属性 ******/
+    localMessageID?: string;
+    messageID?: string;
+    senderUserID?: string;
+    timestamp?: number;
+    conversationID?: string;
+    conversationType?: ZIMConversationType;
+    direction?: ZIMMessageDirection;
+    sentStatus?: ZIMMessageSentStatus;
+    orderKey?: number;
+    messageSeq?: number;
+    receiptStatus?: ZIMMessageReceiptStatus;
+    reactions?: ZIMMessageReaction[];
+    isUserInserted?: boolean;
+    isServerMessage?: boolean;
+    isBroadcastMessage?: boolean;
+    isGroupTargetedMessage?: boolean;
+    editorUserID?: string;
+    editedTime?: number;
+    pinnedUserID?: string;
+    pinnedTime?: number;
+    rootRepliedCount?: number;
+    repliedInfo?: ZIMMessageRepliedInfo;
+};
+export type ZIMTipsMessageChangeInfo = {
+    type: ZIMTipsMessageChangeInfoType;
+    /**
+     * 群变更属性
+     */
+    groupDataFlag?: number;
+    groupName?: string;
+    groupAvatarUrl?: string;
+    groupNotice?: string;
+    groupMutedInfo?: ZIMGroupMuteInfo;
+    /**
+     * 群成员变更属性
+     */
+    memberRole?: number;
+    muteExpiredTime?: number;
+    groupNewOwner?: ZIMGroupMemberSimpleInfo;
+    /**
+     * 消息置顶
+     */
+    isPinned?: boolean;
+};
+export type ZIMMessageReceiptInfo = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+    messageID: string;
+    status: ZIMMessageReceiptStatus;
+    readMemberCount: number;
+    unreadMemberCount: number;
+    isSelfOperated: boolean;
+    readTime: number;
+};
+export type ZIMMessageReaction = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+    messageID: string;
+    reactionType: string;
+    isSelfIncluded: boolean;
+    totalCount: number;
+    userList: ZIMMessageReactionUserInfo[];
+};
+export type ZIMMessageReactionUserInfo = {
+    userID: string;
+};
+export type ZIMMessageSentStatusChangeInfo = {
+    reason: string;
+    status: ZIMMessageSentStatus;
+    message: ZIMMessage;
+};
+export type ZIMConversationQueryConfig = {
+    count: number;
+    /**
+     * ZIMConversation.type.toString() + ZIMConversation.conversationID
+     */
+    nextConversation?: string;
+};
+export type ZIMConversationTotalUnreadMessageCountQueryConfig = {
+    marks: number[];
+    conversationTypes: ZIMConversationType[];
+};
+export type ZIMConversationFilterOption = {
+    marks: number[];
+    conversationTypes: ZIMConversationType[];
+    isOnlyUnreadConversation: boolean;
+    pinnedFilter: ZIMConversationPinnedFilter;
+};
+export type ZIMConversationDeleteConfig = {
+    isAlsoDeleteServerConversation: boolean;
+};
+export type ZIMVoIPConfig = {
+    iOSVoIPHandleType: ZIMCXHandleType;
+    iOSVoIPHandleValue: string;
+    iOSVoIPHasVideo: boolean;
+};
+export type ZIMOfflinePushPrivateMessageTemplate = {
+    templateID: string;
+    titleParameters: string;
+    contentParameters: string;
+};
+export type ZIMPushConfig = {
+    title: string;
+    content: string;
+    payload?: string;
+    resourcesID?: string;
+    badgeIncrement?: number;
+    enableBadge?: boolean;
+    voIPConfig?: ZIMVoIPConfig;
+    privateMessageTemplate?: ZIMOfflinePushPrivateMessageTemplate;
+};
+export type ZIMMessageSendConfig = {
+    priority: ZIMMessagePriority;
+    hasReceipt?: boolean;
+    isRetrySend?: boolean;
+    isNotifyMentionedUsers?: boolean;
+    disableUnreadMessageCount?: boolean;
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMMessageEditConfig = {};
+export type ZIMSendingMessageCancelConfig = {};
+export type ZIMMessageRepliedListQueryConfig = {
+    count: number;
+    nextFlag: number;
+};
+export type ZIMMessageRepliedListQueriedResult = {
+    nextFlag: number;
+    rootRepliedInfo: ZIMMessageRootRepliedInfo;
+    messageList: ZIMMessage[];
+};
+export type ZIMMessageDeleteConfig = {
+    isAlsoDeleteServerMessage: boolean;
+};
+export type ZIMMessageQueryConfig = {
+    count: number;
+    reverse: boolean;
+    /**
+     * ZIMMessage.localMessageID
+     */
+    nextMessage?: string;
+};
+export type ZIMGroupMessageReceiptMemberQueryConfig = {
+    count: number;
+    nextFlag: number;
+};
+export type ZIMMessageRevokeConfig = {
+    revokeExtendedData: string;
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMMessageReactionUserQueryConfig = {
+    reactionType: string;
+    count: number;
+    nextFlag: number;
+};
+export type ZIMMessageReactionAddedResult = {
+    reaction: ZIMMessageReaction;
+};
+export type ZIMMessageReactionDeletedResult = {
+    reaction: ZIMMessageReaction;
+};
+export type ZIMMessageReactionUserListQueriedResult = {
+    totalCount: number;
+    nextFlag: number;
+    reactionType: string;
+    userList: ZIMMessageReactionUserInfo[];
+    message: ZIMMessage;
+};
+export type ZIMConversationQueriedResult = {
+    conversation: ZIMConversation;
+};
+export type ZIMConversationListQueriedResult = {
+    conversationList: ZIMConversation[];
+};
+export type ZIMConversationPinnedListQueriedResult = {
+    conversationList: ZIMConversation[];
+};
+export type ZIMConversationDeletedResult = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+};
+export type ZIMConversationNotificationStatusSetResult = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+};
+export type ZIMCombineMessageDetailQueriedResult = {
+    message: ZIMMessage;
+};
+export type ZIMPinnedMessageListQueriedResult = {
+    messageList: ZIMMessage[];
+};
+export type ZIMConversationDraftSetResult = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+};
+export type ZIMConversationPinnedStateUpdatedResult = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+};
+export type ZIMConversationUnreadMessageCountClearedResult = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+};
+export type ZIMConversationMarkSetResult = {
+    failedConversationInfos: ZIMConversationBaseInfo[];
+};
+export type ZIMConversationTotalUnreadMessageCountQueriedResult = {
+    unreadMessageCount: number;
+};
+export type ZIMMessageDeletedResult = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+};
+export type ZIMMessageSentResult = {
+    message: ZIMMessage;
+};
+export type ZIMMessageEditedResult = {
+    message: ZIMMessage;
+};
+export type ZIMMessageQueriedResult = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+    messageList: ZIMMessage[];
+};
+export type ZIMFileCacheQueryConfig = {
+    endTime: number;
+};
+export type ZIMFileCacheClearConfig = {
+    endTime: number;
+};
+export type ZIMMessageImportConfig = {};
+export type ZIMMessageExportConfig = {};
+export type ZIMMediaDownloadConfig = {
+    messageInfoIndex: number;
+};
+export type ZIMFileCacheQueriedResult = {
+    totalFileSize: number;
+};
+export type ZIMMediaDownloadedResult = {
+    message: ZIMMessage;
+};
+export type ZIMMessageImportingProgress = (importedMessageCount: number, totalMessageCount: number) => void;
+export type ZIMMessageExportingProgress = (exportedMessageCount: number, totalMessageCount: number) => void;
+export type ZIMMediaDownloadingProgress = (message: ZIMMessage, currentFileSize: number, totalFileSize: number) => void;
+export type ZIMMessageSendNotification = {
+    onMessageAttached: (message: ZIMMessage) => void;
+    onMediaUploadingProgress?: (message: ZIMMessage, currentFileSize: number, totalFileSize: number) => void;
+    onMultipleMediaUploadingProgress?: (
+        message: ZIMMessage,
+        currentFileSize: number,
+        totalFileSize: number,
+        messageInfoIndex: number,
+        currentIndexFileSize: number,
+        totalIndexFileSize: number,
+    ) => void;
+};
+export type ZIMMessageInsertedResult = {
+    message: ZIMMessage;
+};
+export type ZIMMessageLocalExtendedDataUpdatedResult = {
+    message: ZIMMessage;
+};
+export type ZIMConversationMessageReceiptReadSentResult = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+};
+export type ZIMMessageReceiptsReadSentResult = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+    errorMessageIDs: string[];
+};
+export type ZIMMessageReceiptsInfoQueriedResult = {
+    infos: ZIMMessageReceiptInfo[];
+    errorMessageIDs: string[];
+};
+export type ZIMGroupMessageReceiptMemberListQueriedResult = {
+    groupID: string;
+    userList: ZIMGroupMemberInfo[];
+    nextFlag: number;
+};
+export type ZIMMessageRevokedResult = {
+    message: ZIMMessage;
+};
+export type ZIMRoomMemberQueriedResult = {
+    roomID: string;
+    memberList: ZIMUserInfo[];
+    nextFlag: string;
+};
+export type ZIMRoomMembersQueriedResult = {
+    roomID: string;
+    memberList: ZIMRoomMemberInfo[];
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMRoomInfo = {
+    roomID: string;
+    roomName: string;
+};
+export type ZIMRoomFullInfo = {
+    baseInfo: ZIMRoomInfo;
+};
+export type ZIMRoomMemberInfo = {
+    userID: string;
+    userName: string;
+    userAvatarUrl: string;
+    userExtendedData: string;
+};
+export type ZIMRoomAttributesUpdateInfo = {
+    action: ZIMRoomAttributesUpdateAction;
+    roomAttributes: UTSJSONObject;
+};
+export type ZIMRoomMemberQueryConfig = {
+    count: number;
+    nextFlag: string;
+};
+export type ZIMRoomAdvancedConfig = {
+    roomAttributes: UTSJSONObject;
+    roomDestroyDelayTime: number;
+};
+export type ZIMRoomAttributesDeleteConfig = {
+    isForce: boolean;
+};
+export type ZIMRoomAttributesSetConfig = {
+    isForce: boolean;
+    isUpdateOwner: boolean;
+    isDeleteAfterOwnerLeft: boolean;
+};
+export type ZIMRoomAttributesBatchOperationConfig = {
+    isForce: boolean;
+    isUpdateOwner: boolean;
+    isDeleteAfterOwnerLeft: boolean;
+};
+export type ZIMRoomCreatedResult = {
+    roomInfo: ZIMRoomFullInfo;
+};
+export type ZIMRoomEnteredResult = {
+    roomInfo: ZIMRoomFullInfo;
+};
+export type ZIMRoomJoinedResult = {
+    roomInfo: ZIMRoomFullInfo;
+};
+export type ZIMRoomSwitchedResult = {
+    roomInfo: ZIMRoomFullInfo;
+};
+export type ZIMRoomLeftResult = {
+    roomID: string;
+};
+export type ZIMRoomAllLeftResult = {
+    roomIDs: string[];
+};
+export type ZIMRoomAttributesBatchOperatedResult = {
+    roomID: string;
+};
+export type ZIMRoomOnlineMemberCountQueriedResult = {
+    roomID: string;
+    count: number;
+};
+export type ZIMRoomAttributesOperatedResult = {
+    roomID: string;
+    errorKeys: string[];
+};
+export type ZIMRoomAttributesQueriedResult = {
+    roomID: string;
+    roomAttributes: UTSJSONObject;
+};
+export type ZIMRoomMemberAttributesInfo = {
+    userID: string;
+    attributes: UTSJSONObject;
+};
+export type ZIMRoomMemberAttributesOperatedInfo = {
+    attributesInfo: ZIMRoomMemberAttributesInfo;
+    errorKeys: string[];
+};
+export type ZIMRoomMemberAttributesUpdateInfo = {
+    attributesInfo: ZIMRoomMemberAttributesInfo;
+};
+export type ZIMRoomMemberAttributesSetConfig = {
+    isDeleteAfterOwnerLeft: boolean;
+};
+export type ZIMRoomMemberAttributesQueryConfig = {
+    count: number;
+    nextFlag: string;
+};
+export type ZIMRoomOperatedInfo = {
+    userID: string;
+};
+export type ZIMRoomMembersAttributesOperatedResult = {
+    roomID: string;
+    infos: ZIMRoomMemberAttributesOperatedInfo[];
+    errorUserList: string[];
+};
+export type ZIMRoomMembersAttributesQueriedResult = {
+    roomID: string;
+    infos: ZIMRoomMemberAttributesInfo[];
+};
+export type ZIMRoomMemberAttributesListQueriedResult = {
+    roomID: string;
+    infos: ZIMRoomMemberAttributesInfo[];
+    nextFlag: string;
+};
+export type ZIMGroupInfo = {
+    groupID: string;
+    groupName: string;
+    groupAvatarUrl: string;
+};
+export type ZIMGroupMuteInfo = {
+    mode: ZIMGroupMuteMode;
+    expiredTime: number;
+    roles: number[];
+};
+export type ZIMGroupVerifyInfo = {
+    joinMode: ZIMGroupJoinMode;
+    inviteMode: ZIMGroupInviteMode;
+    beInviteMode: ZIMGroupBeInviteMode;
+};
+export type ZIMGroupApplicationInfo = {
+    type: ZIMGroupApplicationType;
+    state: ZIMGroupApplicationState;
+    createTime: number;
+    updateTime: number;
+    wording: string;
+    applyUser: ZIMUserInfo;
+    groupInfo: ZIMGroupInfo;
+    operatedUser?: ZIMGroupMemberSimpleInfo;
+};
+export type ZIMGroupFullInfo = {
+    baseInfo: ZIMGroupInfo;
+    groupAlias: string;
+    groupNotice: string;
+    groupAttributes: UTSJSONObject;
+    notificationStatus: ZIMGroupMessageNotificationStatus;
+    createTime: number;
+    maxMemberCount: number;
+    mutedInfo: ZIMGroupMuteInfo;
+    verifyInfo: ZIMGroupVerifyInfo;
+};
+export type ZIMGroup = {
+    baseInfo: ZIMGroupInfo;
+    groupAlias: string;
+    notificationStatus: ZIMGroupMessageNotificationStatus;
+};
+export type ZIMGroupMemberInfo = {
+    userID: string;
+    userName: string;
+    userAvatarUrl: string;
+    memberRole: number;
+    memberNickname: string;
+    muteExpiredTime: number;
+    groupEnterInfo: ZIMGroupEnterInfo;
+};
+export type ZIMGroupMemberSimpleInfo = {
+    userID: string;
+    userName: string;
+    userAvatarUrl: string;
+    memberNickname: string;
+    memberRole: number;
+};
+export type ZIMGroupEnterInfo = {
+    enterTime: number;
+    enterType: ZIMGroupEnterType;
+    operatedUser?: ZIMGroupMemberSimpleInfo;
+};
+export type ZIMGroupOperatedInfo = {
+    userID: string;
+    userName: string;
+    memberRole: number;
+    memberNickname: string;
+};
+export type ZIMGroupMuteConfig = {
+    mode: ZIMGroupMuteMode;
+    duration: number;
+    roles: number[];
+};
+export type ZIMGroupMemberMuteConfig = {
+    duration: number;
+};
+export type ZIMGroupMutedResult = {
+    groupID: string;
+    isMute: boolean;
+    mutedInfo: ZIMGroupMuteInfo;
+};
+export type ZIMGroupMembersMutedResult = {
+    groupID: string;
+    isMute: boolean;
+    duration: number;
+    mutedUserIDs: string[];
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMGroupMemberMutedListQueriedResult = {
+    groupID: string;
+    nextFlag: number;
+    userList: ZIMGroupMemberInfo[];
+};
+export type ZIMGroupJoinModeUpdatedResult = {
+    groupID: string;
+    mode: ZIMGroupJoinMode;
+};
+export type ZIMGroupInviteModeUpdatedResult = {
+    groupID: string;
+    mode: ZIMGroupInviteMode;
+};
+export type ZIMGroupBeInviteModeUpdatedResult = {
+    groupID: string;
+    mode: ZIMGroupBeInviteMode;
+};
+export type ZIMGroupJoinApplicationSendConfig = {
+    wording: string;
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMGroupJoinApplicationSentResult = {
+    groupID: string;
+};
+export type ZIMGroupJoinApplicationAcceptConfig = {
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMGroupJoinApplicationAcceptedResult = {
+    groupID: string;
+    userID: string;
+};
+export type ZIMGroupJoinApplicationRejectConfig = {
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMGroupJoinApplicationRejectedResult = {
+    groupID: string;
+    userID: string;
+};
+export type ZIMGroupInviteApplicationSendConfig = {
+    wording: string;
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMGroupInviteApplicationsSentResult = {
+    groupID: string;
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMGroupInviteApplicationAcceptConfig = {
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMGroupInviteApplicationAcceptedResult = {
+    groupInfo: ZIMGroupFullInfo;
+    inviterUserID: string;
+};
+export type ZIMGroupInviteApplicationRejectConfig = {
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMGroupInviteApplicationRejectedResult = {
+    groupID: string;
+    inviterUserID: string;
+};
+export type ZIMGroupApplicationListQueryConfig = {
+    count: number;
+    nextFlag: number;
+};
+export type ZIMGroupApplicationListQueriedResult = {
+    nextFlag: number;
+    applicationList: ZIMGroupApplicationInfo[];
+};
+export type ZIMGroupAttributesUpdateInfo = {
+    action: ZIMGroupAttributesUpdateAction;
+    groupAttributes: UTSJSONObject;
+};
+export type ZIMGroupAdvancedConfig = {
+    groupNotice: string;
+    groupAttributes: UTSJSONObject;
+    maxMemberCount: number;
+    joinMode: ZIMGroupJoinMode;
+    inviteMode: ZIMGroupInviteMode;
+    beInviteMode: ZIMGroupBeInviteMode;
+};
+export type ZIMGroupMemberQueryConfig = {
+    count: number;
+    nextFlag: number;
+};
+export type ZIMGroupLeftResult = {
+    groupID: string;
+};
+export type ZIMGroupDismissedResult = {
+    groupID: string;
+};
+export type ZIMGroupCreatedResult = {
+    groupInfo: ZIMGroupFullInfo;
+    userList: ZIMGroupMemberInfo[];
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMGroupJoinedResult = {
+    groupInfo: ZIMGroupFullInfo;
+};
+export type ZIMGroupInfoQueriedResult = {
+    groupInfo: ZIMGroupFullInfo;
+};
+export type ZIMGroupListQueriedResult = {
+    groupList: ZIMGroup[];
+};
+export type ZIMGroupNameUpdatedResult = {
+    groupID: string;
+    groupName: string;
+};
+export type ZIMGroupAvatarUrlUpdatedResult = {
+    groupID: string;
+    groupAvatarUrl: string;
+};
+export type ZIMGroupNoticeUpdatedResult = {
+    groupID: string;
+    groupNotice: string;
+};
+export type ZIMGroupAttributesOperatedResult = {
+    groupID: string;
+    errorKeys: string[];
+};
+export type ZIMGroupAttributesQueriedResult = {
+    groupID: string;
+    groupAttributes: UTSJSONObject;
+};
+export type ZIMGroupAliasUpdatedResult = {
+    groupID: string;
+    groupAlias: string;
+};
+export type ZIMGroupUsersInvitedResult = {
+    groupID: string;
+    userList: ZIMGroupMemberInfo[];
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMGroupOwnerTransferredResult = {
+    groupID: string;
+    toUserID: string;
+};
+export type ZIMGroupMemberKickedResult = {
+    groupID: string;
+    kickedUserIDs: string[];
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMGroupMemberListQueriedResult = {
+    groupID: string;
+    userList: ZIMGroupMemberInfo[];
+    nextFlag: number;
+};
+export type ZIMGroupMemberInfoQueriedResult = {
+    groupID: string;
+    userInfo: ZIMGroupMemberInfo;
+};
+export type ZIMGroupMemberNicknameUpdatedResult = {
+    groupID: string;
+    forUserID: string;
+    nickname: string;
+};
+export type ZIMGroupMemberRoleUpdatedResult = {
+    groupID: string;
+    forUserID: string;
+    role: number;
+};
+export type ZIMGroupMemberCountQueriedResult = {
+    groupID: string;
+    count: number;
+};
+export type ZIMCallUserInfo = {
+    userID: string;
+    state: ZIMCallUserState;
+    extendedData: string;
+};
+export type ZIMCallInfo = {
+    callID: string;
+    caller: string;
+    mode: ZIMCallInvitationMode;
+    state: ZIMCallState;
+    extendedData: string;
+    createTime: number;
+    endTime: number;
+    callUserList: ZIMCallUserInfo[];
+};
+export type ZIMCallInviteConfig = {
+    mode: ZIMCallInvitationMode;
+    timeout: number;
+    extendedData: string;
+    enableNotReceivedCheck?: boolean;
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMCallCancelConfig = {
+    extendedData: string;
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMCallAcceptConfig = {
+    extendedData: string;
+};
+export type ZIMCallRejectConfig = {
+    extendedData: string;
+};
+export type ZIMCallingInviteConfig = {
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMCallQuitConfig = {
+    extendedData: string;
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMCallEndConfig = {
+    extendedData: string;
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMCallJoinConfig = {
+    extendedData: string;
+};
+export type ZIMCallInvitationQueryConfig = {
+    count: number;
+    nextFlag: number;
+};
+export type ZIMCallInvitationSentResult = {
+    callID: string;
+    timeout: number;
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMCallCancelSentResult = {
+    callID: string;
+    errorInvitees: string[];
+};
+export type ZIMCallAcceptanceSentResult = {
+    callID: string;
+};
+export type ZIMCallRejectionSentResult = {
+    callID: string;
+};
+export type ZIMCallingInvitationSentResult = {
+    callID: string;
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMCallQuitSentResult = {
+    callID: string;
+    createTime: number;
+    acceptTime: number;
+    quitTime: number;
+};
+export type ZIMCallEndSentResult = {
+    callID: string;
+    createTime: number;
+    acceptTime: number;
+    endTime: number;
+};
+export type ZIMCallJoinSentResult = {
+    callID: string;
+    createTime: number;
+    joinTime: number;
+    extendedData: string;
+    callUserList: ZIMCallUserInfo[];
+};
+export type ZIMCallInvitationListQueriedResult = {
+    callList: ZIMCallInfo[];
+    nextFlag: number;
+};
+export type ZIMConversationSearchConfig = {
+    keywords: string[];
+    senderUserIDs: string[];
+    messageTypes: ZIMMessageType[];
+    subMessageTypes: number[];
+    startTime: number;
+    endTime: number;
+    totalConversationCount: number;
+    conversationMessageCount: number;
+    nextFlag: number;
+};
+export type ZIMMessageSearchConfig = {
+    keywords: string[];
+    senderUserIDs: string[];
+    messageTypes: ZIMMessageType[];
+    subMessageTypes: number[];
+    startTime: number;
+    endTime: number;
+    order: ZIMMessageOrder;
+    count: number;
+    /**
+     * ZIMMessage.localMessageID
+     */
+    nextMessage?: string;
+};
+export type ZIMGroupSearchConfig = {
+    keywords: string[];
+    isAlsoMatchGroupMemberUserName: boolean;
+    isAlsoMatchGroupMemberNickname: boolean;
+    count: number;
+    nextFlag: number;
+};
+export type ZIMGroupMemberSearchConfig = {
+    keywords: string[];
+    isAlsoMatchGroupMemberNickname: boolean;
+    count: number;
+    nextFlag: number;
+};
+export type ZIMConversationSearchInfo = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+    totalMessageCount: number;
+    messageList: ZIMMessage[];
+};
+export type ZIMGroupSearchInfo = {
+    groupInfo: ZIMGroupInfo;
+    userList: ZIMGroupMemberInfo[];
+};
+export type ZIMConversationsSearchedResult = {
+    nextFlag: number;
+    conversationSearchInfoList: ZIMConversationSearchInfo[];
+};
+export type ZIMMessagesGlobalSearchedResult = {
+    messageList: ZIMMessage[];
+    nextMessage?: string;
+};
+export type ZIMMessagesSearchedResult = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+    messageList: ZIMMessage[];
+    nextMessage?: string;
+};
+export type ZIMGroupsSearchedResult = {
+    groupSearchInfoList: ZIMGroupSearchInfo[];
+    nextFlag: number;
+};
+export type ZIMGroupMembersSearchedResult = {
+    groupID: string;
+    userList: ZIMGroupMemberInfo[];
+    nextFlag: number;
+};
+export type ZIMFriendInfo = {
+    userID: string;
+    userName: string;
+    userAvatarUrl: string;
+    wording: string;
+    friendAlias: string;
+    friendAttributes: UTSJSONObject;
+    createTime: number;
+};
+export type ZIMFriendApplicationInfo = {
+    applyUser: ZIMUserInfo;
+    wording: string;
+    createTime: number;
+    updateTime: number;
+    type: ZIMFriendApplicationType;
+    state: ZIMFriendApplicationState;
+};
+export type ZIMFriendAddConfig = {
+    wording: string;
+    friendAlias: string;
+    friendAttributes: UTSJSONObject;
+};
+export type ZIMFriendAddedResult = {
+    friendInfo: ZIMFriendInfo;
+};
+export type ZIMFriendApplicationSendConfig = {
+    wording: string;
+    friendAlias: string;
+    friendAttributes: UTSJSONObject;
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMFriendApplicationSentResult = {
+    applicationInfo: ZIMFriendApplicationInfo;
+};
+export type ZIMFriendDeleteConfig = {
+    type: ZIMFriendDeleteType;
+};
+export type ZIMFriendsDeletedResult = {
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMFriendRelationCheckConfig = {
+    type: ZIMFriendRelationCheckType;
+};
+export type ZIMFriendRelationInfo = {
+    userID: string;
+    type: ZIMUserRelationType;
+};
+export type ZIMFriendsRelationCheckedResult = {
+    relationInfos: ZIMFriendRelationInfo[];
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMFriendAliasUpdatedResult = {
+    friendInfo: ZIMFriendInfo;
+};
+export type ZIMFriendAttributesUpdatedResult = {
+    friendInfo: ZIMFriendInfo;
+};
+export type ZIMFriendApplicationAcceptConfig = {
+    friendAlias: string;
+    friendAttributes: UTSJSONObject;
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMFriendApplicationAcceptedResult = {
+    friendInfo: ZIMFriendInfo;
+};
+export type ZIMFriendApplicationRejectConfig = {
+    pushConfig?: ZIMPushConfig;
+};
+export type ZIMFriendApplicationRejectedResult = {
+    userInfo: ZIMUserInfo;
+};
+export type ZIMFriendListQueryConfig = {
+    count: number;
+    nextFlag: number;
+};
+export type ZIMFriendsInfoQueriedResult = {
+    friendInfos: ZIMFriendInfo[];
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMFriendListQueriedResult = {
+    friendList: ZIMFriendInfo[];
+    nextFlag: number;
+};
+export type ZIMFriendApplicationListQueryConfig = {
+    count: number;
+    nextFlag: number;
+};
+export type ZIMFriendApplicationListQueriedResult = {
+    applicationList: ZIMFriendApplicationInfo[];
+    nextFlag: number;
+};
+export type ZIMFriendSearchConfig = {
+    keywords: string[];
+    isAlsoMatchFriendAlias: boolean;
+    count: number;
+    nextFlag: number;
+};
+export type ZIMFriendsSearchedResult = {
+    nextFlag: number;
+    friendInfoList: ZIMFriendInfo[];
+};
+export type ZIMBlacklistUsersAddedResult = {
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMBlacklistUsersRemovedResult = {
+    errorUserList: ZIMErrorUserInfo[];
+};
+export type ZIMBlacklistQueryConfig = {
+    count: number;
+    nextFlag: number;
+};
+export type ZIMBlacklistQueriedResult = {
+    blacklist: ZIMUserInfo[];
+    nextFlag: number;
+};
+export type ZIMBlacklistCheckedResult = {
+    isUserInBlacklist: boolean;
+};
+
+export type ZIMEventOfConnectionStateChangedResult = {
+    state: ZIMConnectionState;
+    event: ZIMConnectionEvent;
+    extendedData: UTSJSONObject;
+};
+export type ZIMEventOfTokenWillExpireResult = {
+    second: number;
+};
+export type ZIMEventOfUserInfoUpdatedResult = {
+    info: ZIMUserFullInfo;
+};
+export type ZIMEventOfUserStatusUpdatedResult = {
+    userStatusList: ZIMUserStatus[];
+};
+export type ZIMEventOfUserRuleUpdatedResult = {
+    userRule: ZIMUserRule;
+};
+export type ZIMEventOfConversationsAllDeletedResult = {
+    count: number;
+};
+export type ZIMEventOfConversationChangedResult = {
+    infoList: ZIMConversationChangeInfo[];
+};
+export type ZIMEventOfConversationSyncStateChangedResult = {
+    state: ZIMConversationSyncState;
+};
+export type ZIMEventOfConversationTotalUnreadMessageCountUpdatedResult = {
+    totalUnreadMessageCount: number;
+};
+export type ZIMEventOfMessageEditedResult = {
+    messageList: ZIMMessage[];
+};
+export type ZIMEventOfConversationMessageReceivedResult = {
+    messageList: ZIMMessage[];
+    fromConversationID: string;
+    info: ZIMMessageReceivedInfo;
+};
+export type ZIMEventOfBroadcastMessageReceivedResult = {
+    message: ZIMMessage;
+};
+export type ZIMEventOfMessageReceiptChangedResult = {
+    infos: ZIMMessageReceiptInfo[];
+};
+export type ZIMEventOfMessageRevokeReceivedResult = {
+    messageList: ZIMMessage[];
+};
+export type ZIMEventOfMessageReactionsChangedResult = {
+    reactions: ZIMMessageReaction[];
+};
+export type ZIMEventOfMessageRepliedCountChangedResult = {
+    infos: ZIMMessageRootRepliedCountInfo[];
+};
+export type ZIMEventOfMessageRepliedInfoChangedResult = {
+    messageList: ZIMMessage[];
+};
+export type ZIMEventOfMessagePinStatusChangedResult = {
+    infos: ZIMMessagePinStatusChangeInfo[];
+};
+export type ZIMEventOfMessageDeletedResult = {
+    conversationID: string;
+    conversationType: ZIMConversationType;
+    isDeleteConversationAllMessage: boolean;
+    messageDeleteType: ZIMMessageDeleteType;
+    messageList: ZIMMessage[];
+};
+export type ZIMEventOfMessageSentStatusChangedResult = {
+    infos: ZIMMessageSentStatusChangeInfo[];
+};
+export type ZIMEventOfRoomStateChangedResult = {
+    roomID: string;
+    state: ZIMRoomState;
+    event: ZIMRoomEvent;
+    extendedData: UTSJSONObject;
+};
+export type ZIMEventOfRoomMemberChangedResult = {
+    roomID: string;
+    memberList: ZIMUserInfo[];
+};
+export type ZIMEventOfRoomAttributesUpdatedResult = {
+    roomID: string;
+    infos: ZIMRoomAttributesUpdateInfo[];
+};
+export type ZIMEventOfRoomMembersAttributesUpdatedResult = {
+    roomID: string;
+    infos: ZIMRoomMemberAttributesUpdateInfo[];
+    operatedInfo: ZIMRoomOperatedInfo;
+};
+export type ZIMEventOfGroupStateChangedResult = {
+    state: ZIMGroupState;
+    event: ZIMGroupEvent;
+    operatedInfo: ZIMGroupOperatedInfo;
+    groupInfo: ZIMGroupFullInfo;
+};
+export type ZIMEventOfGroupNameUpdatedResult = {
+    groupID: string;
+    groupName: string;
+    operatedInfo: ZIMGroupOperatedInfo;
+};
+export type ZIMEventOfGroupNoticeUpdatedResult = {
+    groupID: string;
+    groupNotice: string;
+    operatedInfo: ZIMGroupOperatedInfo;
+};
+export type ZIMEventOfGroupAliasUpdatedResult = {
+    groupID: string;
+    groupAlias: string;
+    operatedUserID: string;
+};
+export type ZIMEventOfGroupAvatarUrlUpdatedResult = {
+    groupID: string;
+    groupAvatarUrl: string;
+    operatedInfo: ZIMGroupOperatedInfo;
+};
+export type ZIMEventOfGroupAttributesUpdatedResult = {
+    groupID: string;
+    infoList: ZIMGroupAttributesUpdateInfo[];
+    operatedInfo: ZIMGroupOperatedInfo;
+};
+export type ZIMEventOfGroupMutedInfoUpdatedResult = {
+    groupID: string;
+    mutedInfo: ZIMGroupMuteInfo;
+    operatedInfo: ZIMGroupOperatedInfo;
+};
+export type ZIMEventOfGroupVerifyInfoUpdatedResult = {
+    groupID: string;
+    verifyInfo: ZIMGroupVerifyInfo;
+    operatedInfo: ZIMGroupOperatedInfo;
+};
+export type ZIMEventOfGroupApplicationListChangedResult = {
+    action: ZIMGroupApplicationListChangeAction;
+    applicationList: ZIMGroupApplicationInfo[];
+};
+export type ZIMEventOfGroupApplicationUpdatedResult = {
+    applicationList: ZIMGroupApplicationInfo[];
+};
+export type ZIMEventOfGroupMemberStateChangedResult = {
+    groupID: string;
+    state: ZIMGroupMemberState;
+    event: ZIMGroupMemberEvent;
+    userList: ZIMGroupMemberInfo[];
+    operatedInfo: ZIMGroupOperatedInfo;
+};
+export type ZIMEventOfGroupMemberInfoUpdatedResult = {
+    groupID: string;
+    userList: ZIMGroupMemberInfo[];
+    operatedInfo: ZIMGroupOperatedInfo;
+};
+export type ZIMEventOfCallInvitationCreatedResult = {
+    callID: string;
+    mode: ZIMCallInvitationMode;
+    caller: string;
+    extendedData: string;
+    timeout: number;
+    createTime: number;
+    callUserList: ZIMCallUserInfo[];
+};
+export type ZIMEventOfCallInvitationReceivedResult = {
+    callID: string;
+    mode: ZIMCallInvitationMode;
+    caller: string;
+    inviter: string;
+    extendedData: string;
+    timeout: number;
+    createTime: number;
+    callUserList: ZIMCallUserInfo[];
+};
+export type ZIMEventOfCallInvitationCancelledResult = {
+    callID: string;
+    mode: ZIMCallInvitationMode;
+    inviter: string;
+    extendedData: string;
+};
+export type ZIMEventOfCallInvitationTimeoutResult = {
+    callID: string;
+    mode: ZIMCallInvitationMode;
+};
+export type ZIMEventOfCallInvitationEndedResult = {
+    callID: string;
+    mode: ZIMCallInvitationMode;
+    caller: string;
+    operatedUserID: string;
+    extendedData: string;
+    endTime: number;
+};
+export type ZIMEventOfCallUserStateChangedResult = {
+    callID: string;
+    callUserList: ZIMCallUserInfo[];
+};
+export type ZIMEventOfBlacklistChangedResult = {
+    action: ZIMBlacklistChangeAction;
+    userList: ZIMUserInfo[];
+};
+export type ZIMEventOfFriendListChangedResult = {
+    action: ZIMFriendListChangeAction;
+    friendList: ZIMFriendInfo[];
+};
+export type ZIMEventOfFriendInfoUpdatedResult = {
+    friendList: ZIMFriendInfo[];
+};
+export type ZIMEventOfFriendApplicationListChangedResult = {
+    action: ZIMFriendApplicationListChangeAction;
+    applicationList: ZIMFriendApplicationInfo[];
+};
+export type ZIMEventOfFriendApplicationUpdatedResult = {
+    applicationList: ZIMFriendApplicationInfo[];
+};
+
+export type ZIMEventHandler = {
+    onError?: (error: ZIMError) => void;
+    onConnectionStateChanged?: (data: ZIMEventOfConnectionStateChangedResult) => void;
+    onTokenWillExpire?: (data: ZIMEventOfTokenWillExpireResult) => void;
+    onUserInfoUpdated?: (data: ZIMEventOfUserInfoUpdatedResult) => void;
+    onUserStatusUpdated?: (data: ZIMEventOfUserStatusUpdatedResult) => void;
+    onUserRuleUpdated?: (data: ZIMEventOfUserRuleUpdatedResult) => void;
+
+    onConversationsAllDeleted?: (data: ZIMEventOfConversationsAllDeletedResult) => void;
+    onConversationChanged?: (data: ZIMEventOfConversationChangedResult) => void;
+    onConversationSyncStateChanged?: (data: ZIMEventOfConversationSyncStateChangedResult) => void;
+    onConversationTotalUnreadMessageCountUpdated?: (
+        data: ZIMEventOfConversationTotalUnreadMessageCountUpdatedResult,
+    ) => void;
+    onConversationMessageReceiptChanged?: (data: ZIMEventOfMessageReceiptChangedResult) => void;
+
+    onMessageRevokeReceived?: (data: ZIMEventOfMessageRevokeReceivedResult) => void;
+    onMessageReceiptChanged?: (data: ZIMEventOfMessageReceiptChangedResult) => void;
+    onMessageReactionsChanged?: (data: ZIMEventOfMessageReactionsChangedResult) => void;
+    onMessageRepliedCountChanged?: (data: ZIMEventOfMessageRepliedCountChangedResult) => void;
+    onMessageRepliedInfoChanged?: (data: ZIMEventOfMessageRepliedInfoChangedResult) => void;
+    onMessagePinStatusChanged?: (data: ZIMEventOfMessagePinStatusChangedResult) => void;
+    onMessageDeleted?: (data: ZIMEventOfMessageDeletedResult) => void;
+    onMessageEdited?: (data: ZIMEventOfMessageEditedResult) => void;
+    onMessageSentStatusChanged?: (data: ZIMEventOfMessageSentStatusChangedResult) => void;
+    onBroadcastMessageReceived?: (data: ZIMEventOfBroadcastMessageReceivedResult) => void;
+    onPeerMessageReceived?: (data: ZIMEventOfConversationMessageReceivedResult) => void;
+    onGroupMessageReceived?: (data: ZIMEventOfConversationMessageReceivedResult) => void;
+    onRoomMessageReceived?: (data: ZIMEventOfConversationMessageReceivedResult) => void;
+
+    onRoomStateChanged?: (data: ZIMEventOfRoomStateChangedResult) => void;
+    onRoomMemberJoined?: (data: ZIMEventOfRoomMemberChangedResult) => void;
+    onRoomMemberLeft?: (data: ZIMEventOfRoomMemberChangedResult) => void;
+    onRoomAttributesUpdated?: (data: ZIMEventOfRoomAttributesUpdatedResult) => void;
+    onRoomAttributesBatchUpdated?: (data: ZIMEventOfRoomAttributesUpdatedResult) => void;
+    onRoomMemberAttributesUpdated?: (data: ZIMEventOfRoomMembersAttributesUpdatedResult) => void;
+
+    onGroupStateChanged?: (data: ZIMEventOfGroupStateChangedResult) => void;
+    onGroupNameUpdated?: (data: ZIMEventOfGroupNameUpdatedResult) => void;
+    onGroupAvatarUrlUpdated?: (data: ZIMEventOfGroupAvatarUrlUpdatedResult) => void;
+    onGroupNoticeUpdated?: (data: ZIMEventOfGroupNoticeUpdatedResult) => void;
+    onGroupAliasUpdated?: (data: ZIMEventOfGroupAliasUpdatedResult) => void;
+    onGroupAttributesUpdated?: (data: ZIMEventOfGroupAttributesUpdatedResult) => void;
+    onGroupMutedInfoUpdated?: (data: ZIMEventOfGroupMutedInfoUpdatedResult) => void;
+    onGroupVerifyInfoUpdated?: (data: ZIMEventOfGroupVerifyInfoUpdatedResult) => void;
+    onGroupApplicationListChanged?: (data: ZIMEventOfGroupApplicationListChangedResult) => void;
+    onGroupApplicationUpdated?: (data: ZIMEventOfGroupApplicationUpdatedResult) => void;
+    onGroupMemberStateChanged?: (data: ZIMEventOfGroupMemberStateChangedResult) => void;
+    onGroupMemberInfoUpdated?: (data: ZIMEventOfGroupMemberInfoUpdatedResult) => void;
+
+    onCallInvitationCreated?: (data: ZIMEventOfCallInvitationCreatedResult) => void;
+    onCallInvitationReceived?: (data: ZIMEventOfCallInvitationReceivedResult) => void;
+    onCallInvitationCancelled?: (data: ZIMEventOfCallInvitationCancelledResult) => void;
+    onCallInvitationTimeout?: (data: ZIMEventOfCallInvitationTimeoutResult) => void;
+    onCallInvitationEnded?: (data: ZIMEventOfCallInvitationEndedResult) => void;
+    onCallUserStateChanged?: (data: ZIMEventOfCallUserStateChangedResult) => void;
+
+    onBlacklistChanged?: (data: ZIMEventOfBlacklistChangedResult) => void;
+    onFriendListChanged?: (data: ZIMEventOfFriendListChangedResult) => void;
+    onFriendInfoUpdated?: (data: ZIMEventOfFriendInfoUpdatedResult) => void;
+    onFriendApplicationListChanged?: (data: ZIMEventOfFriendApplicationListChangedResult) => void;
+    onFriendApplicationUpdated?: (data: ZIMEventOfFriendApplicationUpdatedResult) => void;
+};
+
+export interface IZIM {
+    destroy(): void;
+    uploadLog(): Promise<void>;
+    queryLocalFileCache(config: ZIMFileCacheQueryConfig): Promise<ZIMFileCacheQueriedResult>;
+    clearLocalFileCache(config: ZIMFileCacheClearConfig): Promise<void>;
+
+    // MARK: - User
+
+    login(userID: string, config: ZIMLoginConfig): Promise<void>;
+    logout(): void;
+    renewToken(token: string): Promise<ZIMTokenRenewedResult>;
+    updateUserName(userName: string): Promise<ZIMUserNameUpdatedResult>;
+    updateUserAvatarUrl(userAvatarUrl: string): Promise<ZIMUserAvatarUrlUpdatedResult>;
+    updateUserExtendedData(extendedData: string): Promise<ZIMUserExtendedDataUpdatedResult>;
+    updateUserCustomStatus(customStatus: string): Promise<ZIMUserCustomStatusUpdatedResult>;
+    updateUserOfflinePushRule(offlinePushRule: ZIMUserOfflinePushRule): Promise<ZIMUserOfflinePushRuleUpdatedResult>;
+    querySelfUserInfo(): Promise<ZIMSelfUserInfoQueriedResult>;
+    queryUsersInfo(userIDs: string[], config: ZIMUsersInfoQueryConfig): Promise<ZIMUsersInfoQueriedResult>;
+    subscribeUsersStatus(
+        userIDs: string[],
+        config: ZIMUserStatusSubscribeConfig,
+    ): Promise<ZIMUsersStatusSubscribedResult>;
+    unsubscribeUsersStatus(userIDs: string[]): Promise<ZIMUsersStatusUnsubscribedResult>;
+    queryUsersStatus(userIDs: string[]): Promise<ZIMUsersStatusQueriedResult>;
+    querySubscribedUserStatusList(
+        config: ZIMSubscribedUserStatusQueryConfig,
+    ): Promise<ZIMSubscribedUserStatusListQueriedResult>;
+
+    // MARK: - Conversation
+
+    queryConversation(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationQueriedResult>;
+    queryConversationList(
+        config: ZIMConversationQueryConfig,
+        option?: ZIMConversationFilterOption,
+    ): Promise<ZIMConversationListQueriedResult>;
+    queryConversationPinnedList(config: ZIMConversationQueryConfig): Promise<ZIMConversationPinnedListQueriedResult>;
+    queryConversationTotalUnreadMessageCount(
+        config: ZIMConversationTotalUnreadMessageCountQueryConfig,
+    ): Promise<ZIMConversationTotalUnreadMessageCountQueriedResult>;
+    deleteConversation(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMConversationDeleteConfig,
+    ): Promise<ZIMConversationDeletedResult>;
+    deleteAllConversations(config: ZIMConversationDeleteConfig): Promise<void>;
+    deleteAllConversationMessages(config: ZIMMessageDeleteConfig): Promise<void>;
+    clearConversationUnreadMessageCount(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationUnreadMessageCountClearedResult>;
+    clearConversationTotalUnreadMessageCount(): Promise<void>;
+    updateConversationPinnedState(
+        isPinned: boolean,
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationPinnedStateUpdatedResult>;
+    setConversationDraft(
+        draft: string,
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationDraftSetResult>;
+    setConversationMark(
+        markType: number,
+        enable: boolean,
+        conversationInfos: ZIMConversationBaseInfo[],
+    ): Promise<ZIMConversationMarkSetResult>;
+    setConversationNotificationStatus(
+        status: ZIMConversationNotificationStatus,
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationNotificationStatusSetResult>;
+
+    // MARK: - Message
+
+    sendMessage(
+        message: ZIMMessage,
+        toConversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMMessageSendConfig,
+        notification?: ZIMMessageSendNotification,
+    ): Promise<ZIMMessageSentResult>;
+    replyMessage(
+        message: ZIMMessage,
+        toOriginalMessage: ZIMMessage,
+        config: ZIMMessageSendConfig,
+        notification?: ZIMMessageSendNotification,
+    ): Promise<ZIMMessageSentResult>;
+    editMessage(
+        message: ZIMMessage,
+        config: ZIMMessageEditConfig,
+        notification?: ZIMMessageSendNotification,
+    ): Promise<ZIMMessageEditedResult>;
+    cancelSendingMessage(message: ZIMMessage, config: ZIMSendingMessageCancelConfig): Promise<void>;
+    downloadMediaFile(
+        message: ZIMMessage,
+        fileType: ZIMMediaFileType,
+        config: ZIMMediaDownloadConfig,
+        progress: ZIMMediaDownloadingProgress,
+    ): Promise<ZIMMediaDownloadedResult>;
+    importLocalMessages(
+        folderPath: string,
+        config: ZIMMessageImportConfig,
+        progress: ZIMMessageImportingProgress,
+    ): Promise<void>;
+    exportLocalMessages(
+        folderPath: string,
+        config: ZIMMessageExportConfig,
+        progress: ZIMMessageExportingProgress,
+    ): Promise<void>;
+    deleteMessages(
+        messageList: ZIMMessage[],
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMMessageDeleteConfig,
+    ): Promise<ZIMMessageDeletedResult>;
+    deleteAllMessage(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMMessageDeleteConfig,
+    ): Promise<ZIMMessageDeletedResult>;
+    queryHistoryMessage(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMMessageQueryConfig,
+    ): Promise<ZIMMessageQueriedResult>;
+    queryMessages(
+        messageSeqs: number[],
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMMessageQueriedResult>;
+    insertMessageToLocalDB(
+        message: ZIMMessage,
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        senderUserID: string,
+    ): Promise<ZIMMessageInsertedResult>;
+    updateMessageLocalExtendedData(
+        localExtendedData: string,
+        message: ZIMMessage,
+    ): Promise<ZIMMessageLocalExtendedDataUpdatedResult>;
+    revokeMessage(message: ZIMMessage, config: ZIMMessageRevokeConfig): Promise<ZIMMessageRevokedResult>;
+    queryCombineMessageDetail(message: ZIMMessage): Promise<ZIMCombineMessageDetailQueriedResult>;
+    pinMessage(message: ZIMMessage, isPinned: boolean): Promise<void>;
+    queryPinnedMessageList(conversationID: string, conversationType: ZIMConversationType): Promise<ZIMPinnedMessageListQueriedResult>;
+    sendConversationMessageReceiptRead(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationMessageReceiptReadSentResult>;
+    sendMessageReceiptsRead(
+        messageList: ZIMMessage[],
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMMessageReceiptsReadSentResult>;
+    queryMessageReceiptsInfo(
+        messageList: ZIMMessage[],
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMMessageReceiptsInfoQueriedResult>;
+    queryGroupMessageReceiptReadMemberList(
+        message: ZIMMessage,
+        groupID: string,
+        config: ZIMGroupMessageReceiptMemberQueryConfig,
+    ): Promise<ZIMGroupMessageReceiptMemberListQueriedResult>;
+    queryGroupMessageReceiptUnreadMemberList(
+        message: ZIMMessage,
+        groupID: string,
+        config: ZIMGroupMessageReceiptMemberQueryConfig,
+    ): Promise<ZIMGroupMessageReceiptMemberListQueriedResult>;
+    addMessageReaction(reactionType: string, message: ZIMMessage): Promise<ZIMMessageReactionAddedResult>;
+    deleteMessageReaction(reactionType: string, message: ZIMMessage): Promise<ZIMMessageReactionDeletedResult>;
+    queryMessageReactionUserList(
+        message: ZIMMessage,
+        config: ZIMMessageReactionUserQueryConfig,
+    ): Promise<ZIMMessageReactionUserListQueriedResult>;
+    queryMessageRepliedList(
+        message: ZIMMessage,
+        config: ZIMMessageRepliedListQueryConfig,
+    ): Promise<ZIMMessageRepliedListQueriedResult>;
+
+    // MARK: - Room
+
+    createRoom(roomInfo: ZIMRoomInfo, config?: ZIMRoomAdvancedConfig): Promise<ZIMRoomCreatedResult>;
+    enterRoom(roomInfo: ZIMRoomInfo, config?: ZIMRoomAdvancedConfig): Promise<ZIMRoomEnteredResult>;
+    switchRoom(
+        fromRoomID: string,
+        toRoomInfo: ZIMRoomInfo,
+        isCreateWhenRoomNotExisted: boolean,
+        config?: ZIMRoomAdvancedConfig,
+    ): Promise<ZIMRoomSwitchedResult>;
+    joinRoom(roomID: string): Promise<ZIMRoomJoinedResult>;
+    leaveRoom(roomID: string): Promise<ZIMRoomLeftResult>;
+    leaveAllRoom(): Promise<ZIMRoomAllLeftResult>;
+    queryRoomMembers(userIDs: string[], roomID: string): Promise<ZIMRoomMembersQueriedResult>;
+    queryRoomMemberList(roomID: string, config: ZIMRoomMemberQueryConfig): Promise<ZIMRoomMemberQueriedResult>;
+    queryRoomOnlineMemberCount(roomID: string): Promise<ZIMRoomOnlineMemberCountQueriedResult>;
+    setRoomAttributes(
+        roomAttributes: UTSJSONObject,
+        roomID: string,
+        config: ZIMRoomAttributesSetConfig,
+    ): Promise<ZIMRoomAttributesOperatedResult>;
+    deleteRoomAttributes(
+        keys: string[],
+        roomID: string,
+        config: ZIMRoomAttributesDeleteConfig,
+    ): Promise<ZIMRoomAttributesOperatedResult>;
+    beginRoomAttributesBatchOperation(roomID: string, config: ZIMRoomAttributesBatchOperationConfig): void;
+    endRoomAttributesBatchOperation(roomID: string): Promise<ZIMRoomAttributesBatchOperatedResult>;
+    queryRoomAllAttributes(roomID: string): Promise<ZIMRoomAttributesQueriedResult>;
+    setRoomMembersAttributes(
+        attributes: UTSJSONObject,
+        userIDs: string[],
+        roomID: string,
+        config: ZIMRoomMemberAttributesSetConfig,
+    ): Promise<ZIMRoomMembersAttributesOperatedResult>;
+    queryRoomMembersAttributes(userIDs: string[], roomID: string): Promise<ZIMRoomMembersAttributesQueriedResult>;
+    queryRoomMemberAttributesList(
+        roomID: string,
+        config: ZIMRoomMemberAttributesQueryConfig,
+    ): Promise<ZIMRoomMemberAttributesListQueriedResult>;
+
+    // MARK: - Group
+
+    createGroup(
+        groupInfo: ZIMGroupInfo,
+        userIDs: string[],
+        config?: ZIMGroupAdvancedConfig,
+    ): Promise<ZIMGroupCreatedResult>;
+    joinGroup(groupID: string): Promise<ZIMGroupJoinedResult>;
+    leaveGroup(groupID: string): Promise<ZIMGroupLeftResult>;
+    dismissGroup(groupID: string): Promise<ZIMGroupDismissedResult>;
+    queryGroupInfo(groupID: string): Promise<ZIMGroupInfoQueriedResult>;
+    queryGroupList(): Promise<ZIMGroupListQueriedResult>;
+    updateGroupName(groupName: string, groupID: string): Promise<ZIMGroupNameUpdatedResult>;
+    updateGroupAvatarUrl(groupAvatarUrl: string, groupID: string): Promise<ZIMGroupAvatarUrlUpdatedResult>;
+    updateGroupNotice(groupNotice: string, groupID: string): Promise<ZIMGroupNoticeUpdatedResult>;
+    updateGroupAlias(groupAlias: string, groupID: string): Promise<ZIMGroupAliasUpdatedResult>;
+    muteGroup(isMute: boolean, groupID: string, config: ZIMGroupMuteConfig): Promise<ZIMGroupMutedResult>;
+    setGroupAttributes(groupAttributes: UTSJSONObject, groupID: string): Promise<ZIMGroupAttributesOperatedResult>;
+    deleteGroupAttributes(keys: string[], groupID: string): Promise<ZIMGroupAttributesOperatedResult>;
+    queryGroupAttributes(keys: string[], groupID: string): Promise<ZIMGroupAttributesQueriedResult>;
+    queryGroupAllAttributes(groupID: string): Promise<ZIMGroupAttributesQueriedResult>;
+    setGroupMemberRole(role: number, forUserID: string, groupID: string): Promise<ZIMGroupMemberRoleUpdatedResult>;
+    setGroupMemberNickname(
+        nickname: string,
+        forUserID: string,
+        groupID: string,
+    ): Promise<ZIMGroupMemberNicknameUpdatedResult>;
+    transferGroupOwner(toUserID: string, groupID: string): Promise<ZIMGroupOwnerTransferredResult>;
+    inviteUsersIntoGroup(userIDs: string[], groupID: string): Promise<ZIMGroupUsersInvitedResult>;
+    kickGroupMembers(userIDs: string[], groupID: string): Promise<ZIMGroupMemberKickedResult>;
+    queryGroupMemberCount(groupID: string): Promise<ZIMGroupMemberCountQueriedResult>;
+    queryGroupMemberInfo(userID: string, groupID: string): Promise<ZIMGroupMemberInfoQueriedResult>;
+    queryGroupMemberList(groupID: string, config: ZIMGroupMemberQueryConfig): Promise<ZIMGroupMemberListQueriedResult>;
+    muteGroupMembers(
+        isMute: boolean,
+        userIDs: string[],
+        groupID: string,
+        config: ZIMGroupMemberMuteConfig,
+    ): Promise<ZIMGroupMembersMutedResult>;
+    queryGroupMemberMutedList(
+        groupID: string,
+        config: ZIMGroupMemberQueryConfig,
+    ): Promise<ZIMGroupMemberMutedListQueriedResult>;
+    updateGroupJoinMode(mode: ZIMGroupJoinMode, groupID: string): Promise<ZIMGroupJoinModeUpdatedResult>;
+    updateGroupInviteMode(mode: ZIMGroupInviteMode, groupID: string): Promise<ZIMGroupInviteModeUpdatedResult>;
+    updateGroupBeInviteMode(mode: ZIMGroupBeInviteMode, groupID: string): Promise<ZIMGroupBeInviteModeUpdatedResult>;
+    sendGroupJoinApplication(
+        groupID: string,
+        config: ZIMGroupJoinApplicationSendConfig,
+    ): Promise<ZIMGroupJoinApplicationSentResult>;
+    acceptGroupJoinApplication(
+        userID: string,
+        groupID: string,
+        config: ZIMGroupJoinApplicationAcceptConfig,
+    ): Promise<ZIMGroupJoinApplicationAcceptedResult>;
+    rejectGroupJoinApplication(
+        userID: string,
+        groupID: string,
+        config: ZIMGroupJoinApplicationRejectConfig,
+    ): Promise<ZIMGroupJoinApplicationRejectedResult>;
+    sendGroupInviteApplications(
+        userIDs: string[],
+        groupID: string,
+        config: ZIMGroupInviteApplicationSendConfig,
+    ): Promise<ZIMGroupInviteApplicationsSentResult>;
+    acceptGroupInviteApplication(
+        inviterUserID: string,
+        groupID: string,
+        config: ZIMGroupInviteApplicationAcceptConfig,
+    ): Promise<ZIMGroupInviteApplicationAcceptedResult>;
+    rejectGroupInviteApplication(
+        inviterUserID: string,
+        groupID: string,
+        config: ZIMGroupInviteApplicationRejectConfig,
+    ): Promise<ZIMGroupInviteApplicationRejectedResult>;
+    queryGroupApplicationList(
+        config: ZIMGroupApplicationListQueryConfig,
+    ): Promise<ZIMGroupApplicationListQueriedResult>;
+
+    // MARK: - Call
+
+    callInvite(invitees: string[], config: ZIMCallInviteConfig): Promise<ZIMCallInvitationSentResult>;
+    callCancel(invitees: string[], callID: string, config: ZIMCallCancelConfig): Promise<ZIMCallCancelSentResult>;
+    callAccept(callID: string, config: ZIMCallAcceptConfig): Promise<ZIMCallAcceptanceSentResult>;
+    callReject(callID: string, config: ZIMCallRejectConfig): Promise<ZIMCallRejectionSentResult>;
+    callingInvite(
+        invitees: string[],
+        callID: string,
+        config: ZIMCallingInviteConfig,
+    ): Promise<ZIMCallingInvitationSentResult>;
+    callJoin(callID: string, config: ZIMCallJoinConfig): Promise<ZIMCallJoinSentResult>;
+    callQuit(callID: string, config: ZIMCallQuitConfig): Promise<ZIMCallQuitSentResult>;
+    callEnd(callID: string, config: ZIMCallEndConfig): Promise<ZIMCallEndSentResult>;
+    queryCallInvitationList(config: ZIMCallInvitationQueryConfig): Promise<ZIMCallInvitationListQueriedResult>;
+
+    // MARK: - DB Search
+
+    searchLocalConversations(config: ZIMConversationSearchConfig): Promise<ZIMConversationsSearchedResult>;
+    searchLocalMessages(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMMessageSearchConfig,
+    ): Promise<ZIMMessagesSearchedResult>;
+    searchGlobalLocalMessages(config: ZIMMessageSearchConfig): Promise<ZIMMessagesGlobalSearchedResult>;
+    searchLocalGroups(config: ZIMGroupSearchConfig): Promise<ZIMGroupsSearchedResult>;
+    searchLocalGroupMembers(
+        groupID: string,
+        config: ZIMGroupMemberSearchConfig,
+    ): Promise<ZIMGroupMembersSearchedResult>;
+    searchLocalFriends(config: ZIMFriendSearchConfig): Promise<ZIMFriendsSearchedResult>;
+
+    // MARK: - Friend
+
+    addFriend(userID: string, config: ZIMFriendAddConfig): Promise<ZIMFriendAddedResult>;
+    deleteFriends(userIDs: string[], config: ZIMFriendDeleteConfig): Promise<ZIMFriendsDeletedResult>;
+    checkFriendsRelation(
+        userIDs: string[],
+        config: ZIMFriendRelationCheckConfig,
+    ): Promise<ZIMFriendsRelationCheckedResult>;
+    updateFriendAlias(friendAlias: string, userID: string): Promise<ZIMFriendAliasUpdatedResult>;
+    updateFriendAttributes(friendAttributes: UTSJSONObject, userID: string): Promise<ZIMFriendAttributesUpdatedResult>;
+    queryFriendsInfo(userIDs: string[]): Promise<ZIMFriendsInfoQueriedResult>;
+    queryFriendList(config: ZIMFriendListQueryConfig): Promise<ZIMFriendListQueriedResult>;
+    sendFriendApplication(
+        userID: string,
+        config: ZIMFriendApplicationSendConfig,
+    ): Promise<ZIMFriendApplicationSentResult>;
+    acceptFriendApplication(
+        userID: string,
+        config: ZIMFriendApplicationAcceptConfig,
+    ): Promise<ZIMFriendApplicationAcceptedResult>;
+    rejectFriendApplication(
+        userID: string,
+        config: ZIMFriendApplicationRejectConfig,
+    ): Promise<ZIMFriendApplicationRejectedResult>;
+    queryFriendApplicationList(
+        config: ZIMFriendApplicationListQueryConfig,
+    ): Promise<ZIMFriendApplicationListQueriedResult>;
+
+    // MARK: - Blacklist
+
+    addUsersToBlacklist(userIDs: string[]): Promise<ZIMBlacklistUsersAddedResult>;
+    removeUsersFromBlacklist(userIDs: string[]): Promise<ZIMBlacklistUsersRemovedResult>;
+    checkUserIsInBlacklist(userID: string): Promise<ZIMBlacklistCheckedResult>;
+    queryBlacklist(config: ZIMBlacklistQueryConfig): Promise<ZIMBlacklistQueriedResult>;
+
+    // MARK: - Event
+
+    /**
+     * callback 传入 null 时，可取消已注册的事件
+     */
+
+    onError(callback: null | ((error: ZIMError) => void)): void;
+    onConnectionStateChanged(callback: null | ((data: ZIMEventOfConnectionStateChangedResult) => void)): void;
+    onTokenWillExpire(callback: null | ((data: ZIMEventOfTokenWillExpireResult) => void)): void;
+    onUserInfoUpdated(callback: null | ((data: ZIMEventOfUserInfoUpdatedResult) => void)): void;
+    onUserStatusUpdated(callback: null | ((data: ZIMEventOfUserStatusUpdatedResult) => void)): void;
+    onUserRuleUpdated(callback: null | ((data: ZIMEventOfUserRuleUpdatedResult) => void)): void;
+
+    onConversationsAllDeleted(callback: null | ((data: ZIMEventOfConversationsAllDeletedResult) => void)): void;
+    onConversationChanged(callback: null | ((data: ZIMEventOfConversationChangedResult) => void)): void;
+    onConversationSyncStateChanged(
+        callback: null | ((data: ZIMEventOfConversationSyncStateChangedResult) => void),
+    ): void;
+    onConversationTotalUnreadMessageCountUpdated(
+        callback: null | ((data: ZIMEventOfConversationTotalUnreadMessageCountUpdatedResult) => void),
+    ): void;
+    onConversationMessageReceiptChanged(callback: null | ((data: ZIMEventOfMessageReceiptChangedResult) => void)): void;
+
+    onMessageRevokeReceived(callback: null | ((data: ZIMEventOfMessageRevokeReceivedResult) => void)): void;
+    onMessageReceiptChanged(callback: null | ((data: ZIMEventOfMessageReceiptChangedResult) => void)): void;
+    onMessageReactionsChanged(callback: null | ((data: ZIMEventOfMessageReactionsChangedResult) => void)): void;
+    onMessageRepliedCountChanged(callback: null | ((data: ZIMEventOfMessageRepliedCountChangedResult) => void)): void;
+    onMessageRepliedInfoChanged(callback: null | ((data: ZIMEventOfMessageRepliedInfoChangedResult) => void)): void;
+    onMessagePinStatusChanged(callback: null | ((data: ZIMEventOfMessagePinStatusChangedResult) => void)): void;
+    onMessageDeleted(callback: null | ((data: ZIMEventOfMessageDeletedResult) => void)): void;
+    onMessageEdited(callback: null | ((data: ZIMEventOfMessageEditedResult) => void)): void;
+    onMessageSentStatusChanged(callback: null | ((data: ZIMEventOfMessageSentStatusChangedResult) => void)): void;
+    onBroadcastMessageReceived(callback: null | ((data: ZIMEventOfBroadcastMessageReceivedResult) => void)): void;
+    onPeerMessageReceived(callback: null | ((data: ZIMEventOfConversationMessageReceivedResult) => void)): void;
+    onGroupMessageReceived(callback: null | ((data: ZIMEventOfConversationMessageReceivedResult) => void)): void;
+    onRoomMessageReceived(callback: null | ((data: ZIMEventOfConversationMessageReceivedResult) => void)): void;
+
+    onRoomStateChanged(callback: null | ((data: ZIMEventOfRoomStateChangedResult) => void)): void;
+    onRoomMemberJoined(callback: null | ((data: ZIMEventOfRoomMemberChangedResult) => void)): void;
+    onRoomMemberLeft(callback: null | ((data: ZIMEventOfRoomMemberChangedResult) => void)): void;
+    onRoomAttributesUpdated(callback: null | ((data: ZIMEventOfRoomAttributesUpdatedResult) => void)): void;
+    onRoomAttributesBatchUpdated(callback: null | ((data: ZIMEventOfRoomAttributesUpdatedResult) => void)): void;
+    onRoomMemberAttributesUpdated(
+        callback: null | ((data: ZIMEventOfRoomMembersAttributesUpdatedResult) => void),
+    ): void;
+
+    onGroupStateChanged(callback: null | ((data: ZIMEventOfGroupStateChangedResult) => void)): void;
+    onGroupNameUpdated(callback: null | ((data: ZIMEventOfGroupNameUpdatedResult) => void)): void;
+    onGroupAvatarUrlUpdated(callback: null | ((data: ZIMEventOfGroupAvatarUrlUpdatedResult) => void)): void;
+    onGroupNoticeUpdated(callback: null | ((data: ZIMEventOfGroupNoticeUpdatedResult) => void)): void;
+    onGroupAliasUpdated(callback: null | ((data: ZIMEventOfGroupAliasUpdatedResult) => void)): void;
+    onGroupAttributesUpdated(callback: null | ((data: ZIMEventOfGroupAttributesUpdatedResult) => void)): void;
+    onGroupMutedInfoUpdated(callback: null | ((data: ZIMEventOfGroupMutedInfoUpdatedResult) => void)): void;
+    onGroupVerifyInfoUpdated(callback: null | ((data: ZIMEventOfGroupVerifyInfoUpdatedResult) => void)): void;
+    onGroupApplicationListChanged(callback: null | ((data: ZIMEventOfGroupApplicationListChangedResult) => void)): void;
+    onGroupApplicationUpdated(callback: null | ((data: ZIMEventOfGroupApplicationUpdatedResult) => void)): void;
+    onGroupMemberStateChanged(callback: null | ((data: ZIMEventOfGroupMemberStateChangedResult) => void)): void;
+    onGroupMemberInfoUpdated(callback: null | ((data: ZIMEventOfGroupMemberInfoUpdatedResult) => void)): void;
+
+    onCallInvitationCreated(callback: null | ((data: ZIMEventOfCallInvitationCreatedResult) => void)): void;
+    onCallInvitationReceived(callback: null | ((data: ZIMEventOfCallInvitationReceivedResult) => void)): void;
+    onCallInvitationCancelled(callback: null | ((data: ZIMEventOfCallInvitationCancelledResult) => void)): void;
+    onCallInvitationTimeout(callback: null | ((data: ZIMEventOfCallInvitationTimeoutResult) => void)): void;
+    onCallInvitationEnded(callback: null | ((data: ZIMEventOfCallInvitationEndedResult) => void)): void;
+    onCallUserStateChanged(callback: null | ((data: ZIMEventOfCallUserStateChangedResult) => void)): void;
+
+    onBlacklistChanged(callback: null | ((data: ZIMEventOfBlacklistChangedResult) => void)): void;
+    onFriendListChanged(callback: null | ((data: ZIMEventOfFriendListChangedResult) => void)): void;
+    onFriendInfoUpdated(callback: null | ((data: ZIMEventOfFriendInfoUpdatedResult) => void)): void;
+    onFriendApplicationListChanged(
+        callback: null | ((data: ZIMEventOfFriendApplicationListChangedResult) => void),
+    ): void;
+    onFriendApplicationUpdated(callback: null | ((data: ZIMEventOfFriendApplicationUpdatedResult) => void)): void;
+}

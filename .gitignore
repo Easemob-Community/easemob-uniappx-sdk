@@ -17,6 +17,8 @@ node_modules/
 5.05/
 Android-SDK@5.05.82597_20260319/
 
+uts-sdk-demo/uni_modules/easemob-uts-sdk
+
 # 临时工具脚本
 install-cocoapods-offline.sh
 install-ruby-china.sh

@@ -19,10 +19,10 @@ export {
 // ==================== 平台相关导出 ====================
 
 // #ifdef APP-IOS
-export { create } from './app-ios/index.uts';
+export { create, getClient } from './app-ios/index.uts';
 // #endif
 
 // #ifdef APP-ANDROID
-export { create } from './app-android/index.uts';
+export { create, getClient } from './app-android/index.uts';
 // #endif
 

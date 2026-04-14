@@ -1,0 +1,161 @@
+{
+  "id": "zego-zim-uts",
+  "displayName": "zego-zim-uts",
+  "version": "2.26.1",
+  "description": "uts插件实现zego zim功能",
+  "keywords": [
+    "zego",
+    "zim",
+    "uts插件"
+],
+  "repository": "",
+  "engines": {
+    "HBuilderX": "^4.27",
+    "uni-app": "^4.36",
+    "uni-app-x": "^4.36"
+  },
+  "dcloudext": {
+    "type": "uts",
+    "sale": {
+      "regular": {
+        "price": "0.00"
+      },
+      "sourcecode": {
+        "price": "0.00"
+      }
+    },
+    "contact": {
+      "qq": ""
+    },
+    "declaration": {
+      "ads": "无",
+      "data": "插件不采集任何数据",
+      "permissions": "无"
+    },
+    "npmurl": "",
+    "darkmode": "x",
+    "i18n": "x",
+    "widescreen": "x"
+  },
+  "uni_modules": {
+    "dependencies": [],
+    "encrypt": [],
+    "platforms": {
+      "cloud": {
+        "tcb": "√",
+        "aliyun": "√",
+        "alipay": "√"
+      },
+      "client": {
+        "uni-app": {
+          "vue": {
+            "vue2": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            },
+            "vue3": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            }
+          },
+          "web": {
+            "safari": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            },
+            "chrome": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            }
+          },
+          "app": {
+            "vue": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            },
+            "nvue": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            },
+            "android": {
+                "extVersion": "2.23.0",
+                "minVersion": "21"
+            },
+            "ios": {
+                "extVersion": "2.23.0",
+                "minVersion": "12"
+            },
+            "harmony": {
+                "extVersion": "2.26.0",
+                "minVersion": ""
+            }
+          },
+          "mp": {
+            "weixin": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            },
+            "alipay": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            },
+            "toutiao": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            },
+            "baidu": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            },
+            "kuaishou": "-",
+            "jd": "-",
+            "harmony": "-",
+            "qq": "-",
+            "lark": "-",
+            "xhs": "-"
+          },
+          "quickapp": {
+            "huawei": "x",
+            "union": "x"
+          }
+        },
+        "uni-app-x": {
+          "web": {
+            "safari": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            },
+            "chrome": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            }
+          },
+          "app": {
+            "android": {
+                "extVersion": "2.23.0",
+                "minVersion": "21"
+            },
+            "ios": {
+                "extVersion": "2.23.0",
+                "minVersion": "12"
+            },
+            "harmony": {
+                "extVersion": "2.26.0",
+                "minVersion": ""
+            }
+          },
+          "mp": {
+            "weixin": {
+                "extVersion": "2.23.0",
+                "minVersion": ""
+            }
+          }
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "zego-zim-miniprogram": "^2.26.0",
+    "zego-zim-web": "^2.26.0"
+  }
+}

@@ -56,6 +56,22 @@ export type ConnectionListenerCallbacks = {
   onOfflineMessageSyncFinish?: () => void;
 }
 
+// ==================== 消息类型（简化版）====================
+
+export type MessageBody = {
+  type: string;
+  message: string | null;
+}
+
+export type Message = {
+  msgId: string;
+  from: string;
+  to: string;
+  conversationId: string;
+  chatType: number;
+  body: MessageBody;
+}
+
 // ==================== SDK 主接口 ====================
 
 /**
@@ -72,6 +88,12 @@ export interface EasemobClient {
 
   /** 注册被登出监听 */
   onLogout(listener: ((errorCode: number) => void) | null): void;
+
+  /** 注册消息接收监听 */
+  onMessageReceived(listener: ((messages: Message[]) => void) | null): void;
+
+  /** 注册 CMD 消息接收监听 */
+  onCmdMessageReceived(listener: ((messages: Message[]) => void) | null): void;
 
   // MARK: - 事件监听（桩函数）
 
@@ -108,9 +130,18 @@ export interface EasemobClient {
 
   /** 获取当前登录用户 ID（iOS 已实现） */
   getCurrentUser(): string | null;
+
+  /** 发送文本消息 */
+  sendTextMessage(content: string, to: string, chatType: string, ext?: UTSJSONObject | null): Promise<Message>;
 }
 
 /**
  * 创建 Easemob IM SDK 客户端实例
  */
 export type CreateEasemobClient = (config: EMInitConfig) => EasemobClient;
+
+/**
+ * 获取已初始化的 Easemob IM SDK 客户端实例
+ * 若未初始化则返回 null
+ */
+export type GetEasemobClient = () => EasemobClient | null;

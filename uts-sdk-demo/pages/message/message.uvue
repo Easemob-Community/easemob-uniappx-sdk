@@ -1,0 +1,197 @@
+<template>
+	<scroll-view class="container" scroll-y="true">
+		<view class="content">
+			<text class="title">发送消息</text>
+
+			<view class="section">
+				<text class="section-title">目标用户 ID</text>
+				<input class="input" v-model="targetUserId" placeholder="输入用户 ID" />
+			</view>
+
+			<view class="section">
+				<text class="section-title">聊天类型</text>
+				<view class="radio-group">
+					<view class="radio-label" @click="chatType = 'single'">
+						<view class="radio-box" :class="{ 'radio-box-checked': chatType === 'single' }">
+							<view v-if="chatType === 'single'" class="radio-inner"></view>
+						</view>
+						<text class="radio-text">单聊</text>
+					</view>
+					<view class="radio-label" @click="chatType = 'group'">
+						<view class="radio-box" :class="{ 'radio-box-checked': chatType === 'group' }">
+							<view v-if="chatType === 'group'" class="radio-inner"></view>
+						</view>
+						<text class="radio-text">群组</text>
+					</view>
+				</view>
+			</view>
+
+			<view class="section">
+				<text class="section-title">消息内容</text>
+				<textarea class="textarea" v-model="messageContent" placeholder="输入文本消息" />
+				<text class="section-title">扩展属性 (ext JSON)</text>
+				<textarea class="textarea" v-model="extJsonStr" placeholder='{"key":"value"}' />
+				<button class="btn" type="primary" @click="handleSend" :disabled="isSending">发送</button>
+			</view>
+		</view>
+	</scroll-view>
+</template>
+
+<script setup lang="uts">
+	import { ref } from 'vue'
+	import { getClient, type EasemobClient, type Message } from '@/uni_modules/easemob-uts-sdk-beta'
+
+	const targetUserId = ref('')
+	const chatType = ref<'single' | 'group' | 'chatroom'>('single')
+	const messageContent = ref('')
+	const extJsonStr = ref('{"orderId":"12345","type":"urgent"}')
+	const isSending = ref(false)
+
+	function parseExt(): UTSJSONObject | null {
+		const str = extJsonStr.value.trim()
+		if (str.length === 0) {
+			return null
+		}
+		try {
+			return JSON.parse(str) as UTSJSONObject
+		} catch (e) {
+			uni.showToast({ title: '扩展属性 JSON 格式错误', icon: 'none' })
+			return null
+		}
+	}
+
+	async function handleSend(): Promise<void> {
+		const content = messageContent.value.trim()
+		const to = targetUserId.value.trim()
+
+		if (content.length === 0) {
+			uni.showToast({ title: '请输入消息内容', icon: 'none' })
+			return
+		}
+		if (to.length === 0) {
+			uni.showToast({ title: '请输入目标用户 ID', icon: 'none' })
+			return
+		}
+
+		const ext = parseExt()
+		if (extJsonStr.value.trim().length > 0 && ext == null) {
+			return
+		}
+
+		isSending.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			const message = await easemob.sendTextMessage(content, to, chatType.value, ext)
+			console.log('[message] 发送成功:', message)
+			uni.showToast({ title: '发送成功', icon: 'success' })
+			messageContent.value = ''
+			extJsonStr.value = ''
+		} catch (error) {
+			console.error('[message] 发送失败:', error)
+			uni.showToast({ title: '发送失败: ' + error, icon: 'none' })
+		} finally {
+			isSending.value = false
+		}
+	}
+</script>
+
+<style>
+	.container {
+		flex: 1;
+		background-color: #f5f5f5;
+	}
+
+	.content {
+		padding: 15px;
+	}
+
+	.title {
+		font-size: 24px;
+		font-weight: bold;
+		text-align: center;
+		margin-bottom: 20px;
+		color: #333333;
+	}
+
+	.section {
+		background-color: #ffffff;
+		border-radius: 10px;
+		padding: 15px;
+		margin-bottom: 15px;
+	}
+
+	.section-title {
+		font-size: 16px;
+		font-weight: bold;
+		color: #333333;
+		margin-bottom: 10px;
+	}
+
+	.input {
+		height: 40px;
+		border-width: 1px;
+		border-color: #dddddd;
+		border-radius: 5px;
+		padding-left: 10px;
+		padding-right: 10px;
+		background-color: #f9f9f9;
+		font-size: 14px;
+	}
+
+	.radio-group {
+		flex-direction: row;
+		align-items: center;
+	}
+
+	.radio-label {
+		flex-direction: row;
+		align-items: center;
+		margin-right: 20px;
+	}
+
+	.radio-text {
+		font-size: 14px;
+		color: #333333;
+		margin-left: 5px;
+	}
+
+	.radio-box {
+		width: 18px;
+		height: 18px;
+		border-radius: 9px;
+		border-width: 1px;
+		border-color: #999999;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.radio-box-checked {
+		border-color: #007aff;
+	}
+
+	.radio-inner {
+		width: 10px;
+		height: 10px;
+		border-radius: 5px;
+		background-color: #007aff;
+	}
+
+	.textarea {
+		height: 100px;
+		border-width: 1px;
+		border-color: #dddddd;
+		border-radius: 5px;
+		padding: 10px;
+		background-color: #f9f9f9;
+		font-size: 14px;
+		margin-bottom: 10px;
+	}
+
+	.btn {
+		margin-top: 10px;
+	}
+</style>

@@ -19,40 +19,28 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-enum class EMConnectionState__1(override val value: Int) : UTSEnumInt {
-    CONNECTED(0),
-    CONNECTING(1),
-    DISCONNECTED(2)
-}
-enum class EMConnectionEvent__1(override val value: Int) : UTSEnumInt {
-    LOGIN_SUCCESS(0),
-    LOGOUT(1),
-    KICKED_BY_OTHER_DEVICE(2),
-    LOGIN_FAILED(3),
-    NETWORK_ERROR(4)
-}
-open class EMConnectionStateChangedEvent {
-    open lateinit var state: EMConnectionState__1
-    open lateinit var event: EMConnectionEvent__1
-    open var ext: String? = null
-    constructor(state: EMConnectionState__1, event: EMConnectionEvent__1, ext: String? = null){
-        this.state = state
-        this.event = event
-        this.ext = ext
-    }
-}
 open class EMError (
     @JsonNotNull
     open var code: Number,
     @JsonNotNull
     open var message: String,
 ) : UTSObject()
-typealias EMConnectionStateChangedListener = (event: EMConnectionStateChangedEvent) -> Unit
 typealias EMErrorListener = (error: EMError) -> Unit
 typealias EMTokenWillExpireListener = () -> Unit
 typealias EMTokenExpiredListener = () -> Unit
+open class ConnectionListenerCallbacks (
+    open var onConnected: (() -> Unit)? = null,
+    open var onDisconnected: ((errorCode: Number) -> Unit)? = null,
+    open var onLogout: ((errorCode: Number) -> Unit)? = null,
+    open var onTokenWillExpire: (() -> Unit)? = null,
+    open var onTokenExpired: (() -> Unit)? = null,
+    open var onOfflineMessageSyncStart: (() -> Unit)? = null,
+    open var onOfflineMessageSyncFinish: (() -> Unit)? = null,
+) : UTSObject()
 interface IEMClient {
-    fun onConnectionStateChanged(listener: EMConnectionStateChangedListener?)
+    fun onConnected(listener: (() -> Unit)?)
+    fun onDisconnected(listener: ((errorCode: Number) -> Unit)?)
+    fun onLogout(listener: ((errorCode: Number) -> Unit)?)
     fun onError(listener: EMErrorListener?)
     fun onTokenWillExpire(listener: EMTokenWillExpireListener?)
     fun onTokenExpired(listener: EMTokenExpiredListener?)
@@ -66,23 +54,31 @@ interface IEMClient {
     fun getCurrentUser(): String?
 }
 open class EMConnectionListenerImpl : EMConnectionListener {
-    open var onConnectionStateChanged: EMConnectionStateChangedListener? = null
+    open var eventMap: ConnectionListenerCallbacks = ConnectionListenerCallbacks()
     override fun onConnected(): Unit {
-        val eventData = EMConnectionStateChangedEvent(EMConnectionState__1.CONNECTED, EMConnectionEvent__1.LOGIN_SUCCESS)
-        this.onConnectionStateChanged?.invoke(eventData)
+        console.log("[Android] native onConnected fired, hasCallback=" + (this.eventMap.onConnected != null))
+        this.eventMap.onConnected?.invoke()
     }
     override fun onDisconnected(errorCode: Int): Unit {
-        var event = EMConnectionEvent__1.NETWORK_ERROR
-        if (errorCode == 206) {
-            event = EMConnectionEvent__1.KICKED_BY_OTHER_DEVICE
-        } else if (errorCode == 202 || errorCode == 204) {
-            event = EMConnectionEvent__1.LOGIN_FAILED
-        }
-        val eventData = EMConnectionStateChangedEvent(EMConnectionState__1.DISCONNECTED, event, errorCode.toString())
-        this.onConnectionStateChanged?.invoke(eventData)
+        console.log("[Android] native onDisconnected fired, errorCode=" + errorCode + ", hasCallback=" + (this.eventMap.onDisconnected != null))
+        this.eventMap.onDisconnected?.invoke(errorCode)
     }
-    override fun onTokenWillExpire(): Unit {}
-    override fun onTokenExpired(): Unit {}
+    override fun onLogout(errorCode: Int): Unit {
+        console.log("[Android] native onLogout fired, errorCode=" + errorCode + ", hasCallback=" + (this.eventMap.onLogout != null))
+        this.eventMap.onLogout?.invoke(errorCode)
+    }
+    override fun onTokenWillExpire(): Unit {
+        this.eventMap.onTokenWillExpire?.invoke()
+    }
+    override fun onTokenExpired(): Unit {
+        this.eventMap.onTokenExpired?.invoke()
+    }
+    override fun onOfflineMessageSyncStart(): Unit {
+        this.eventMap.onOfflineMessageSyncStart?.invoke()
+    }
+    override fun onOfflineMessageSyncFinish(): Unit {
+        this.eventMap.onOfflineMessageSyncFinish?.invoke()
+    }
 }
 open class EMCallBackImpl : EMCallBack {
     open var onSuccessHandler: (() -> Unit)? = null
@@ -103,6 +99,11 @@ fun makeCallBack(onSuccess: () -> Unit, onError: (code: Number, message: String)
 open class EMClientImpl : IEMClient {
     private var _listener: EMConnectionListenerImpl? = null
     private var _isInitialized = false
+    private var _onConnected: (() -> Unit)? = null
+    private var _onDisconnected: ((errorCode: Number) -> Unit)? = null
+    private var _onLogout: ((errorCode: Number) -> Unit)? = null
+    private var _onTokenWillExpire: (() -> Unit)? = null
+    private var _onTokenExpired: (() -> Unit)? = null
     private constructor(){}
     override fun initSDK(config: UTSJSONObject): UTSPromise<Unit> {
         return UTSPromise(fun(resolve, reject){
@@ -185,14 +186,37 @@ open class EMClientImpl : IEMClient {
         this._isInitialized = false
         console.log("[Android] EMClient SDK destroyed")
     }
-    override fun onConnectionStateChanged(listener: EMConnectionStateChangedListener?): Unit {
+    override fun onConnected(listener: (() -> Unit)?): Unit {
+        this._onConnected = listener
         if (this._listener != null) {
-            this._listener!!.onConnectionStateChanged = listener
+            this._listener!!.eventMap.onConnected = listener
+        }
+    }
+    override fun onDisconnected(listener: ((errorCode: Number) -> Unit)?): Unit {
+        this._onDisconnected = listener
+        if (this._listener != null) {
+            this._listener!!.eventMap.onDisconnected = listener
+        }
+    }
+    override fun onLogout(listener: ((errorCode: Number) -> Unit)?): Unit {
+        this._onLogout = listener
+        if (this._listener != null) {
+            this._listener!!.eventMap.onLogout = listener
+        }
+    }
+    override fun onTokenWillExpire(listener: EMTokenWillExpireListener?): Unit {
+        this._onTokenWillExpire = listener
+        if (this._listener != null) {
+            this._listener!!.eventMap.onTokenWillExpire = listener
+        }
+    }
+    override fun onTokenExpired(listener: EMTokenExpiredListener?): Unit {
+        this._onTokenExpired = listener
+        if (this._listener != null) {
+            this._listener!!.eventMap.onTokenExpired = listener
         }
     }
     override fun onError(_listener: EMErrorListener?): Unit {}
-    override fun onTokenWillExpire(_listener: EMTokenWillExpireListener?): Unit {}
-    override fun onTokenExpired(_listener: EMTokenExpiredListener?): Unit {}
     override fun getVersion(): String {
         return "unknown"
     }
@@ -227,12 +251,22 @@ fun logout(): UTSPromise<Unit> {
 fun destroy(): Unit {
     EMClientImpl.getInstance().destroy()
 }
-fun onConnectionStateChanged(listener: EMConnectionStateChangedListener?): Unit {
-    EMClientImpl.getInstance().onConnectionStateChanged(listener)
+fun onConnected(listener: (() -> Unit)?): Unit {
+    EMClientImpl.getInstance().onConnected(listener)
+}
+fun onDisconnected(listener: ((errorCode: Number) -> Unit)?): Unit {
+    EMClientImpl.getInstance().onDisconnected(listener)
+}
+fun onLogout(listener: ((errorCode: Number) -> Unit)?): Unit {
+    EMClientImpl.getInstance().onLogout(listener)
+}
+fun onTokenWillExpire(listener: EMTokenWillExpireListener?): Unit {
+    EMClientImpl.getInstance().onTokenWillExpire(listener)
+}
+fun onTokenExpired(listener: EMTokenExpiredListener?): Unit {
+    EMClientImpl.getInstance().onTokenExpired(listener)
 }
 fun onError(_listener: EMErrorListener?): Unit {}
-fun onTokenWillExpire(_listener: EMTokenWillExpireListener?): Unit {}
-fun onTokenExpired(_listener: EMTokenExpiredListener?): Unit {}
 fun getVersion(): String {
     return "unknown"
 }

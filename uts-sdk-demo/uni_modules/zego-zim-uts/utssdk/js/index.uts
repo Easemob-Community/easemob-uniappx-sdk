@@ -1,0 +1,1613 @@
+// #ifdef WEB
+import { ZIM as NZIM, ZIMSDK } from 'zego-zim-web';
+// #endif
+
+// #ifdef MP
+import { ZIM as NZIM, ZIMSDK } from 'zego-zim-miniprogram';
+// #endif
+
+import {
+    IZIM,
+    ZIMAppConfig,
+    ZIMBlacklistCheckedResult,
+    ZIMBlacklistQueriedResult,
+    ZIMBlacklistQueryConfig,
+    ZIMBlacklistUsersAddedResult,
+    ZIMBlacklistUsersRemovedResult,
+    ZIMCacheConfig,
+    ZIMCallAcceptConfig,
+    ZIMCallAcceptanceSentResult,
+    ZIMCallCancelConfig,
+    ZIMCallCancelSentResult,
+    ZIMCallEndConfig,
+    ZIMCallEndSentResult,
+    ZIMCallInvitationListQueriedResult,
+    ZIMCallInvitationQueryConfig,
+    ZIMCallInvitationSentResult,
+    ZIMCallInviteConfig,
+    ZIMCallJoinConfig,
+    ZIMCallJoinSentResult,
+    ZIMCallQuitConfig,
+    ZIMCallQuitSentResult,
+    ZIMCallRejectConfig,
+    ZIMCallRejectionSentResult,
+    ZIMCallingInvitationSentResult,
+    ZIMCallingInviteConfig,
+    ZIMCombineMessageDetailQueriedResult,
+    ZIMPinnedMessageListQueriedResult,
+    ZIMConnectionState,
+    ZIMConnectionEvent,
+    ZIMConversationBaseInfo,
+    ZIMConversationDeleteConfig,
+    ZIMConversationDeletedResult,
+    ZIMConversationDraftSetResult,
+    ZIMConversationFilterOption,
+    ZIMConversationListQueriedResult,
+    ZIMConversationMarkSetResult,
+    ZIMConversationMessageReceiptReadSentResult,
+    ZIMConversationNotificationStatus,
+    ZIMConversationNotificationStatusSetResult,
+    ZIMConversationPinnedListQueriedResult,
+    ZIMConversationPinnedStateUpdatedResult,
+    ZIMConversationQueriedResult,
+    ZIMConversationQueryConfig,
+    ZIMConversationSearchConfig,
+    ZIMConversationTotalUnreadMessageCountQueriedResult,
+    ZIMConversationTotalUnreadMessageCountQueryConfig,
+    ZIMConversationType,
+    ZIMConversationUnreadMessageCountClearedResult,
+    ZIMConversationsSearchedResult,
+    ZIMError,
+    ZIMEventOfBlacklistChangedResult,
+    ZIMEventOfBroadcastMessageReceivedResult,
+    ZIMEventOfCallInvitationCancelledResult,
+    ZIMEventOfCallInvitationCreatedResult,
+    ZIMEventOfCallInvitationEndedResult,
+    ZIMEventOfCallInvitationReceivedResult,
+    ZIMEventOfCallInvitationTimeoutResult,
+    ZIMEventOfCallUserStateChangedResult,
+    ZIMEventOfConnectionStateChangedResult,
+    ZIMEventOfConversationChangedResult,
+    ZIMEventOfConversationMessageReceivedResult,
+    ZIMEventOfConversationTotalUnreadMessageCountUpdatedResult,
+    ZIMEventOfConversationsAllDeletedResult,
+    ZIMEventOfConversationSyncStateChangedResult,
+    ZIMEventOfFriendApplicationListChangedResult,
+    ZIMEventOfFriendApplicationUpdatedResult,
+    ZIMEventOfFriendInfoUpdatedResult,
+    ZIMEventOfFriendListChangedResult,
+    ZIMEventOfGroupAliasUpdatedResult,
+    ZIMEventOfGroupApplicationListChangedResult,
+    ZIMEventOfGroupApplicationUpdatedResult,
+    ZIMEventOfGroupAttributesUpdatedResult,
+    ZIMEventOfGroupAvatarUrlUpdatedResult,
+    ZIMEventOfGroupMemberInfoUpdatedResult,
+    ZIMEventOfGroupMemberStateChangedResult,
+    ZIMEventOfGroupMutedInfoUpdatedResult,
+    ZIMEventOfGroupNameUpdatedResult,
+    ZIMEventOfGroupNoticeUpdatedResult,
+    ZIMEventOfGroupStateChangedResult,
+    ZIMEventOfGroupVerifyInfoUpdatedResult,
+    ZIMEventOfMessageDeletedResult,
+    ZIMEventOfMessageEditedResult,
+    ZIMEventOfMessageReactionsChangedResult,
+    ZIMEventOfMessageReceiptChangedResult,
+    ZIMEventOfMessageRepliedCountChangedResult,
+    ZIMEventOfMessageRepliedInfoChangedResult,
+    ZIMEventOfMessagePinStatusChangedResult,
+    ZIMEventOfMessageRevokeReceivedResult,
+    ZIMEventOfMessageSentStatusChangedResult,
+    ZIMEventOfRoomAttributesUpdatedResult,
+    ZIMEventOfRoomMemberChangedResult,
+    ZIMEventOfRoomMembersAttributesUpdatedResult,
+    ZIMEventOfRoomStateChangedResult,
+    ZIMEventOfTokenWillExpireResult,
+    ZIMEventOfUserInfoUpdatedResult,
+    ZIMEventOfUserRuleUpdatedResult,
+    ZIMEventOfUserStatusUpdatedResult,
+    ZIMFileCacheClearConfig,
+    ZIMFileCacheQueriedResult,
+    ZIMFileCacheQueryConfig,
+    ZIMFriendAddConfig,
+    ZIMFriendAddedResult,
+    ZIMFriendAliasUpdatedResult,
+    ZIMFriendApplicationAcceptConfig,
+    ZIMFriendApplicationAcceptedResult,
+    ZIMFriendApplicationListQueriedResult,
+    ZIMFriendApplicationListQueryConfig,
+    ZIMFriendApplicationRejectConfig,
+    ZIMFriendApplicationRejectedResult,
+    ZIMFriendApplicationSendConfig,
+    ZIMFriendApplicationSentResult,
+    ZIMFriendAttributesUpdatedResult,
+    ZIMFriendDeleteConfig,
+    ZIMFriendListQueriedResult,
+    ZIMFriendListQueryConfig,
+    ZIMFriendRelationCheckConfig,
+    ZIMFriendSearchConfig,
+    ZIMFriendsDeletedResult,
+    ZIMFriendsInfoQueriedResult,
+    ZIMFriendsRelationCheckedResult,
+    ZIMFriendsSearchedResult,
+    ZIMGeofencingType,
+    ZIMGroupAdvancedConfig,
+    ZIMGroupAliasUpdatedResult,
+    ZIMGroupApplicationListQueriedResult,
+    ZIMGroupApplicationListQueryConfig,
+    ZIMGroupAttributesOperatedResult,
+    ZIMGroupAttributesQueriedResult,
+    ZIMGroupAvatarUrlUpdatedResult,
+    ZIMGroupBeInviteMode,
+    ZIMGroupBeInviteModeUpdatedResult,
+    ZIMGroupCreatedResult,
+    ZIMGroupDismissedResult,
+    ZIMGroupInfo,
+    ZIMGroupInfoQueriedResult,
+    ZIMGroupInviteApplicationAcceptConfig,
+    ZIMGroupInviteApplicationAcceptedResult,
+    ZIMGroupInviteApplicationRejectConfig,
+    ZIMGroupInviteApplicationRejectedResult,
+    ZIMGroupInviteApplicationSendConfig,
+    ZIMGroupInviteApplicationsSentResult,
+    ZIMGroupInviteMode,
+    ZIMGroupInviteModeUpdatedResult,
+    ZIMGroupJoinApplicationAcceptConfig,
+    ZIMGroupJoinApplicationAcceptedResult,
+    ZIMGroupJoinApplicationRejectConfig,
+    ZIMGroupJoinApplicationRejectedResult,
+    ZIMGroupJoinApplicationSendConfig,
+    ZIMGroupJoinApplicationSentResult,
+    ZIMGroupJoinMode,
+    ZIMGroupJoinModeUpdatedResult,
+    ZIMGroupJoinedResult,
+    ZIMGroupLeftResult,
+    ZIMGroupListQueriedResult,
+    ZIMGroupMemberCountQueriedResult,
+    ZIMGroupMemberInfoQueriedResult,
+    ZIMGroupMemberKickedResult,
+    ZIMGroupMemberListQueriedResult,
+    ZIMGroupMemberMuteConfig,
+    ZIMGroupMemberMutedListQueriedResult,
+    ZIMGroupMemberNicknameUpdatedResult,
+    ZIMGroupMemberQueryConfig,
+    ZIMGroupMemberRoleUpdatedResult,
+    ZIMGroupMemberSearchConfig,
+    ZIMGroupMembersMutedResult,
+    ZIMGroupMembersSearchedResult,
+    ZIMGroupMessageReceiptMemberListQueriedResult,
+    ZIMGroupMessageReceiptMemberQueryConfig,
+    ZIMGroupMuteConfig,
+    ZIMGroupMutedResult,
+    ZIMGroupNameUpdatedResult,
+    ZIMGroupNoticeUpdatedResult,
+    ZIMGroupOwnerTransferredResult,
+    ZIMGroupSearchConfig,
+    ZIMGroupUsersInvitedResult,
+    ZIMGroupsSearchedResult,
+    ZIMLogConfig,
+    ZIMLoginConfig,
+    ZIMMediaDownloadConfig,
+    ZIMMediaDownloadedResult,
+    ZIMMediaDownloadingProgress,
+    ZIMMediaFileType,
+    ZIMMessage,
+    ZIMMessageDeleteConfig,
+    ZIMMessageDeletedResult,
+    ZIMMessageEditConfig,
+    ZIMMessageEditedResult,
+    ZIMMessageExportConfig,
+    ZIMMessageExportingProgress,
+    ZIMMessageImportConfig,
+    ZIMMessageImportingProgress,
+    ZIMMessageInsertedResult,
+    ZIMMessageLocalExtendedDataUpdatedResult,
+    ZIMMessageQueriedResult,
+    ZIMMessageQueryConfig,
+    ZIMMessageReactionAddedResult,
+    ZIMMessageReactionDeletedResult,
+    ZIMMessageReactionUserListQueriedResult,
+    ZIMMessageReactionUserQueryConfig,
+    ZIMMessageReceiptsInfoQueriedResult,
+    ZIMMessageReceiptsReadSentResult,
+    ZIMMessageRepliedListQueriedResult,
+    ZIMMessageRepliedListQueryConfig,
+    ZIMMessageRevokeConfig,
+    ZIMMessageRevokedResult,
+    ZIMMessageSearchConfig,
+    ZIMMessageSendConfig,
+    ZIMMessageSendNotification,
+    ZIMMessageSentResult,
+    ZIMMessagesGlobalSearchedResult,
+    ZIMMessagesSearchedResult,
+    ZIMRoomAdvancedConfig,
+    ZIMRoomAllLeftResult,
+    ZIMRoomAttributesBatchOperatedResult,
+    ZIMRoomAttributesBatchOperationConfig,
+    ZIMRoomAttributesDeleteConfig,
+    ZIMRoomAttributesOperatedResult,
+    ZIMRoomAttributesQueriedResult,
+    ZIMRoomAttributesSetConfig,
+    ZIMRoomCreatedResult,
+    ZIMRoomEnteredResult,
+    ZIMRoomEvent,
+    ZIMRoomInfo,
+    ZIMRoomJoinedResult,
+    ZIMRoomLeftResult,
+    ZIMRoomMemberAttributesListQueriedResult,
+    ZIMRoomMemberAttributesQueryConfig,
+    ZIMRoomMemberAttributesSetConfig,
+    ZIMRoomMemberQueriedResult,
+    ZIMRoomMemberQueryConfig,
+    ZIMRoomMembersAttributesOperatedResult,
+    ZIMRoomMembersAttributesQueriedResult,
+    ZIMRoomMembersQueriedResult,
+    ZIMRoomOnlineMemberCountQueriedResult,
+    ZIMRoomState,
+    ZIMRoomSwitchedResult,
+    ZIMSelfUserInfoQueriedResult,
+    ZIMSendingMessageCancelConfig,
+    ZIMSubscribedUserStatusListQueriedResult,
+    ZIMSubscribedUserStatusQueryConfig,
+    ZIMTokenRenewedResult,
+    ZIMUserAvatarUrlUpdatedResult,
+    ZIMUserCustomStatusUpdatedResult,
+    ZIMUserExtendedDataUpdatedResult,
+    ZIMUserNameUpdatedResult,
+    ZIMUserOfflinePushRule,
+    ZIMUserOfflinePushRuleUpdatedResult,
+    ZIMUserStatusSubscribeConfig,
+    ZIMUsersInfoQueriedResult,
+    ZIMUsersInfoQueryConfig,
+    ZIMUsersStatusQueriedResult,
+    ZIMUsersStatusSubscribedResult,
+    ZIMUsersStatusUnsubscribedResult,
+} from '../interface.uts';
+
+export class ZIM implements IZIM {
+    private static _logLevel = '';
+    private static _instance: IZIM | null = null;
+    
+    private _zim : ZIMSDK | null = null;
+    private constructor(nzim : ZIMSDK) {
+        this._zim = nzim;
+    }
+    
+    // 与 iOS 保持逻辑一致
+    private nextMessageMap = new Map<string, any>();
+    private nextConversationMap = new Map<string, any>();
+    private putNextMessage(msgObj: any): string {
+        const key = msgObj.localMessageID;
+        this.nextMessageMap.set(key , msgObj);
+        return key;
+    }
+    private putNextConversation(convObj: any): string {
+        const key = convObj.type.toString() + convObj.conversationID;
+        this.nextConversationMap.set(key , convObj);
+        return key;
+    }
+    
+    /**
+     * 不支持，保留空实现
+     */
+    static setAdvancedConfig(key : string, value : string): void {}
+    
+    /**
+     * 不支持，保留空实现
+     */
+    static setCacheConfig(config : ZIMCacheConfig): void {}
+    
+    static setLogConfig(config : ZIMLogConfig): void {
+        if (config.logLevel != null) {
+            this._logLevel = config.logLevel!;
+        }
+    }
+    
+    static setGeofencingConfig(areaList : number[], type : ZIMGeofencingType): boolean {
+        return NZIM.setGeofencingConfig(areaList, type);
+    }
+
+    static getVersion(): string {
+        return NZIM.getVersion();
+    }
+
+    static create(appConfig : ZIMAppConfig): IZIM {
+        if(this._instance == null) {
+            const nzim = NZIM.create(appConfig);
+            nzim!.setLogConfig({ logLevel: this._logLevel });
+            
+            this._instance = new ZIM(nzim!);
+        }
+        return this._instance!;
+    }
+    
+    static getInstance(): IZIM {
+        return this._instance!;
+    }
+    
+
+    destroy() : void {
+        this.nextMessageMap.clear();
+        this.nextConversationMap.clear();
+        if (this._zim != null) {
+            this._zim!.destroy();
+            this._zim = null;
+        }
+    }
+    
+    uploadLog() : Promise<void> {
+        return this._zim!.uploadLog();
+    }
+
+    /**
+     * 不支持，保留空实现
+     */
+    queryLocalFileCache(config: ZIMFileCacheQueryConfig): Promise<ZIMFileCacheQueriedResult> {
+        return Promise.resolve({ totalFileSize: 0 });
+    }
+    
+    /**
+     * 不支持，保留空实现
+     */
+    clearLocalFileCache(config: ZIMFileCacheClearConfig): Promise<void> {
+        return Promise.resolve();
+    }
+    
+    // MARK: - User
+    
+    login(userID: string, config: ZIMLoginConfig): Promise<void> {
+        return this._zim!.login(userID, config);
+    }
+    
+    logout(): void {
+        this.nextMessageMap.clear();
+        this.nextConversationMap.clear();
+        this._zim!.logout();
+    }
+    
+    renewToken(token: string): Promise<ZIMTokenRenewedResult> {
+        return this._zim!.renewToken(token);
+    }
+    
+    updateUserName(userName: string): Promise<ZIMUserNameUpdatedResult> {
+        return this._zim!.updateUserName(userName);
+    }
+    
+    updateUserAvatarUrl(userAvatarUrl: string): Promise<ZIMUserAvatarUrlUpdatedResult> {
+        return this._zim!.updateUserAvatarUrl(userAvatarUrl);
+    }
+    
+    updateUserExtendedData(extendedData: string): Promise<ZIMUserExtendedDataUpdatedResult> {
+        return this._zim!.updateUserExtendedData(extendedData);
+    }
+    
+    updateUserCustomStatus(customStatus: string): Promise<ZIMUserCustomStatusUpdatedResult> {
+        return this._zim!.updateUserCustomStatus(customStatus);
+    }
+    
+    updateUserOfflinePushRule(offlinePushRule: ZIMUserOfflinePushRule): Promise<ZIMUserOfflinePushRuleUpdatedResult> {
+        return this._zim!.updateUserOfflinePushRule(offlinePushRule);
+    }
+    
+    querySelfUserInfo(): Promise<ZIMSelfUserInfoQueriedResult> {
+        return this._zim!.querySelfUserInfo();
+    }
+    
+    queryUsersInfo(userIDs: string[], config: ZIMUsersInfoQueryConfig): Promise<ZIMUsersInfoQueriedResult> {
+        return this._zim!.queryUsersInfo(userIDs, config);
+    }
+    
+    subscribeUsersStatus(
+        userIDs: string[],
+        config: ZIMUserStatusSubscribeConfig,
+    ): Promise<ZIMUsersStatusSubscribedResult> {
+        return this._zim!.subscribeUsersStatus(userIDs, config);
+    }
+    
+    unsubscribeUsersStatus(userIDs: string[]): Promise<ZIMUsersStatusUnsubscribedResult> {
+        return this._zim!.unsubscribeUsersStatus(userIDs);
+    }
+    
+    queryUsersStatus(userIDs: string[]): Promise<ZIMUsersStatusQueriedResult> {
+        return this._zim!.queryUsersStatus(userIDs);
+    }
+    
+    querySubscribedUserStatusList(
+        config: ZIMSubscribedUserStatusQueryConfig,
+    ): Promise<ZIMSubscribedUserStatusListQueriedResult> {
+        return this._zim!.querySubscribedUserStatusList(config);
+    }
+    
+    // MARK: - Conversation
+    
+    queryConversation(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationQueriedResult> {
+        return this._zim!.queryConversation(conversationID, conversationType);
+    }
+    
+    queryConversationList(
+        config: ZIMConversationQueryConfig,
+        option?: ZIMConversationFilterOption,
+    ): Promise<ZIMConversationListQueriedResult> {
+        if (config.nextConversation != null) {
+            config.nextConversation = this.nextConversationMap.get(config.nextConversation!);
+        }
+        return this._zim!.queryConversationList(config, option).then((res) => {
+            const len = res.conversationList.length;
+            if (len > 0) {
+                this.putNextConversation(res.conversationList[len - 1]);
+            }
+            return res;
+        });
+    }
+    
+    queryConversationPinnedList(config: ZIMConversationQueryConfig): Promise<ZIMConversationPinnedListQueriedResult> {
+        if (config.nextConversation != null) {
+            config.nextConversation = this.nextConversationMap.get(config.nextConversation!);
+        }
+        return this._zim!.queryConversationPinnedList(config).then((res) => {
+            const len = res.conversationList.length;
+            if (len > 0) {
+                this.putNextConversation(res.conversationList[len - 1]);
+            }
+            return res;
+        });
+    }
+    
+    queryConversationTotalUnreadMessageCount(
+        config: ZIMConversationTotalUnreadMessageCountQueryConfig,
+    ): Promise<ZIMConversationTotalUnreadMessageCountQueriedResult> {
+        return this._zim!.queryConversationTotalUnreadMessageCount(config);
+    }
+    
+    deleteConversation(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMConversationDeleteConfig,
+    ): Promise<ZIMConversationDeletedResult> {
+        return this._zim!.deleteConversation(conversationID, conversationType, config);
+    }
+    
+    deleteAllConversations(config: ZIMConversationDeleteConfig): Promise<void> {
+        return this._zim!.deleteAllConversations(config);
+    }
+    
+    deleteAllConversationMessages(config: ZIMMessageDeleteConfig): Promise<void> {
+        return this._zim!.deleteAllConversationMessages(config);
+    }
+    
+    clearConversationUnreadMessageCount(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationUnreadMessageCountClearedResult> {
+        return this._zim!.clearConversationUnreadMessageCount(conversationID, conversationType);
+    }
+    
+    clearConversationTotalUnreadMessageCount(): Promise<void> {
+        return this._zim!.clearConversationTotalUnreadMessageCount();
+    }
+    
+    updateConversationPinnedState(
+        isPinned: boolean,
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationPinnedStateUpdatedResult> {
+        return this._zim!.updateConversationPinnedState(isPinned, conversationID, conversationType);
+    }
+    
+    setConversationDraft(
+        draft: string,
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationDraftSetResult> {
+        return this._zim!.setConversationDraft(draft, conversationID, conversationType);
+    }
+    
+    setConversationMark(
+        markType: number,
+        enable: boolean,
+        conversationInfos: ZIMConversationBaseInfo[],
+    ): Promise<ZIMConversationMarkSetResult> {
+        return this._zim!.setConversationMark(markType, enable, conversationInfos);
+    }
+    
+    setConversationNotificationStatus(
+        status: ZIMConversationNotificationStatus,
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationNotificationStatusSetResult> {
+        return this._zim!.setConversationNotificationStatus(status, conversationID, conversationType);
+    }
+    
+    // MARK: - Message
+    
+    sendMessage(
+        message: ZIMMessage,
+        toConversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMMessageSendConfig,
+        notification?: ZIMMessageSendNotification,
+    ): Promise<ZIMMessageSentResult> {
+        return this._zim!.sendMessage(message, toConversationID, conversationType, config, notification);
+    }
+    
+    replyMessage(
+        message: ZIMMessage,
+        toOriginalMessage: ZIMMessage,
+        config: ZIMMessageSendConfig,
+        notification?: ZIMMessageSendNotification,
+    ): Promise<ZIMMessageSentResult> {
+        return this._zim!.replyMessage(message, toOriginalMessage, config, notification);
+    }
+    
+    editMessage(
+        message: ZIMMessage,
+        config: ZIMMessageEditConfig,
+        notification?: ZIMMessageSendNotification,
+    ): Promise<ZIMMessageEditedResult> {
+        return this._zim!.editMessage(message, config, notification);
+    }
+    
+    cancelSendingMessage(message: ZIMMessage, config: ZIMSendingMessageCancelConfig): Promise<void> {
+        return this._zim!.cancelSendingMessage(message, config);
+    }
+    
+    /**
+     * 不支持，保留空实现
+     */
+    downloadMediaFile(
+        message: ZIMMessage,
+        fileType: ZIMMediaFileType,
+        config: ZIMMediaDownloadConfig,
+        progress: ZIMMediaDownloadingProgress,
+    ): Promise<ZIMMediaDownloadedResult> {
+        return Promise.resolve({ message });
+    }
+    
+    /**
+     * 不支持，保留空实现
+     */
+    importLocalMessages(
+        folderPath: string,
+        config: ZIMMessageImportConfig,
+        progress: ZIMMessageImportingProgress,
+    ): Promise<void> {
+        return Promise.resolve();
+    }
+    
+    /**
+     * 不支持，保留空实现
+     */
+    exportLocalMessages(
+        folderPath: string,
+        config: ZIMMessageExportConfig,
+        progress: ZIMMessageExportingProgress,
+    ): Promise<void> {
+        return Promise.resolve();
+    }
+    
+    deleteMessages(
+        messageList: ZIMMessage[],
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMMessageDeleteConfig,
+    ): Promise<ZIMMessageDeletedResult> {
+        return this._zim!.deleteMessages(messageList, conversationID, conversationType, config);
+    }
+    
+    deleteAllMessage(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMMessageDeleteConfig,
+    ): Promise<ZIMMessageDeletedResult> {
+        return this._zim!.deleteAllMessage(conversationID, conversationType, config);
+    }
+    
+    queryHistoryMessage(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMMessageQueryConfig,
+    ): Promise<ZIMMessageQueriedResult> {
+        if (config.nextMessage != null) {
+            config.nextMessage = this.nextMessageMap.get(config.nextMessage!);
+        }
+        return this._zim!.queryHistoryMessage(conversationID, conversationType, config).then((res) => {
+            const len = res.messageList.length;
+            if (len > 0) {
+                this.putNextMessage(res.messageList[0]);
+                this.putNextMessage(res.messageList[len - 1]);
+            }
+            return res;
+        });
+    }
+    
+    queryMessages(
+        messageSeqs: number[],
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMMessageQueriedResult> {
+        return this._zim!.queryMessages(messageSeqs, conversationID, conversationType);
+    }
+    
+    insertMessageToLocalDB(
+        message: ZIMMessage,
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        senderUserID: string,
+    ): Promise<ZIMMessageInsertedResult> {
+        return this._zim!.insertMessageToLocalDB(message, conversationID, conversationType, senderUserID);
+    }
+    
+    updateMessageLocalExtendedData(
+        localExtendedData: string,
+        message: ZIMMessage,
+    ): Promise<ZIMMessageLocalExtendedDataUpdatedResult> {
+        return this._zim!.updateMessageLocalExtendedData(localExtendedData, message);
+    }
+    
+    revokeMessage(message: ZIMMessage, config: ZIMMessageRevokeConfig): Promise<ZIMMessageRevokedResult> {
+        return this._zim!.revokeMessage(message, config);
+    }
+    
+    queryCombineMessageDetail(message: ZIMMessage): Promise<ZIMCombineMessageDetailQueriedResult> {
+        return this._zim!.queryCombineMessageDetail(message);
+    }
+    
+    pinMessage(message: ZIMMessage, isPinned: boolean): Promise<void> {
+        return this._zim!.pinMessage(message, isPinned);
+    }
+    
+    queryPinnedMessageList(conversationID: string, conversationType: ZIMConversationType): Promise<ZIMPinnedMessageListQueriedResult> {
+        return this._zim!.queryPinnedMessageList(conversationID, conversationType);
+    }
+    
+    sendConversationMessageReceiptRead(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMConversationMessageReceiptReadSentResult> {
+        return this._zim!.sendConversationMessageReceiptRead(conversationID, conversationType);
+    }
+    
+    sendMessageReceiptsRead(
+        messageList: ZIMMessage[],
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMMessageReceiptsReadSentResult> {
+        return this._zim!.sendMessageReceiptsRead(messageList, conversationID, conversationType);
+    }
+    
+    queryMessageReceiptsInfo(
+        messageList: ZIMMessage[],
+        conversationID: string,
+        conversationType: ZIMConversationType,
+    ): Promise<ZIMMessageReceiptsInfoQueriedResult> {
+        return this._zim!.queryMessageReceiptsInfo(messageList, conversationID, conversationType);
+    }
+    
+    queryGroupMessageReceiptReadMemberList(
+        message: ZIMMessage,
+        groupID: string,
+        config: ZIMGroupMessageReceiptMemberQueryConfig,
+    ): Promise<ZIMGroupMessageReceiptMemberListQueriedResult> {
+        return this._zim!.queryGroupMessageReceiptReadMemberList(message, groupID, config);
+    }
+    
+    queryGroupMessageReceiptUnreadMemberList(
+        message: ZIMMessage,
+        groupID: string,
+        config: ZIMGroupMessageReceiptMemberQueryConfig,
+    ): Promise<ZIMGroupMessageReceiptMemberListQueriedResult> {
+        return this._zim!.queryGroupMessageReceiptUnreadMemberList(message, groupID, config);
+    }
+    
+    addMessageReaction(reactionType: string, message: ZIMMessage): Promise<ZIMMessageReactionAddedResult> {
+        return this._zim!.addMessageReaction(reactionType, message);
+    }
+    
+    deleteMessageReaction(reactionType: string, message: ZIMMessage): Promise<ZIMMessageReactionDeletedResult> {
+        return this._zim!.deleteMessageReaction(reactionType, message);
+    }
+    
+    queryMessageReactionUserList(
+        message: ZIMMessage,
+        config: ZIMMessageReactionUserQueryConfig,
+    ): Promise<ZIMMessageReactionUserListQueriedResult> {
+        return this._zim!.queryMessageReactionUserList(message, config);
+    }
+    
+    queryMessageRepliedList(
+        message: ZIMMessage,
+        config: ZIMMessageRepliedListQueryConfig,
+    ): Promise<ZIMMessageRepliedListQueriedResult> {
+        return this._zim!.queryMessageRepliedList(message, config);
+    }
+    
+    // MARK: - Room
+    
+    createRoom(roomInfo: ZIMRoomInfo, config?: ZIMRoomAdvancedConfig): Promise<ZIMRoomCreatedResult> {
+        return this._zim!.createRoom(roomInfo, config);
+    }
+    
+    enterRoom(roomInfo: ZIMRoomInfo, config?: ZIMRoomAdvancedConfig): Promise<ZIMRoomEnteredResult> {
+        return this._zim!.enterRoom(roomInfo, config);
+    }
+    
+    switchRoom(
+        fromRoomID: string,
+        toRoomInfo: ZIMRoomInfo,
+        isCreateWhenRoomNotExisted: boolean,
+        config?: ZIMRoomAdvancedConfig,
+    ): Promise<ZIMRoomSwitchedResult> {
+        return this._zim!.switchRoom(fromRoomID, toRoomInfo, isCreateWhenRoomNotExisted, config);
+    }
+    
+    joinRoom(roomID: string): Promise<ZIMRoomJoinedResult> {
+        return this._zim!.joinRoom(roomID);
+    }
+    
+    leaveRoom(roomID: string): Promise<ZIMRoomLeftResult> {
+        return this._zim!.leaveRoom(roomID);
+    }
+    
+    leaveAllRoom(): Promise<ZIMRoomAllLeftResult> {
+        return this._zim!.leaveAllRoom();
+    }
+    
+    queryRoomMembers(userIDs: string[], roomID: string): Promise<ZIMRoomMembersQueriedResult> {
+        return this._zim!.queryRoomMembers(userIDs, roomID);
+    }
+    
+    queryRoomMemberList(roomID: string, config: ZIMRoomMemberQueryConfig): Promise<ZIMRoomMemberQueriedResult> {
+        return this._zim!.queryRoomMemberList(roomID, config);
+    }
+    
+    queryRoomOnlineMemberCount(roomID: string): Promise<ZIMRoomOnlineMemberCountQueriedResult> {
+        return this._zim!.queryRoomOnlineMemberCount(roomID);
+    }
+    
+    setRoomAttributes(
+        roomAttributes: UTSJSONObject,
+        roomID: string,
+        config: ZIMRoomAttributesSetConfig,
+    ): Promise<ZIMRoomAttributesOperatedResult> {
+        return this._zim!.setRoomAttributes(roomAttributes, roomID, config);
+    }
+    
+    deleteRoomAttributes(
+        keys: string[],
+        roomID: string,
+        config: ZIMRoomAttributesDeleteConfig,
+    ): Promise<ZIMRoomAttributesOperatedResult> {
+        return this._zim!.deleteRoomAttributes(keys, roomID, config);
+    }
+    
+    beginRoomAttributesBatchOperation(roomID: string, config: ZIMRoomAttributesBatchOperationConfig): void {
+        this._zim!.beginRoomAttributesBatchOperation(roomID, config);
+    }
+    
+    endRoomAttributesBatchOperation(roomID: string): Promise<ZIMRoomAttributesBatchOperatedResult> {
+        return this._zim!.endRoomAttributesBatchOperation(roomID);
+    }
+    
+    queryRoomAllAttributes(roomID: string): Promise<ZIMRoomAttributesQueriedResult> {
+        return this._zim!.queryRoomAllAttributes(roomID);
+    }
+    
+    setRoomMembersAttributes(
+        attributes: UTSJSONObject,
+        userIDs: string[],
+        roomID: string,
+        config: ZIMRoomMemberAttributesSetConfig,
+    ): Promise<ZIMRoomMembersAttributesOperatedResult> {
+        return this._zim!.setRoomMembersAttributes(attributes, userIDs, roomID, config);
+    }
+    
+    queryRoomMembersAttributes(userIDs: string[], roomID: string): Promise<ZIMRoomMembersAttributesQueriedResult> {
+        return this._zim!.queryRoomMembersAttributes(userIDs, roomID);
+    }
+    
+    queryRoomMemberAttributesList(
+        roomID: string,
+        config: ZIMRoomMemberAttributesQueryConfig,
+    ): Promise<ZIMRoomMemberAttributesListQueriedResult> {
+        return this._zim!.queryRoomMemberAttributesList(roomID, config);
+    }
+    
+    // MARK: - Group
+    
+    createGroup(
+        groupInfo: ZIMGroupInfo,
+        userIDs: string[],
+        config?: ZIMGroupAdvancedConfig,
+    ): Promise<ZIMGroupCreatedResult> {
+        return this._zim!.createGroup(groupInfo, userIDs, config);
+    }
+    
+    joinGroup(groupID: string): Promise<ZIMGroupJoinedResult> {
+        return this._zim!.joinGroup(groupID);
+    }
+    
+    leaveGroup(groupID: string): Promise<ZIMGroupLeftResult> {
+        return this._zim!.leaveGroup(groupID);
+    }
+    
+    dismissGroup(groupID: string): Promise<ZIMGroupDismissedResult> {
+        return this._zim!.dismissGroup(groupID);
+    }
+    
+    queryGroupInfo(groupID: string): Promise<ZIMGroupInfoQueriedResult> {
+        return this._zim!.queryGroupInfo(groupID);
+    }
+    
+    queryGroupList(): Promise<ZIMGroupListQueriedResult> {
+        return this._zim!.queryGroupList();
+    }
+    
+    updateGroupName(groupName: string, groupID: string): Promise<ZIMGroupNameUpdatedResult> {
+        return this._zim!.updateGroupName(groupName,groupID);
+    }
+    
+    updateGroupAvatarUrl(groupAvatarUrl: string, groupID: string): Promise<ZIMGroupAvatarUrlUpdatedResult> {
+        return this._zim!.updateGroupAvatarUrl(groupAvatarUrl, groupID);
+    }
+    
+    updateGroupNotice(groupNotice: string, groupID: string): Promise<ZIMGroupNoticeUpdatedResult> {
+        return this._zim!.updateGroupNotice(groupNotice, groupID);
+    }
+    
+    updateGroupAlias(groupAlias: string, groupID: string): Promise<ZIMGroupAliasUpdatedResult> {
+        return this._zim!.updateGroupAlias(groupAlias, groupID);
+    }
+    
+    muteGroup(isMute: boolean, groupID: string, config: ZIMGroupMuteConfig): Promise<ZIMGroupMutedResult> {
+        return this._zim!.muteGroup(isMute, groupID, config);
+    }
+    
+    setGroupAttributes(groupAttributes: UTSJSONObject, groupID: string): Promise<ZIMGroupAttributesOperatedResult> {
+        return this._zim!.setGroupAttributes(groupAttributes, groupID);
+    }
+    
+    deleteGroupAttributes(keys: string[], groupID: string): Promise<ZIMGroupAttributesOperatedResult> {
+        return this._zim!.deleteGroupAttributes(keys, groupID);
+    }
+    
+    queryGroupAttributes(keys: string[], groupID: string): Promise<ZIMGroupAttributesQueriedResult> {
+        return this._zim!.queryGroupAttributes(keys,groupID);
+    }
+    
+    queryGroupAllAttributes(groupID: string): Promise<ZIMGroupAttributesQueriedResult> {
+        return this._zim!.queryGroupAllAttributes(groupID);
+    }
+    
+    setGroupMemberRole(role: number, forUserID: string, groupID: string): Promise<ZIMGroupMemberRoleUpdatedResult> {
+        return this._zim!.setGroupMemberRole(role, forUserID, groupID);
+    }
+    
+    setGroupMemberNickname(
+        nickname: string,
+        forUserID: string,
+        groupID: string,
+    ): Promise<ZIMGroupMemberNicknameUpdatedResult> {
+        return this._zim!.setGroupMemberNickname(nickname, forUserID, groupID);
+    }
+    
+    transferGroupOwner(toUserID: string, groupID: string): Promise<ZIMGroupOwnerTransferredResult> {
+        return this._zim!.transferGroupOwner(toUserID, groupID);
+    }
+    
+    inviteUsersIntoGroup(userIDs: string[], groupID: string): Promise<ZIMGroupUsersInvitedResult> {
+        return this._zim!.inviteUsersIntoGroup(userIDs, groupID);
+    }
+    
+    kickGroupMembers(userIDs: string[], groupID: string): Promise<ZIMGroupMemberKickedResult> {
+        return this._zim!.kickGroupMembers(userIDs, groupID);
+    }
+    
+    queryGroupMemberCount(groupID: string): Promise<ZIMGroupMemberCountQueriedResult> {
+        return this._zim!.queryGroupMemberCount(groupID);
+    }
+    
+    queryGroupMemberInfo(userID: string, groupID: string): Promise<ZIMGroupMemberInfoQueriedResult> {
+        return this._zim!.queryGroupMemberInfo(userID, groupID);
+    }
+    
+    queryGroupMemberList(
+        groupID: string,
+        config: ZIMGroupMemberQueryConfig,
+    ): Promise<ZIMGroupMemberListQueriedResult> {
+        return this._zim!.queryGroupMemberList(groupID, config);
+    }
+    
+    muteGroupMembers(
+        isMute: boolean,
+        userIDs: string[],
+        groupID: string,
+        config: ZIMGroupMemberMuteConfig,
+    ): Promise<ZIMGroupMembersMutedResult> {
+        return this._zim!.muteGroupMembers(isMute, userIDs, groupID, config);
+    }
+    
+    queryGroupMemberMutedList(
+        groupID: string,
+        config: ZIMGroupMemberQueryConfig,
+    ): Promise<ZIMGroupMemberMutedListQueriedResult> {
+        return this._zim!.queryGroupMemberMutedList(groupID, config);
+    }
+    
+    updateGroupJoinMode(mode: ZIMGroupJoinMode, groupID: string): Promise<ZIMGroupJoinModeUpdatedResult> {
+        return this._zim!.updateGroupJoinMode(mode, groupID);
+    }
+    
+    updateGroupInviteMode(mode: ZIMGroupInviteMode, groupID: string): Promise<ZIMGroupInviteModeUpdatedResult> {
+        return this._zim!.updateGroupInviteMode(mode, groupID);
+    }
+    
+    updateGroupBeInviteMode(mode: ZIMGroupBeInviteMode, groupID: string): Promise<ZIMGroupBeInviteModeUpdatedResult> {
+        return this._zim!.updateGroupBeInviteMode(mode, groupID);
+    }
+    
+    sendGroupJoinApplication(
+        groupID: string,
+        config: ZIMGroupJoinApplicationSendConfig,
+    ): Promise<ZIMGroupJoinApplicationSentResult> {
+        return this._zim!.sendGroupJoinApplication(groupID, config);
+    }
+    
+    acceptGroupJoinApplication(
+        userID: string,
+        groupID: string,
+        config: ZIMGroupJoinApplicationAcceptConfig,
+    ): Promise<ZIMGroupJoinApplicationAcceptedResult> {
+        return this._zim!.acceptGroupJoinApplication(userID, groupID, config);
+    }
+    
+    rejectGroupJoinApplication(
+        userID: string,
+        groupID: string,
+        config: ZIMGroupJoinApplicationRejectConfig,
+    ): Promise<ZIMGroupJoinApplicationRejectedResult> {
+        return this._zim!.rejectGroupJoinApplication(userID, groupID, config);
+    }
+    
+    sendGroupInviteApplications(
+        userIDs: string[],
+        groupID: string,
+        config: ZIMGroupInviteApplicationSendConfig,
+    ): Promise<ZIMGroupInviteApplicationsSentResult> {
+        return this._zim!.sendGroupInviteApplications(userIDs, groupID, config);
+    }
+    
+    acceptGroupInviteApplication(
+        inviterUserID: string,
+        groupID: string,
+        config: ZIMGroupInviteApplicationAcceptConfig,
+    ): Promise<ZIMGroupInviteApplicationAcceptedResult> {
+        return this._zim!.acceptGroupInviteApplication(inviterUserID, groupID, config);
+    }
+    
+    rejectGroupInviteApplication(
+        inviterUserID: string,
+        groupID: string,
+        config: ZIMGroupInviteApplicationRejectConfig,
+    ): Promise<ZIMGroupInviteApplicationRejectedResult> {
+        return this._zim!.rejectGroupInviteApplication(inviterUserID, groupID, config);
+    }
+    
+    queryGroupApplicationList(
+        config: ZIMGroupApplicationListQueryConfig,
+    ): Promise<ZIMGroupApplicationListQueriedResult> {
+        return this._zim!.queryGroupApplicationList(config);
+    }
+    
+    // MARK: - Call
+    
+    callInvite(invitees: string[], config: ZIMCallInviteConfig): Promise<ZIMCallInvitationSentResult> {
+        return this._zim!.callInvite(invitees, config);
+    }
+    
+    callCancel(invitees: string[], callID: string, config: ZIMCallCancelConfig): Promise<ZIMCallCancelSentResult> {
+        return this._zim!.callCancel(invitees, callID, config);
+    }
+    
+    callAccept(callID: string, config: ZIMCallAcceptConfig): Promise<ZIMCallAcceptanceSentResult> {
+        return this._zim!.callAccept(callID, config);
+    }
+    
+    callReject(callID: string, config: ZIMCallRejectConfig): Promise<ZIMCallRejectionSentResult> {
+        return this._zim!.callReject(callID, config);
+    }
+    
+    callingInvite(
+        invitees: string[],
+        callID: string,
+        config: ZIMCallingInviteConfig,
+    ): Promise<ZIMCallingInvitationSentResult> {
+        return this._zim!.callingInvite(invitees, callID, config);
+    }
+    
+    callJoin(callID: string, config: ZIMCallJoinConfig): Promise<ZIMCallJoinSentResult> {
+        return this._zim!.callJoin(callID, config);
+    }
+    
+    callQuit(callID: string, config: ZIMCallQuitConfig): Promise<ZIMCallQuitSentResult> {
+        return this._zim!.callQuit(callID, config);
+    }
+    
+    callEnd(callID: string, config: ZIMCallEndConfig): Promise<ZIMCallEndSentResult> {
+        return this._zim!.callEnd(callID, config);
+    }
+    
+    queryCallInvitationList(config: ZIMCallInvitationQueryConfig): Promise<ZIMCallInvitationListQueriedResult> {
+        return this._zim!.queryCallInvitationList(config);
+    }
+    
+    // MARK: - DB Search
+    
+    searchLocalConversations(config: ZIMConversationSearchConfig): Promise<ZIMConversationsSearchedResult> {
+        return this._zim!.searchLocalConversations(config);
+    }
+    
+    searchLocalMessages(
+        conversationID: string,
+        conversationType: ZIMConversationType,
+        config: ZIMMessageSearchConfig,
+    ): Promise<ZIMMessagesSearchedResult> {
+        if (config.nextMessage != null) {
+            config.nextMessage = this.nextMessageMap.get(config.nextMessage!);
+        }
+        return this._zim!.searchLocalMessages(conversationID, conversationType, config).then((res) => {
+            if (res.nextMessage != null) {
+                res.nextMessage = this.putNextMessage(res.nextMessage);
+            }
+            return res;
+        });
+    }
+    
+    searchGlobalLocalMessages(config: ZIMMessageSearchConfig): Promise<ZIMMessagesGlobalSearchedResult> {
+        if (config.nextMessage != null) {
+            config.nextMessage = this.nextMessageMap.get(config.nextMessage!);
+        }
+        return this._zim!.searchGlobalLocalMessages(config).then((res) => {
+            if (res.nextMessage != null) {
+                res.nextMessage = this.putNextMessage(res.nextMessage);
+            }
+            return res;
+        });
+    }
+    
+    searchLocalGroups(config: ZIMGroupSearchConfig): Promise<ZIMGroupsSearchedResult> {
+        return this._zim!.searchLocalGroups(config);
+    }
+    
+    searchLocalGroupMembers(
+        groupID: string,
+        config: ZIMGroupMemberSearchConfig,
+    ): Promise<ZIMGroupMembersSearchedResult> {
+        return this._zim!.searchLocalGroupMembers(groupID, config);
+    }
+    
+    searchLocalFriends(config: ZIMFriendSearchConfig): Promise<ZIMFriendsSearchedResult> {
+        return this._zim!.searchLocalFriends(config);
+    }
+    
+    // MARK: - Friend
+    
+    addFriend(userID: string, config: ZIMFriendAddConfig): Promise<ZIMFriendAddedResult> {
+        return this._zim!.addFriend(userID, config);
+    }
+    
+    deleteFriends(userIDs: string[], config: ZIMFriendDeleteConfig): Promise<ZIMFriendsDeletedResult> {
+        return this._zim!.deleteFriends(userIDs, config);
+    }
+    
+    checkFriendsRelation(
+        userIDs: string[],
+        config: ZIMFriendRelationCheckConfig,
+    ): Promise<ZIMFriendsRelationCheckedResult> {
+        return this._zim!.checkFriendsRelation(userIDs, config);
+    }
+    
+    updateFriendAlias(friendAlias: string, userID: string): Promise<ZIMFriendAliasUpdatedResult> {
+        return this._zim!.updateFriendAlias(friendAlias, userID);
+    }
+    
+    updateFriendAttributes(friendAttributes: UTSJSONObject, userID: string): Promise<ZIMFriendAttributesUpdatedResult> {
+        return this._zim!.updateFriendAttributes(friendAttributes, userID);
+    }
+    
+    queryFriendsInfo(userIDs: string[]): Promise<ZIMFriendsInfoQueriedResult> {
+        return this._zim!.queryFriendsInfo(userIDs);
+    }
+    
+    queryFriendList(config: ZIMFriendListQueryConfig): Promise<ZIMFriendListQueriedResult> {
+        return this._zim!.queryFriendList(config);
+    }
+    
+    sendFriendApplication(
+        userID: string,
+        config: ZIMFriendApplicationSendConfig,
+    ): Promise<ZIMFriendApplicationSentResult> {
+        return this._zim!.sendFriendApplication(userID, config);
+    }
+    
+    acceptFriendApplication(
+        userID: string,
+        config: ZIMFriendApplicationAcceptConfig,
+    ): Promise<ZIMFriendApplicationAcceptedResult> {
+        return this._zim!.acceptFriendApplication(userID, config);
+    }
+    
+    rejectFriendApplication(
+        userID: string,
+        config: ZIMFriendApplicationRejectConfig,
+    ): Promise<ZIMFriendApplicationRejectedResult> {
+        return this._zim!.rejectFriendApplication(userID, config);
+    }
+    
+    queryFriendApplicationList(
+        config: ZIMFriendApplicationListQueryConfig,
+    ): Promise<ZIMFriendApplicationListQueriedResult> {
+        return this._zim!.queryFriendApplicationList(config);
+    }
+    
+    // MARK: - Blacklist
+    
+    addUsersToBlacklist(userIDs: string[]): Promise<ZIMBlacklistUsersAddedResult> {
+        return this._zim!.addUsersToBlacklist(userIDs);
+    }
+    
+    removeUsersFromBlacklist(userIDs: string[]): Promise<ZIMBlacklistUsersRemovedResult> {
+        return this._zim!.removeUsersFromBlacklist(userIDs);
+    }
+    
+    checkUserIsInBlacklist(userID: string): Promise<ZIMBlacklistCheckedResult> {
+        return this._zim!.checkUserIsInBlacklist(userID);
+    }
+    
+    queryBlacklist(config: ZIMBlacklistQueryConfig): Promise<ZIMBlacklistQueriedResult> {
+        return this._zim!.queryBlacklist(config);
+    }
+    
+    
+    // MARK: - Event
+    
+    onError(callback: null | ((error: ZIMError) => void)): void {
+        if (callback == null) {
+            this._zim!.off('error');
+        } else {
+            this._zim!.on('error', (_, data) => callback(data));
+        }
+    }
+    
+    onConnectionStateChanged(callback: null | ((data: ZIMEventOfConnectionStateChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('connectionStateChanged');
+        } else {
+            this._zim!.on('connectionStateChanged', (_, data) => {
+                const str = data.extendedData;
+                callback({
+                    state: data.state as ZIMConnectionState,
+                    event: data.event as ZIMConnectionEvent,
+                    extendedData: JSON.parseObject(str == null || str.length == 0 ? '{}' : str) ?? {}
+                });
+            });
+        }
+    }
+    
+    onTokenWillExpire(callback: null | ((data: ZIMEventOfTokenWillExpireResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('tokenWillExpire');
+        } else {
+            this._zim!.on('tokenWillExpire', (_, data) => callback(data));
+        }
+    }
+    
+    onUserInfoUpdated(callback: null | ((data: ZIMEventOfUserInfoUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('userInfoUpdated');
+        } else {
+            this._zim!.on('userInfoUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onUserStatusUpdated(callback: null | ((data: ZIMEventOfUserStatusUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('userStatusUpdated');
+        } else {
+            this._zim!.on('userStatusUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onUserRuleUpdated(callback: null | ((data: ZIMEventOfUserRuleUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('userRuleUpdated');
+        } else {
+            this._zim!.on('userRuleUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onConversationsAllDeleted(callback: null | ((data: ZIMEventOfConversationsAllDeletedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('conversationsAllDeleted');
+        } else {
+            this._zim!.on('conversationsAllDeleted', (_, data) => callback(data));
+        }
+    }
+    
+    onConversationChanged(callback: null | ((data: ZIMEventOfConversationChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('conversationChanged');
+        } else {
+            this._zim!.on('conversationChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onConversationSyncStateChanged(callback: null | ((data: ZIMEventOfConversationSyncStateChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('conversationSyncStateChanged');
+        } else {
+            this._zim!.on('conversationSyncStateChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onConversationTotalUnreadMessageCountUpdated(callback: null | ((data: ZIMEventOfConversationTotalUnreadMessageCountUpdatedResult) => void)): void  {
+        if (callback == null) {
+            this._zim!.off('conversationTotalUnreadMessageCountUpdated');
+        } else {
+            this._zim!.on('conversationTotalUnreadMessageCountUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onConversationMessageReceiptChanged(callback: null | ((data: ZIMEventOfMessageReceiptChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('conversationMessageReceiptChanged');
+        } else {
+            this._zim!.on('conversationMessageReceiptChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onMessageRevokeReceived(callback: null | ((data: ZIMEventOfMessageRevokeReceivedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('messageRevokeReceived');
+        } else {
+            this._zim!.on('messageRevokeReceived', (_, data) => callback(data));
+        }
+    }
+    
+    onMessageReceiptChanged(callback: null | ((data: ZIMEventOfMessageReceiptChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('messageReceiptChanged');
+        } else {
+            this._zim!.on('messageReceiptChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onMessageReactionsChanged(callback: null | ((data: ZIMEventOfMessageReactionsChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('messageReactionsChanged');
+        } else {
+            this._zim!.on('messageReactionsChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onMessageRepliedCountChanged(callback: null | ((data: ZIMEventOfMessageRepliedCountChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('messageRepliedCountChanged');
+        } else {
+            this._zim!.on('messageRepliedCountChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onMessageRepliedInfoChanged(callback: null | ((data: ZIMEventOfMessageRepliedInfoChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('messageRepliedInfoChanged');
+        } else {
+            this._zim!.on('messageRepliedInfoChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onMessagePinStatusChanged(callback: null | ((data: ZIMEventOfMessagePinStatusChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('messagePinStatusChanged');
+        } else {
+            this._zim!.on('messagePinStatusChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onMessageDeleted(callback: null | ((data: ZIMEventOfMessageDeletedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('messageDeleted');
+        } else {
+            this._zim!.on('messageDeleted', (_, data) => callback(data));
+        }
+    }
+    
+    onMessageEdited(callback: null | ((data: ZIMEventOfMessageEditedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('messageEdited');
+        } else {
+            this._zim!.on('messageEdited', (_, data) => callback(data));
+        }
+    }
+    
+    onMessageSentStatusChanged(callback: null | ((data: ZIMEventOfMessageSentStatusChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('messageSentStatusChanged');
+        } else {
+            this._zim!.on('messageSentStatusChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onBroadcastMessageReceived(callback: null | ((data: ZIMEventOfBroadcastMessageReceivedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('broadcastMessageReceived');
+        } else {
+            this._zim!.on('broadcastMessageReceived', (_, data) => callback(data));
+        }
+    }
+    
+    onPeerMessageReceived(callback: null | ((data: ZIMEventOfConversationMessageReceivedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('peerMessageReceived');
+        } else {
+            this._zim!.on('peerMessageReceived', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupMessageReceived(callback: null | ((data: ZIMEventOfConversationMessageReceivedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupMessageReceived');
+        } else {
+            this._zim!.on('groupMessageReceived', (_, data) => callback(data));
+        }
+    }
+    
+    onRoomMessageReceived(callback: null | ((data: ZIMEventOfConversationMessageReceivedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('roomMessageReceived');
+        } else {
+            this._zim!.on('roomMessageReceived', (_, data) => callback(data));
+        }
+    }
+        
+    onRoomStateChanged(callback: null | ((data: ZIMEventOfRoomStateChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('roomStateChanged');
+        } else {
+            this._zim!.on('roomStateChanged', (_, data) => {
+                const str = data.extendedData;
+                callback({
+                    roomID: data.roomID,
+                    state: data.state as ZIMRoomState,
+                    event: data.event as ZIMRoomEvent,
+                    extendedData: JSON.parseObject(str == null || str.length == 0 ? '{}' : str) ?? {}
+                });
+            });
+        }
+    }
+    
+    onRoomMemberJoined(callback: null | ((data: ZIMEventOfRoomMemberChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('roomMemberJoined');
+        } else {
+            this._zim!.on('roomMemberJoined', (_, data) => callback(data));
+        }
+    }
+    
+    onRoomMemberLeft(callback: null | ((data: ZIMEventOfRoomMemberChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('roomMemberLeft');
+        } else {
+            this._zim!.on('roomMemberLeft', (_, data) => callback(data));
+        }
+    }
+    
+    onRoomAttributesUpdated(callback: null | ((data: ZIMEventOfRoomAttributesUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('roomAttributesUpdated');
+        } else {
+            this._zim!.on('roomAttributesUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onRoomAttributesBatchUpdated(callback: null | ((data: ZIMEventOfRoomAttributesUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('roomAttributesBatchUpdated');
+        } else {
+            this._zim!.on('roomAttributesBatchUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onRoomMemberAttributesUpdated(callback: null | ((data: ZIMEventOfRoomMembersAttributesUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('roomMemberAttributesUpdated');
+        } else {
+            this._zim!.on('roomMemberAttributesUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupStateChanged(callback: null | ((data: ZIMEventOfGroupStateChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupStateChanged');
+        } else {
+            this._zim!.on('groupStateChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupNameUpdated(callback: null | ((data: ZIMEventOfGroupNameUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupNameUpdated');
+        } else {
+            this._zim!.on('groupNameUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupAvatarUrlUpdated(callback: null | ((data: ZIMEventOfGroupAvatarUrlUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupAvatarUrlUpdated');
+        } else {
+            this._zim!.on('groupAvatarUrlUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupNoticeUpdated(callback: null | ((data: ZIMEventOfGroupNoticeUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupNoticeUpdated');
+        } else {
+            this._zim!.on('groupNoticeUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupAliasUpdated(callback: null | ((data: ZIMEventOfGroupAliasUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupAliasUpdated');
+        } else {
+            this._zim!.on('groupAliasUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupAttributesUpdated(callback: null | ((data: ZIMEventOfGroupAttributesUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupAttributesUpdated');
+        } else {
+            this._zim!.on('groupAttributesUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupMutedInfoUpdated(callback: null | ((data: ZIMEventOfGroupMutedInfoUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupMutedInfoUpdated');
+        } else {
+            this._zim!.on('groupMutedInfoUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupVerifyInfoUpdated(callback: null | ((data: ZIMEventOfGroupVerifyInfoUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupVerifyInfoUpdated');
+        } else {
+            this._zim!.on('groupVerifyInfoUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupApplicationListChanged(callback: null | ((data: ZIMEventOfGroupApplicationListChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupApplicationListChanged');
+        } else {
+            this._zim!.on('groupApplicationListChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupApplicationUpdated(callback: null | ((data: ZIMEventOfGroupApplicationUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupApplicationUpdated');
+        } else {
+            this._zim!.on('groupApplicationUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupMemberStateChanged(callback: null | ((data: ZIMEventOfGroupMemberStateChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupMemberStateChanged');
+        } else {
+            this._zim!.on('groupMemberStateChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onGroupMemberInfoUpdated(callback: null | ((data: ZIMEventOfGroupMemberInfoUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('groupMemberInfoUpdated');
+        } else {
+            this._zim!.on('groupMemberInfoUpdated', (_, data) => callback(data));
+        }
+    }
+    
+    onCallInvitationCreated(callback: null | ((data: ZIMEventOfCallInvitationCreatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('callInvitationCreated');
+        } else {
+            this._zim!.on('callInvitationCreated', (_, data) => callback(data));
+        }
+    }
+    
+    onCallInvitationReceived(callback: null | ((data: ZIMEventOfCallInvitationReceivedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('callInvitationReceived');
+        } else {
+            this._zim!.on('callInvitationReceived', (_, data) => callback(data));
+        }
+    }
+    
+    onCallInvitationCancelled(callback: null | ((data: ZIMEventOfCallInvitationCancelledResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('callInvitationCancelled');
+        } else {
+            this._zim!.on('callInvitationCancelled', (_, data) => callback(data));
+        }
+    }
+    
+    onCallInvitationTimeout(callback: null | ((data: ZIMEventOfCallInvitationTimeoutResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('callInvitationTimeout');
+        } else {
+            this._zim!.on('callInvitationTimeout', (_, data) => callback(data));
+        }
+    }
+    
+    onCallInvitationEnded(callback: null | ((data: ZIMEventOfCallInvitationEndedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('callInvitationEnded');
+        } else {
+            this._zim!.on('callInvitationEnded', (_, data) => callback(data));
+        }
+    }
+    
+    onCallUserStateChanged(callback: null | ((data: ZIMEventOfCallUserStateChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('callUserStateChanged');
+        } else {
+            this._zim!.on('callUserStateChanged', (_, data) => callback(data));
+        }
+    }
+        
+    onBlacklistChanged(callback: null | ((data: ZIMEventOfBlacklistChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('blacklistChanged');
+        } else {
+            this._zim!.on('blacklistChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onFriendListChanged(callback: null | ((data: ZIMEventOfFriendListChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('friendListChanged');
+        } else {
+            this._zim!.on('friendListChanged', (_, data) => callback(data));
+        }
+    }
+    
+    onFriendInfoUpdated(callback: null | ((data: ZIMEventOfFriendInfoUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('friendInfoUpdated');
+        } else {
+            this._zim!.on('friendInfoUpdated', (_, data) => callback(data));
+        }
+    }    
+    
+    onFriendApplicationListChanged(callback: null | ((data: ZIMEventOfFriendApplicationListChangedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('friendApplicationListChanged');
+        } else {
+            this._zim!.on('friendApplicationListChanged', (_, data) => callback(data));
+        }
+    }
+        
+    onFriendApplicationUpdated(callback: null | ((data: ZIMEventOfFriendApplicationUpdatedResult) => void)): void {
+        if (callback == null) {
+            this._zim!.off('friendApplicationUpdated');
+        } else {
+            this._zim!.on('friendApplicationUpdated', (_, data) => callback(data));
+        }
+    }
+}

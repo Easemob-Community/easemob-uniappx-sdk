@@ -1,0 +1,7 @@
+{
+	"deploymentTarget": "13",
+	"dependencies-pods": [{
+		"name": "ZegoZIM",
+		"version": "2.26.0"
+	}]
+}

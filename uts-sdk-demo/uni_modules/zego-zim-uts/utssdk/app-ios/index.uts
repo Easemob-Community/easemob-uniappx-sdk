@@ -1,0 +1,3638 @@
+import {
+    IZIM,
+    ZIMAppConfig,
+    ZIMBlacklistCheckedResult,
+    ZIMBlacklistQueriedResult,
+    ZIMBlacklistQueryConfig,
+    ZIMBlacklistUsersAddedResult,
+    ZIMBlacklistUsersRemovedResult,
+    ZIMCacheConfig,
+    ZIMCallAcceptConfig,
+    ZIMCallAcceptanceSentResult,
+    ZIMCallCancelConfig,
+    ZIMCallCancelSentResult,
+    ZIMCallEndConfig,
+    ZIMCallEndSentResult,
+    ZIMCallInvitationListQueriedResult,
+    ZIMCallInvitationQueryConfig,
+    ZIMCallInvitationSentResult,
+    ZIMCallInviteConfig,
+    ZIMCallJoinConfig,
+    ZIMCallJoinSentResult,
+    ZIMCallQuitConfig,
+    ZIMCallQuitSentResult,
+    ZIMCallRejectConfig,
+    ZIMCallRejectionSentResult,
+    ZIMCallingInvitationSentResult,
+    ZIMCallingInviteConfig,
+    ZIMCombineMessageDetailQueriedResult,
+    ZIMPinnedMessageListQueriedResult,
+    ZIMConversationBaseInfo,
+    ZIMConversationDeleteConfig,
+    ZIMConversationDeletedResult,
+    ZIMConversationDraftSetResult,
+    ZIMConversationFilterOption,
+    ZIMConversationListQueriedResult,
+    ZIMConversationMarkSetResult,
+    ZIMConversationMessageReceiptReadSentResult,
+    ZIMConversationNotificationStatus,
+    ZIMConversationNotificationStatusSetResult,
+    ZIMConversationPinnedListQueriedResult,
+    ZIMConversationPinnedStateUpdatedResult,
+    ZIMConversationQueriedResult,
+    ZIMConversationQueryConfig,
+    ZIMConversationSearchConfig,
+    ZIMConversationTotalUnreadMessageCountQueriedResult,
+    ZIMConversationTotalUnreadMessageCountQueryConfig,
+    ZIMConversationType,
+    ZIMConversationUnreadMessageCountClearedResult,
+    ZIMConversationsSearchedResult,
+    ZIMError,
+    ZIMEventHandler,
+    ZIMEventOfBlacklistChangedResult,
+    ZIMEventOfBroadcastMessageReceivedResult,
+    ZIMEventOfCallInvitationCancelledResult,
+    ZIMEventOfCallInvitationCreatedResult,
+    ZIMEventOfCallInvitationEndedResult,
+    ZIMEventOfCallInvitationReceivedResult,
+    ZIMEventOfCallInvitationTimeoutResult,
+    ZIMEventOfCallUserStateChangedResult,
+    ZIMEventOfConnectionStateChangedResult,
+    ZIMEventOfConversationChangedResult,
+    ZIMEventOfConversationMessageReceivedResult,
+    ZIMEventOfConversationTotalUnreadMessageCountUpdatedResult,
+    ZIMEventOfConversationsAllDeletedResult,
+    ZIMEventOfConversationSyncStateChangedResult,
+    ZIMEventOfFriendApplicationListChangedResult,
+    ZIMEventOfFriendApplicationUpdatedResult,
+    ZIMEventOfFriendInfoUpdatedResult,
+    ZIMEventOfFriendListChangedResult,
+    ZIMEventOfGroupAliasUpdatedResult,
+    ZIMEventOfGroupApplicationListChangedResult,
+    ZIMEventOfGroupApplicationUpdatedResult,
+    ZIMEventOfGroupAttributesUpdatedResult,
+    ZIMEventOfGroupAvatarUrlUpdatedResult,
+    ZIMEventOfGroupMemberInfoUpdatedResult,
+    ZIMEventOfGroupMemberStateChangedResult,
+    ZIMEventOfGroupMutedInfoUpdatedResult,
+    ZIMEventOfGroupNameUpdatedResult,
+    ZIMEventOfGroupNoticeUpdatedResult,
+    ZIMEventOfGroupStateChangedResult,
+    ZIMEventOfGroupVerifyInfoUpdatedResult,
+    ZIMEventOfMessageDeletedResult,
+    ZIMEventOfMessageEditedResult,
+    ZIMEventOfMessageReactionsChangedResult,
+    ZIMEventOfMessageReceiptChangedResult,
+    ZIMEventOfMessageRepliedCountChangedResult,
+    ZIMEventOfMessageRepliedInfoChangedResult,
+    ZIMEventOfMessagePinStatusChangedResult,
+    ZIMEventOfMessageRevokeReceivedResult,
+    ZIMEventOfMessageSentStatusChangedResult,
+    ZIMEventOfRoomAttributesUpdatedResult,
+    ZIMEventOfRoomMemberChangedResult,
+    ZIMEventOfRoomMembersAttributesUpdatedResult,
+    ZIMEventOfRoomStateChangedResult,
+    ZIMEventOfTokenWillExpireResult,
+    ZIMEventOfUserInfoUpdatedResult,
+    ZIMEventOfUserRuleUpdatedResult,
+    ZIMEventOfUserStatusUpdatedResult,
+    ZIMFileCacheClearConfig,
+    ZIMFileCacheQueriedResult,
+    ZIMFileCacheQueryConfig,
+    ZIMFriendAddConfig,
+    ZIMFriendAddedResult,
+    ZIMFriendAliasUpdatedResult,
+    ZIMFriendApplicationAcceptConfig,
+    ZIMFriendApplicationAcceptedResult,
+    ZIMFriendApplicationListQueriedResult,
+    ZIMFriendApplicationListQueryConfig,
+    ZIMFriendApplicationRejectConfig,
+    ZIMFriendApplicationRejectedResult,
+    ZIMFriendApplicationSendConfig,
+    ZIMFriendApplicationSentResult,
+    ZIMFriendAttributesUpdatedResult,
+    ZIMFriendDeleteConfig,
+    ZIMFriendListQueriedResult,
+    ZIMFriendListQueryConfig,
+    ZIMFriendRelationCheckConfig,
+    ZIMFriendSearchConfig,
+    ZIMFriendsDeletedResult,
+    ZIMFriendsInfoQueriedResult,
+    ZIMFriendsRelationCheckedResult,
+    ZIMFriendsSearchedResult,
+    ZIMGeofencingType,
+    ZIMGroupAdvancedConfig,
+    ZIMGroupAliasUpdatedResult,
+    ZIMGroupApplicationListQueriedResult,
+    ZIMGroupApplicationListQueryConfig,
+    ZIMGroupAttributesOperatedResult,
+    ZIMGroupAttributesQueriedResult,
+    ZIMGroupAvatarUrlUpdatedResult,
+    ZIMGroupBeInviteMode,
+    ZIMGroupBeInviteModeUpdatedResult,
+    ZIMGroupCreatedResult,
+    ZIMGroupDismissedResult,
+    ZIMGroupInfo,
+    ZIMGroupInfoQueriedResult,
+    ZIMGroupInviteApplicationAcceptConfig,
+    ZIMGroupInviteApplicationAcceptedResult,
+    ZIMGroupInviteApplicationRejectConfig,
+    ZIMGroupInviteApplicationRejectedResult,
+    ZIMGroupInviteApplicationSendConfig,
+    ZIMGroupInviteApplicationsSentResult,
+    ZIMGroupInviteMode,
+    ZIMGroupInviteModeUpdatedResult,
+    ZIMGroupJoinApplicationAcceptConfig,
+    ZIMGroupJoinApplicationAcceptedResult,
+    ZIMGroupJoinApplicationRejectConfig,
+    ZIMGroupJoinApplicationRejectedResult,
+    ZIMGroupJoinApplicationSendConfig,
+    ZIMGroupJoinApplicationSentResult,
+    ZIMGroupJoinMode,
+    ZIMGroupJoinModeUpdatedResult,
+    ZIMGroupJoinedResult,
+    ZIMGroupLeftResult,
+    ZIMGroupListQueriedResult,
+    ZIMGroupMemberCountQueriedResult,
+    ZIMGroupMemberInfoQueriedResult,
+    ZIMGroupMemberKickedResult,
+    ZIMGroupMemberListQueriedResult,
+    ZIMGroupMemberMuteConfig,
+    ZIMGroupMemberMutedListQueriedResult,
+    ZIMGroupMemberNicknameUpdatedResult,
+    ZIMGroupMemberQueryConfig,
+    ZIMGroupMemberRoleUpdatedResult,
+    ZIMGroupMemberSearchConfig,
+    ZIMGroupMembersMutedResult,
+    ZIMGroupMembersSearchedResult,
+    ZIMGroupMessageReceiptMemberListQueriedResult,
+    ZIMGroupMessageReceiptMemberQueryConfig,
+    ZIMGroupMuteConfig,
+    ZIMGroupMutedResult,
+    ZIMGroupNameUpdatedResult,
+    ZIMGroupNoticeUpdatedResult,
+    ZIMGroupOwnerTransferredResult,
+    ZIMGroupSearchConfig,
+    ZIMGroupUsersInvitedResult,
+    ZIMGroupsSearchedResult,
+    ZIMLogConfig,
+    ZIMLoginConfig,
+    ZIMMediaDownloadConfig,
+    ZIMMediaDownloadedResult,
+    ZIMMediaDownloadingProgress,
+    ZIMMediaFileType,
+    ZIMMessage,
+    ZIMMessageDeleteConfig,
+    ZIMMessageDeletedResult,
+    ZIMMessageEditConfig,
+    ZIMMessageEditedResult,
+    ZIMMessageExportConfig,
+    ZIMMessageExportingProgress,
+    ZIMMessageImportConfig,
+    ZIMMessageImportingProgress,
+    ZIMMessageInsertedResult,
+    ZIMMessageLocalExtendedDataUpdatedResult,
+    ZIMMessageQueriedResult,
+    ZIMMessageQueryConfig,
+    ZIMMessageReactionAddedResult,
+    ZIMMessageReactionDeletedResult,
+    ZIMMessageReactionUserListQueriedResult,
+    ZIMMessageReactionUserQueryConfig,
+    ZIMMessageReceiptsInfoQueriedResult,
+    ZIMMessageReceiptsReadSentResult,
+    ZIMMessageRepliedListQueriedResult,
+    ZIMMessageRepliedListQueryConfig,
+    ZIMMessageRevokeConfig,
+    ZIMMessageRevokedResult,
+    ZIMMessageRootRepliedInfo,
+    ZIMMessageSearchConfig,
+    ZIMMessageSendConfig,
+    ZIMMessageSendNotification,
+    ZIMMessageSentResult,
+    ZIMMessagesGlobalSearchedResult,
+    ZIMMessagesSearchedResult,
+    ZIMRoomAdvancedConfig,
+    ZIMRoomAllLeftResult,
+    ZIMRoomAttributesBatchOperatedResult,
+    ZIMRoomAttributesBatchOperationConfig,
+    ZIMRoomAttributesDeleteConfig,
+    ZIMRoomAttributesOperatedResult,
+    ZIMRoomAttributesQueriedResult,
+    ZIMRoomAttributesSetConfig,
+    ZIMRoomCreatedResult,
+    ZIMRoomEnteredResult,
+    ZIMRoomInfo,
+    ZIMRoomJoinedResult,
+    ZIMRoomLeftResult,
+    ZIMRoomMemberAttributesListQueriedResult,
+    ZIMRoomMemberAttributesQueryConfig,
+    ZIMRoomMemberAttributesSetConfig,
+    ZIMRoomMemberQueriedResult,
+    ZIMRoomMemberQueryConfig,
+    ZIMRoomMembersAttributesOperatedResult,
+    ZIMRoomMembersAttributesQueriedResult,
+    ZIMRoomMembersQueriedResult,
+    ZIMRoomOnlineMemberCountQueriedResult,
+    ZIMRoomSwitchedResult,
+    ZIMSelfUserInfoQueriedResult,
+    ZIMSendingMessageCancelConfig,
+    ZIMSubscribedUserStatusListQueriedResult,
+    ZIMSubscribedUserStatusQueryConfig,
+    ZIMTokenRenewedResult,
+    ZIMUserAvatarUrlUpdatedResult,
+    ZIMUserCustomStatusUpdatedResult,
+    ZIMUserExtendedDataUpdatedResult,
+    ZIMUserNameUpdatedResult,
+    ZIMUserOfflinePushRule,
+    ZIMUserOfflinePushRuleUpdatedResult,
+    ZIMUserStatusSubscribeConfig,
+    ZIMUsersInfoQueriedResult,
+    ZIMUsersInfoQueryConfig,
+    ZIMUsersStatusQueriedResult,
+    ZIMUsersStatusSubscribedResult,
+    ZIMUsersStatusUnsubscribedResult,
+} from '../interface.uts';
+
+import {
+    mMap,
+    mZIMCallInfoList,
+    mZIMCallUserInfoList,
+    mZIMConversation,
+    mZIMConversationBaseInfoList,
+    mZIMConversationChangeInfoList,
+    mZIMConversationList,
+    mZIMConversationSearchInfoList,
+    mZIMErrorUserInfoList,
+    mZIMFriendApplicationInfo,
+    mZIMFriendApplicationInfoList,
+    mZIMFriendInfo,
+    mZIMFriendInfoList,
+    mZIMFriendRelationInfoList,
+    mZIMGroupApplicationInfoList,
+    mZIMGroupAttributesUpdateInfoList,
+    mZIMGroupFullInfo,
+    mZIMGroupList,
+    mZIMGroupMemberInfo,
+    mZIMGroupMemberInfoList,
+    mZIMGroupMuteInfo,
+    mZIMGroupOperatedInfo,
+    mZIMGroupSearchInfoList,
+    mZIMGroupVerifyInfo,
+    mZIMMessage,
+    mZIMMessageList,
+    mZIMMessageReaction,
+    mZIMMessageReactionList,
+    mZIMMessageReactionUserInfoList,
+    mZIMMessageReceiptInfoList,
+    mZIMMessageRootRepliedCountInfoList,
+    mZIMMessagePinStatusChangeInfoList,
+    mZIMMessageSentStatusChangeInfoList,
+    mZIMRoomAttributesUpdateInfoList,
+    mZIMRoomFullInfo,
+    mZIMRoomMemberAttributesInfoList,
+    mZIMRoomMemberAttributesOperatedInfoList,
+    mZIMRoomMemberAttributesUpdateInfoList,
+    mZIMRoomMemberInfoList,
+    mZIMUserFullInfo,
+    mZIMUserFullInfoList,
+    mZIMUserInfo,
+    mZIMUserInfoList,
+    mZIMUserOfflinePushRule,
+    mZIMUserStatus,
+    mZIMUserStatusList,
+    mZIMUserStatusSubscriptionList,
+    oMap,
+    oZIMConversationBaseInfoList,
+    oZIMMessage,
+    oZIMMessageList,
+    oZIMMessageSearchConfig,
+    oZIMMessageSendConfig,
+    oZIMPushConfig,
+    oZIMRoomAdvancedConfig,
+    oZIMRoomInfo,
+} from './utils.uts';
+
+const isSucc = (errorInfo: NZIMError, reject: (err: any) => void): boolean => {
+    const code = errorInfo.code.rawValue as number;
+    if (code != 0) {
+        reject(new UniError('zim-apicall-error', code, errorInfo.message));
+        return false;
+    }
+    return true;
+}
+
+export class ZIM implements IZIM {
+    private static _instance: IZIM | null = null;
+    
+    private _zim : NZIM | null = null;
+    private _event: ZIMEventHandlerImpl | null = null;
+    private constructor(nzim : NZIM) {
+        super(); // error: 'self' used before 'super.init' call
+        this._zim = nzim;
+        this._event = new ZIMEventHandlerImpl();
+        this._zim!.setEventHandler(this._event!);
+    }
+
+    private NoInitErr = new UniError('zim-apicall-error', 1, 'No instance.');
+    
+    // HBuilderX 编译的 swift 代码，存在强制类型转换问题，导致锚点为对象类型的分页查询时App崩溃。
+    private nextMessageMap = new Map<string, NZIMMessage>();
+    private nextConversationMap = new Map<string, NZIMConversation>();
+    private putNextMessage(msgObj: NZIMMessage): string {
+        const key = Number.from(msgObj.localMessageID).toString();
+        this.nextMessageMap.set(key , msgObj);
+        return key;
+    }
+    private putNextConversation(convObj: NZIMConversation): string {
+        const key = convObj.type.rawValue.toString() + convObj.conversationID;
+        this.nextConversationMap.set(key , convObj);
+        return key;
+    }
+
+    // setLogConfig(_ config: NZIMLogConfig)
+    static setLogConfig(config : ZIMLogConfig) : void {
+        const _config = new NZIMLogConfig();
+        if (config.logPath != null && config.logPath != '') {
+            _config.logPath = config.logPath!;
+        }
+        if (config.logSize != null && config.logSize! > 0) {
+            _config.logSize = config.logSize!.toUInt64();
+        }
+
+        NZIM.setLogConfig(_config);
+    }
+
+    // setCacheConfig(_ config: NZIMCacheConfig)
+    static setCacheConfig(config : ZIMCacheConfig) : void {
+        const _config = new NZIMCacheConfig();
+        if (config.cachePath != '') {
+            _config.cachePath = config.cachePath;
+        }
+
+        NZIM.setCacheConfig(_config);
+    }
+
+    // setAdvancedConfig(key: String, value: String)
+    static setAdvancedConfig(key : string, value : string) : void {
+        NZIM.setAdvancedConfig(key = key, value = value);
+    }
+
+    // setGeofencingConfig(with areaList: [NSNumber], type: NZIMGeofencingType) -> Bool
+    static setGeofencingConfig(areaList : number[], type : ZIMGeofencingType) : boolean {
+        return NZIM.setGeofencingConfig(with = areaList, type = NZIMGeofencingType(rawValue = type.toInt())!);
+    }
+
+    static getVersion() : string {
+        return NZIM.getVersion();
+    }
+
+    static create(appConfig : ZIMAppConfig) : IZIM {
+        if(this._instance == null) {
+            const appInfo = uni.getAppBaseInfo();
+            const value = (appInfo.isUniAppX ?? false) ? 'uni-app-x' : 'uni-app-u';
+            NZIM.setAdvancedConfig(key = 'zim_cross_platform', value = value);
+            NZIM.setAdvancedConfig(key = 'zim_cross_platform_uts', value = JSON.stringify(appInfo) ?? value);
+            const config = new NZIMAppConfig();
+            config.appID = appConfig.appID.toUInt32();
+            config.appSign = appConfig.appSign;
+            // create(with config: NZIMAppConfig) -> NZIM?
+            const nzim = NZIM.create(with = config);
+            
+            this._instance = new ZIM(nzim!);
+        }
+        return this._instance!;
+    }
+    
+    static getInstance() : IZIM {
+        return this._instance!;
+    }
+
+        
+    destroy() : void {
+        this.nextMessageMap.clear();
+        this.nextConversationMap.clear();
+        this._event = null;
+        if (this._zim != null) {
+            this._zim!.destroy();
+            this._zim = null;
+        }
+        UTSiOS.destroyInstance(this);
+    }
+    
+    uploadLog() : Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.uploadLog(with = (errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    // queryLocalFileCache(with config: NZIMFileCacheQueryConfig, callback: @escaping NZIMFileCacheQueriedCallback)
+    queryLocalFileCache(config : ZIMFileCacheQueryConfig) : Promise<ZIMFileCacheQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMFileCacheQueryConfig();
+            _config.endTime = config.endTime.toInt64();
+
+            this._zim!.queryLocalFileCache(with = _config, callback = (info : NZIMFileCacheInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ totalFileSize: Number.from(info.totalFileSize) });
+                }
+            });
+        });
+    }
+
+    // clearLocalFileCache(with config: NZIMFileCacheClearConfig, callback: @escaping NZIMFileCacheClearedCallback)
+    clearLocalFileCache(config : ZIMFileCacheClearConfig) : Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMFileCacheClearConfig();
+            _config.endTime = config.endTime.toInt64();
+
+            this._zim!.clearLocalFileCache(with = _config, callback = (errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    // MARK: - User
+    
+    // login(with userID: String, config: NZIMLoginConfig, callback: @escaping NZIMLoggedInCallback)
+    login(userID : string, config : ZIMLoginConfig) : Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMLoginConfig();
+            _config.userName = config.userName ?? '';
+            _config.customStatus = config.customStatus ?? '';
+            _config.token = config.token ?? '';
+            _config.isOfflineLogin = config.isOfflineLogin ?? false;
+
+            this._zim!.login(with = userID, config = _config, callback = (errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    logout() : void {
+        this.nextMessageMap.clear();
+        this.nextConversationMap.clear();
+        if (this._zim != null) {
+            this._zim!.logout();
+        }
+    }
+
+    // renewToken(_ token: String, callback: @escaping NZIMTokenRenewedCallback)
+    renewToken(token : string) : Promise<ZIMTokenRenewedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.renewToken(token, callback = (token : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ token });
+                }
+            });
+        });
+    }
+
+    // updateUserName(_ userName: String, callback: @escaping NZIMUserNameUpdatedCallback)
+    updateUserName(userName : string) : Promise<ZIMUserNameUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.updateUserName(userName, callback = (userName : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ userName });
+                }
+            });
+        });
+    }
+
+    // updateUserAvatarUrl(_ userAvatarUrl: String, callback: @escaping NZIMUserAvatarUrlUpdatedCallback)
+    updateUserAvatarUrl(userAvatarUrl : string) : Promise<ZIMUserAvatarUrlUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.updateUserAvatarUrl(userAvatarUrl, callback = (userAvatarUrl : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ userAvatarUrl });
+                }
+            });
+        });
+    }
+
+    // updateUserExtendedData(_ extendedData: String, callback: @escaping NZIMUserExtendedDataUpdatedCallback)
+    updateUserExtendedData(extendedData : string) : Promise<ZIMUserExtendedDataUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.updateUserExtendedData(extendedData, callback = (extendedData : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ extendedData });
+                }
+            });
+        });
+    }
+
+    // updateUserCustomStatus(_ customStatus: String, callback: @escaping NZIMUserCustomStatusUpdatedCallback)
+    updateUserCustomStatus(customStatus : string) : Promise<ZIMUserCustomStatusUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.updateUserCustomStatus(customStatus, callback = (customStatus : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ customStatus });
+                }
+            });
+        });
+    }
+
+    // update(_ offlinePushRule: NZIMUserOfflinePushRule, callback: @escaping NZIMUserOfflinePushRuleUpdatedCallback)
+    updateUserOfflinePushRule(config : ZIMUserOfflinePushRule) : Promise<ZIMUserOfflinePushRuleUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMUserOfflinePushRule();
+            _config.onlinePlatforms = config.onlinePlatforms ?? [];
+            _config.notToReceiveOfflinePushPlatforms = config.notToReceiveOfflinePushPlatforms ?? [];
+
+            this._zim!.update(_config, callback = (info : NZIMUserOfflinePushRule, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ offlinePushRule: mZIMUserOfflinePushRule(info) });
+                }
+            });
+        });
+    }
+
+    // querySelfUserInfo(_ callback: @escaping NZIMSelfUserInfoQueriedCallback)
+    querySelfUserInfo() : Promise<ZIMSelfUserInfoQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.querySelfUserInfo((info : NZIMSelfUserInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({
+                        selfUserInfo: {
+                            userRule: { offlinePushRule: mZIMUserOfflinePushRule(info.userRule.offlinePushRule) },
+                            userStatus: mZIMUserStatus(info.userStatus),
+                            userFullInfo: mZIMUserFullInfo(info.userFullInfo)
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    // queryUsersInfo(by userIDs: [String], config: NZIMUsersInfoQueryConfig, callback: @escaping NZIMUsersInfoQueriedCallback)
+    queryUsersInfo(userIDs : string[], config : ZIMUsersInfoQueryConfig) : Promise<ZIMUsersInfoQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMUsersInfoQueryConfig();
+            _config.isQueryFromServer = config.isQueryFromServer ?? false;
+
+            this._zim!.queryUsersInfo(by = userIDs, config = _config, callback = 
+                (infos : Array<NZIMUserFullInfo>, errorUserList : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ userList: mZIMUserFullInfoList(infos), errorUserList: mZIMErrorUserInfoList(errorUserList) });
+                    }
+                });
+        });
+    }
+
+    // subscribeUsersStatus(_ userIDs: [String], config: NZIMUserStatusSubscribeConfig, callback: @escaping NZIMUsersStatusSubscribedCallback)
+    subscribeUsersStatus(userIDs : string[], config : ZIMUserStatusSubscribeConfig) : Promise<ZIMUsersStatusSubscribedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMUserStatusSubscribeConfig();
+            _config.subscriptionDuration = config.subscriptionDuration.toUInt32();
+
+            this._zim!.subscribeUsersStatus(userIDs, config = _config, callback = (infos : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ errorUserList: mZIMErrorUserInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // unsubscribeUsersStatus(_ userIDs: [String], callback: @escaping NZIMUsersStatusUnsubscribedCallback)
+    unsubscribeUsersStatus(userIDs : string[]) : Promise<ZIMUsersStatusUnsubscribedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.unsubscribeUsersStatus(userIDs, callback = (infos : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ errorUserList: mZIMErrorUserInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // queryUsersStatus(by userIDs: [String], callback: @escaping NZIMUsersStatusQueriedCallback)
+    queryUsersStatus(userIDs : string[]) : Promise<ZIMUsersStatusQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryUsersStatus(by = userIDs, callback = (infos : Array<NZIMUserStatus>, errorUserList : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ userStatusList: mZIMUserStatusList(infos), errorUserList: mZIMErrorUserInfoList(errorUserList) });
+                }
+            });
+        });
+    }
+
+    // querySubscribedUserStatusList(with config: NZIMSubscribedUserStatusQueryConfig, callback: @escaping NZIMSubscribedUserStatusListQueriedCallback)
+    querySubscribedUserStatusList(config : ZIMSubscribedUserStatusQueryConfig) : Promise<ZIMSubscribedUserStatusListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMSubscribedUserStatusQueryConfig();
+            if (config.userIDs != null) {
+                _config.userIDs = config.userIDs!;
+            }
+
+            this._zim!.querySubscribedUserStatusList(with = _config, callback = (infos : Array<NZIMUserStatusSubscription>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ userStatusSubscriptionList: mZIMUserStatusSubscriptionList(infos) });
+                }
+            });
+        });
+    }
+
+    // MARK: - Conversation
+
+    // queryConversation(by conversationID: String, conversationType: NZIMConversationType, callback: @escaping NZIMConversationQueriedCallback)
+    queryConversation(conversationID : string, conversationType : ZIMConversationType) : Promise<ZIMConversationQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            this._zim!.queryConversation(by = conversationID, conversationType = _type, callback = (info : NZIMConversation, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ conversation: mZIMConversation(info) });
+                }
+            });
+        });
+    }
+
+    // queryConversationList(with config: NZIMConversationQueryConfig, option: NZIMConversationFilterOption, callback: @escaping NZIMConversationListQueriedCallback)
+    queryConversationList(config : ZIMConversationQueryConfig, option ?: ZIMConversationFilterOption) : Promise<ZIMConversationListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMConversationQueryConfig();
+            _config.count = config.count.toUInt32();
+            if (config.nextConversation != null) {
+                _config.nextConversation = this.nextConversationMap.get(config.nextConversation!);
+            }
+
+            const _option = new NZIMConversationFilterOption();
+            if (option != null) {
+                _option.isOnlyUnreadConversation = option!.isOnlyUnreadConversation ?? false;
+                _option.marks = option!.marks ?? [];
+                _option.conversationTypes = option!.conversationTypes ?? [];
+                _option.pinnedFilter = NZIMConversationPinnedFilter(rawValue = (option!.pinnedFilter ?? 0).toUInt())!;
+            }
+
+            this._zim!.queryConversationList(with = _config, option = _option, callback = (infos : Array<NZIMConversation>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    const len = infos.length;
+                    if (len > 0) {
+                        this.putNextConversation(infos[len - 1]);
+                    }
+                    resolve({ conversationList: mZIMConversationList(infos) });
+                }
+            });
+        });
+    }
+
+    // queryConversationPinnedList(with config: NZIMConversationQueryConfig, callback: @escaping NZIMConversationPinnedListQueriedCallback)
+    queryConversationPinnedList(config : ZIMConversationQueryConfig) : Promise<ZIMConversationPinnedListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMConversationQueryConfig();
+            _config.count = config.count.toUInt32();
+            if (config.nextConversation != null) {
+                _config.nextConversation = this.nextConversationMap.get(config.nextConversation!);
+            }
+
+            this._zim!.queryConversationPinnedList(with = _config, callback = (infos : Array<NZIMConversation>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    const len = infos.length;
+                    if (len > 0) {
+                        this.putNextConversation(infos[len - 1]);
+                    }
+                    resolve({ conversationList: mZIMConversationList(infos) });
+                }
+            });
+        });
+    }
+
+    // queryConversationTotalUnreadMessageCount(with config: NZIMConversationTotalUnreadMessageCountQueryConfig, callback: @escaping NZIMConversationTotalUnreadMessageCountQueriedCallback)
+    queryConversationTotalUnreadMessageCount(config : ZIMConversationTotalUnreadMessageCountQueryConfig) : Promise<ZIMConversationTotalUnreadMessageCountQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMConversationTotalUnreadMessageCountQueryConfig();
+            _config.marks = config.marks ?? [];
+            _config.conversationTypes = config.conversationTypes ?? [];
+
+            this._zim!.queryConversationTotalUnreadMessageCount(with = _config, callback = (count : UInt32, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ unreadMessageCount: Number.from(count) });
+                }
+            });
+        });
+    }
+
+    // deleteConversation(by conversationID: String, conversationType: NZIMConversationType, config: NZIMConversationDeleteConfig, callback: @escaping NZIMConversationDeletedCallback)
+    deleteConversation(conversationID : string, conversationType : ZIMConversationType, config : ZIMConversationDeleteConfig) : Promise<ZIMConversationDeletedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+            const _config = new NZIMConversationDeleteConfig();
+            _config.isAlsoDeleteServerConversation = config.isAlsoDeleteServerConversation ?? true;
+
+            this._zim!.deleteConversation(by = conversationID, conversationType = _type, config = _config, callback =
+                (conversationID : string, conversationType : NZIMConversationType, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ conversationID, conversationType: conversationType.rawValue });
+                    }
+                });
+        });
+    }
+
+    // deleteAllConversations(with config: NZIMConversationDeleteConfig, callback: @escaping NZIMConversationsAllDeletedCallback)
+    deleteAllConversations(config : ZIMConversationDeleteConfig) : Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMConversationDeleteConfig();
+            _config.isAlsoDeleteServerConversation = config.isAlsoDeleteServerConversation ?? true;
+
+            this._zim!.deleteAllConversations(with = _config, callback = (errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    // deleteAllConversationMessages(with config: NZIMMessageDeleteConfig, callback: @escaping NZIMConversationMessagesAllDeletedCallback)
+    deleteAllConversationMessages(config : ZIMMessageDeleteConfig) : Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMMessageDeleteConfig();
+            _config.isAlsoDeleteServerMessage = config.isAlsoDeleteServerMessage ?? true;
+
+            this._zim!.deleteAllConversationMessages(with = _config, callback = (errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    // clearConversationUnreadMessageCount(for conversationID: String, conversationType: NZIMConversationType, callback: @escaping NZIMConversationUnreadMessageCountClearedCallback)
+    clearConversationUnreadMessageCount(conversationID : string, conversationType : ZIMConversationType) : Promise<ZIMConversationUnreadMessageCountClearedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            this._zim!.clearConversationUnreadMessageCount(for = conversationID, conversationType = _type, callback =
+                (conversationID : string, conversationType : NZIMConversationType, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ conversationID, conversationType: conversationType.rawValue });
+                    }
+                });
+        });
+    }
+
+    // clearConversationTotalUnreadMessageCount(_ callback: @escaping NZIMConversationTotalUnreadMessageCountClearedCallback)
+    clearConversationTotalUnreadMessageCount() : Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.clearConversationTotalUnreadMessageCount((errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    // updateConversationPinnedState(_ isPinned: Bool, conversationID: String, conversationType: NZIMConversationType, callback: @escaping NZIMConversationPinnedStateUpdatedCallback)
+    updateConversationPinnedState(isPinned : boolean, conversationID : string, conversationType : ZIMConversationType) : Promise<ZIMConversationPinnedStateUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            this._zim!.updateConversationPinnedState(isPinned, conversationID = conversationID, conversationType = _type, callback =
+                (conversationID : string, conversationType : NZIMConversationType, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ conversationID, conversationType: conversationType.rawValue });
+                    }
+                });
+        });
+    }
+
+    // setConversationDraft(_ draft: String, conversationID: String, conversationType: NZIMConversationType, callback: @escaping NZIMConversationDraftSetCallback)
+    setConversationDraft(draft : string, conversationID : string, conversationType : ZIMConversationType) : Promise<ZIMConversationDraftSetResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            this._zim!.setConversationDraft(draft, conversationID = conversationID, conversationType = _type, callback =
+                (conversationID : string, conversationType : NZIMConversationType, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ conversationID, conversationType: conversationType.rawValue });
+                    }
+                });
+        });
+    }
+
+    // setConversationMark(_ markType: NSNumber, enable: Bool, conversationInfos: [ZIMConversationBaseInfo], callback: @escaping NZIMConversationMarkSetCallback)
+    setConversationMark(markType : number, enable : boolean, conversationInfos : ZIMConversationBaseInfo[]) : Promise<ZIMConversationMarkSetResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.setConversationMark(markType, enable = enable, conversationInfos = oZIMConversationBaseInfoList(conversationInfos), callback = 
+                (infos : Array<NZIMConversationBaseInfo>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ failedConversationInfos: mZIMConversationBaseInfoList(infos) });
+                    }
+                });
+        });
+    }
+
+    // setConversationNotificationStatus(_ status: NZIMConversationNotificationStatus, conversationID: String, conversationType: NZIMConversationType, callback: @escaping NZIMConversationNotificationStatusSetCallback)
+    setConversationNotificationStatus(status : ZIMConversationNotificationStatus, conversationID : string, conversationType : ZIMConversationType) : Promise<ZIMConversationNotificationStatusSetResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _status = NZIMConversationNotificationStatus(rawValue = status.toUInt())!;
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            this._zim!.setConversationNotificationStatus(_status, conversationID = conversationID, conversationType = _type, callback =
+                (conversationID : string, conversationType : NZIMConversationType, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ conversationID, conversationType: conversationType.rawValue });
+                    }
+                });
+        });
+    }
+
+    // MARK: - Message
+
+    // sendMessage(_ message: NZIMMessage, toConversationID: String, conversationType: NZIMConversationType, config: NZIMMessageSendConfig, notification: NZIMMessageSendNotification?, callback: @escaping NZIMMessageSentCallback)
+    @UTSJS.keepAlive
+    sendMessage(message : ZIMMessage, toConversationID : string, conversationType : ZIMConversationType, config : ZIMMessageSendConfig, notification ?: ZIMMessageSendNotification) : Promise<ZIMMessageSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            const _notification = new NZIMMessageSendNotification();
+            _notification.onMessageAttached = (info : NZIMMessage) => {
+                notification?.onMessageAttached?.(mZIMMessage(info));
+            };
+            _notification.onMediaUploadingProgress = (info : NZIMMediaMessage, currentFileSize : UInt64, totalFileSize : UInt64) => {
+                notification?.onMediaUploadingProgress?.(mZIMMessage(info), Number.from(currentFileSize), Number.from(totalFileSize));
+            };
+            _notification.onMultipleMediaUploadingProgress = (
+                info : NZIMMultipleMessage, currentFileSize : UInt64, totalFileSize : UInt64, messageInfoIndex : UInt32, currentIndexFileSize : UInt64, totalIndexFileSize : UInt64) => {
+                notification?.onMultipleMediaUploadingProgress?.(
+                    mZIMMessage(info),
+                    Number.from(currentFileSize),
+                    Number.from(totalFileSize),
+                    Number.from(messageInfoIndex),
+                    Number.from(currentIndexFileSize),
+                    Number.from(totalIndexFileSize),
+                );
+            };
+
+            this._zim!.sendMessage(oZIMMessage(message, true), toConversationID = toConversationID, conversationType = _type, config = oZIMMessageSendConfig(config), notification = _notification, callback =
+                (info : NZIMMessage, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ message: mZIMMessage(info) });
+                    }
+                });
+        });
+    }
+
+    // replyMessage(_ message: NZIMMessage, toOriginalMessage: NZIMMessage, config: NZIMMessageSendConfig, notification: NZIMMessageSendNotification?, callback: @escaping NZIMMessageSentCallback)
+    @UTSJS.keepAlive
+    replyMessage(message : ZIMMessage, toOriginalMessage : ZIMMessage, config : ZIMMessageSendConfig, notification ?: ZIMMessageSendNotification) : Promise<ZIMMessageSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _notification = new NZIMMessageSendNotification();
+            _notification.onMessageAttached = (info : NZIMMessage) => {
+                notification?.onMessageAttached?.(mZIMMessage(info));
+            };
+            _notification.onMediaUploadingProgress = (info : NZIMMediaMessage, currentFileSize : UInt64, totalFileSize : UInt64) => {
+                notification?.onMediaUploadingProgress?.(mZIMMessage(info), Number.from(currentFileSize), Number.from(totalFileSize));
+            };
+            _notification.onMultipleMediaUploadingProgress = (
+                info : NZIMMultipleMessage, currentFileSize : UInt64, totalFileSize : UInt64, messageInfoIndex : UInt32, currentIndexFileSize : UInt64, totalIndexFileSize : UInt64) => {
+                notification?.onMultipleMediaUploadingProgress?.(
+                    mZIMMessage(info),
+                    Number.from(currentFileSize),
+                    Number.from(totalFileSize),
+                    Number.from(messageInfoIndex),
+                    Number.from(currentIndexFileSize),
+                    Number.from(totalIndexFileSize),
+                );
+            };
+
+            this._zim!.replyMessage(oZIMMessage(message, true), toOriginalMessage = oZIMMessage(toOriginalMessage, false), config = oZIMMessageSendConfig(config), notification = _notification, callback =
+                (info : NZIMMessage, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ message: mZIMMessage(info) });
+                    }
+                });
+        });
+    }
+
+    // editMessage(_ message: NZIMMessage, config: NZIMMessageEditConfig, notification: NZIMMessageSendNotification?, callback: @escaping NZIMMessageEditedCallback)
+    @UTSJS.keepAlive
+    editMessage(message : ZIMMessage, config : ZIMMessageEditConfig, notification ?: ZIMMessageSendNotification) : Promise<ZIMMessageEditedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = config;
+
+            const _notification = new NZIMMessageSendNotification();
+            _notification.onMessageAttached = (info : NZIMMessage) => {
+                notification?.onMessageAttached?.(mZIMMessage(info));
+            };
+            _notification.onMediaUploadingProgress = (info : NZIMMediaMessage, currentFileSize : UInt64, totalFileSize : UInt64) => {
+                notification?.onMediaUploadingProgress?.(mZIMMessage(info), Number.from(currentFileSize), Number.from(totalFileSize));
+            };
+            _notification.onMultipleMediaUploadingProgress = (
+                info : NZIMMultipleMessage, currentFileSize : UInt64, totalFileSize : UInt64, messageInfoIndex : UInt32, currentIndexFileSize : UInt64, totalIndexFileSize : UInt64) => {
+                notification?.onMultipleMediaUploadingProgress?.(
+                    mZIMMessage(info),
+                    Number.from(currentFileSize),
+                    Number.from(totalFileSize),
+                    Number.from(messageInfoIndex),
+                    Number.from(currentIndexFileSize),
+                    Number.from(totalIndexFileSize),
+                );
+            };
+
+            this._zim!.editMessage(oZIMMessage(message, false), config = new NZIMMessageEditConfig(), notification = _notification, callback = 
+                (info : NZIMMessage, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ message: mZIMMessage(info) });
+                    }
+                });
+        });
+    }
+
+    cancelSendingMessage(message : ZIMMessage, config : ZIMSendingMessageCancelConfig) : Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = config;
+
+            this._zim!.cancelSendingMessage(oZIMMessage(message, false), config = new NZIMSendingMessageCancelConfig(), callback = (errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve();
+                }
+            });
+        });
+    }
+    
+    // downloadMediaFile(with message: NZIMMessage, fileType: NZIMMediaFileType, config: NZIMMediaDownloadConfig, progress: @escaping NZIMMediaDownloadingProgress, callback: @escaping NZIMMediaDownloadedCallback)
+    @UTSJS.keepAlive
+    downloadMediaFile(message : ZIMMessage, fileType : ZIMMediaFileType, config : ZIMMediaDownloadConfig, progress : ZIMMediaDownloadingProgress) : Promise<ZIMMediaDownloadedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMMediaFileType(rawValue = fileType.toUInt())!;
+
+            const _config = new NZIMMediaDownloadConfig();
+            _config.messageInfoIndex = (config.messageInfoIndex ?? 0).toUInt32();
+
+            const _progress = (info : NZIMMessage, currentFileSize : UInt64, totalFileSize : UInt64) => {
+                progress(mZIMMessage(info), Number.from(currentFileSize), Number.from(totalFileSize));
+            };
+
+            this._zim!.downloadMediaFile(with = oZIMMessage(message, false), fileType = _type, config = _config, progress = _progress, callback = 
+                (info : NZIMMessage, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ message: mZIMMessage(info) });
+                    }
+                });
+        });
+    }
+
+    // importLocalMessages(fromFolderPath folderPath: String, config: NZIMMessageImportConfig, progress: @escaping NZIMMessageImportingProgress, callback: @escaping NZIMMessageImportedCallback)
+    @UTSJS.keepAlive
+    importLocalMessages(folderPath : string, config : ZIMMessageImportConfig, progress : ZIMMessageImportingProgress) : Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = config;
+
+            const _progress = (currentMessageCount : UInt64, totalMessageCount : UInt64) => {
+                progress(Number.from(currentMessageCount), Number.from(totalMessageCount));
+            };
+
+            this._zim!.importLocalMessages(fromFolderPath = folderPath, config = new NZIMMessageImportConfig(), progress = _progress, callback = (errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    // exportLocalMessages(toFolderPath folderPath: String, config: NZIMMessageExportConfig, progress: @escaping NZIMMessageExportingProgress, callback: @escaping NZIMMessageExportedCallback)
+    @UTSJS.keepAlive
+    exportLocalMessages(folderPath : string, config : ZIMMessageExportConfig, progress : ZIMMessageExportingProgress) : Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = config;
+
+            const _progress = (currentMessageCount : UInt64, totalMessageCount : UInt64) => {
+                progress(Number.from(currentMessageCount), Number.from(totalMessageCount));
+            };
+
+            this._zim!.exportLocalMessages(toFolderPath = folderPath, config = new NZIMMessageExportConfig(), progress = _progress, callback = (errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    // deleteMessages(_ messageList: [ZIMMessage], conversationID: String, conversationType: NZIMConversationType, config: NZIMMessageDeleteConfig, callback: @escaping NZIMMessageDeletedCallback)
+    deleteMessages(messageList : ZIMMessage[], conversationID : string, conversationType : ZIMConversationType, config : ZIMMessageDeleteConfig) : Promise<ZIMMessageDeletedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            const _config = new NZIMMessageDeleteConfig();
+            _config.isAlsoDeleteServerMessage = config.isAlsoDeleteServerMessage ?? true;
+
+            this._zim!.deleteMessages(oZIMMessageList(messageList), conversationID = conversationID, conversationType = _type, config = _config, callback =
+                (conversationID : string, conversationType : NZIMConversationType, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ conversationID, conversationType: conversationType.rawValue });
+                    }
+                });
+        });
+    }
+
+    // deleteAllMessage(by conversationID: String, conversationType: NZIMConversationType, config: NZIMMessageDeleteConfig, callback: @escaping NZIMMessageDeletedCallback)
+    deleteAllMessage(conversationID : string, conversationType : ZIMConversationType, config : ZIMMessageDeleteConfig) : Promise<ZIMMessageDeletedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            const _config = new NZIMMessageDeleteConfig();
+            _config.isAlsoDeleteServerMessage = config.isAlsoDeleteServerMessage ?? true;
+
+            this._zim!.deleteAllMessage(by = conversationID, conversationType = _type, config = _config, callback =
+                (conversationID : string, conversationType : NZIMConversationType, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ conversationID, conversationType: conversationType.rawValue });
+                    }
+                });
+        });
+    }
+
+    // queryHistoryMessage(by conversationID: String, conversationType: NZIMConversationType, config: NZIMMessageQueryConfig, callback: @escaping NZIMMessageQueriedCallback)
+    queryHistoryMessage(conversationID : string, conversationType : ZIMConversationType, config : ZIMMessageQueryConfig) : Promise<ZIMMessageQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            const _config = new NZIMMessageQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.reverse = config.reverse ?? true;
+            if (config.nextMessage != null) {
+                _config.nextMessage = this.nextMessageMap.get(config.nextMessage!);
+            }
+
+            this._zim!.queryHistoryMessage(by = conversationID, conversationType = _type, config = _config, callback =
+                (conversationID : string, conversationType : NZIMConversationType, infos : Array<NZIMMessage>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        const len = infos.length;
+                        if (len > 0) {
+                            this.putNextMessage(infos[0]);
+                            this.putNextMessage(infos[len - 1]);
+                        }
+                        resolve({ conversationID, conversationType: conversationType.rawValue, messageList: mZIMMessageList(infos) });
+                    }
+                });
+        });
+    }
+
+    // queryMessages(by messageSeqs: [NSNumber], conversationID: String, conversationType: NZIMConversationType, callback: @escaping NZIMMessageQueriedCallback)
+    queryMessages(messageSeqs : number[], conversationID : string, conversationType : ZIMConversationType) : Promise<ZIMMessageQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            this._zim!.queryMessages(by = messageSeqs, conversationID = conversationID, conversationType = _type, callback =
+                (conversationID : string, conversationType : NZIMConversationType, infos : Array<NZIMMessage>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ conversationID, conversationType: conversationType.rawValue, messageList: mZIMMessageList(infos) });
+                    }
+                });
+        });
+    }
+
+    // insertMessageToLocalDB(_ message: NZIMMessage, conversationID: String, conversationType: NZIMConversationType, senderUserID: String, callback: @escaping NZIMMessageInsertedCallback)
+    insertMessageToLocalDB(message : ZIMMessage, conversationID : string, conversationType : ZIMConversationType, senderUserID : string) : Promise<ZIMMessageInsertedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            this._zim!.insertMessageToLocalDB(oZIMMessage(message, true), conversationID = conversationID, conversationType = _type, senderUserID = senderUserID, callback =
+                (info : NZIMMessage, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ message: mZIMMessage(info) });
+                    }
+                });
+        });
+    }
+
+    // updateMessageLocalExtendedData(_ localExtendedData: String, message: NZIMMessage, callback: @escaping NZIMMessageLocalExtendedDataUpdatedCallback)
+    updateMessageLocalExtendedData(localExtendedData : string, message : ZIMMessage) : Promise<ZIMMessageLocalExtendedDataUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.updateMessageLocalExtendedData(localExtendedData, message = oZIMMessage(message, false), callback = (info : NZIMMessage, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ message: mZIMMessage(info) });
+                }
+            });
+        });
+    }
+
+    // revokeMessage(_ message: NZIMMessage, config: NZIMMessageRevokeConfig, callback: @escaping NZIMMessageRevokedCallback)
+    revokeMessage(message : ZIMMessage, config : ZIMMessageRevokeConfig) : Promise<ZIMMessageRevokedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMMessageRevokeConfig();
+            _config.revokeExtendedData = config.revokeExtendedData ?? '';
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.revokeMessage(oZIMMessage(message, false), config = _config, callback = (info : NZIMMessage, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ message: mZIMMessage(info) });
+                }
+            });
+        });
+    }
+
+    // queryCombineMessageDetail(by message: NZIMCombineMessage, callback: @escaping NZIMCombineMessageDetailQueriedCallback)
+    queryCombineMessageDetail(message : ZIMMessage) : Promise<ZIMCombineMessageDetailQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryCombineMessageDetail(by = oZIMMessage(message, false) as NZIMCombineMessage, callback = (info : NZIMCombineMessage, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ message: mZIMMessage(info) });
+                }
+            });
+        });
+    }
+
+    // pinMessage(_ message: NZIMMessage, isPinned: Bool, callback: @escaping NZIMMessagePinnedCallback)
+    pinMessage(message : ZIMMessage, isPinned : boolean) : Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.pinMessage(oZIMMessage(message, false), isPinned = isPinned, callback = (errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve();
+                }
+            });
+        });
+    }
+    
+    // queryPinnedMessageList(by conversationID: String, conversationType: NZIMConversationType, callback: @escaping NZIMPinnedMessageListQueriedCallback)
+    queryPinnedMessageList(conversationID : string, conversationType : ZIMConversationType) : Promise<ZIMPinnedMessageListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+    
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+    
+            this._zim!.queryPinnedMessageList(by = conversationID, conversationType = _type, callback =
+                (infos : Array<NZIMMessage>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ messageList: mZIMMessageList(infos) });
+                    }
+                });
+        });
+    }
+    
+    // sendConversationMessageReceiptRead(for conversationID: String, conversationType: NZIMConversationType, callback: @escaping NZIMConversationMessageReceiptReadSentCallback)
+    sendConversationMessageReceiptRead(conversationID : string, conversationType : ZIMConversationType) : Promise<ZIMConversationMessageReceiptReadSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            this._zim!.sendConversationMessageReceiptRead(for = conversationID, conversationType = _type, callback =
+                (conversationID : string, conversationType : NZIMConversationType, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ conversationID, conversationType: conversationType.rawValue });
+                    }
+                });
+        });
+    }
+
+    // sendMessageReceiptsRead(_ messageList: [ZIMMessage], conversationID: String, conversationType: NZIMConversationType, callback: @escaping NZIMMessageReceiptsReadSentCallback)
+    sendMessageReceiptsRead(messageList : ZIMMessage[], conversationID : string, conversationType : ZIMConversationType) : Promise<ZIMMessageReceiptsReadSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            this._zim!.sendMessageReceiptsRead(oZIMMessageList(messageList), conversationID = conversationID, conversationType = _type, callback =
+                (conversationID : string, conversationType : NZIMConversationType, errorMessageIDs : Array<number>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ conversationID, conversationType: conversationType.rawValue, errorMessageIDs: errorMessageIDs.map((v) => v.toString(v)) });
+                    }
+                });
+        });
+    }
+
+    // queryMessageReceiptsInfo(by messageList: [ZIMMessage], conversationID: String, conversationType: NZIMConversationType, callback: @escaping NZIMMessageReceiptsInfoQueriedCallback)
+    queryMessageReceiptsInfo(messageList : ZIMMessage[], conversationID : string, conversationType : ZIMConversationType) : Promise<ZIMMessageReceiptsInfoQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            this._zim!.queryMessageReceiptsInfo(by = oZIMMessageList(messageList), conversationID = conversationID, conversationType = _type, callback =
+                (infos : Array<NZIMMessageReceiptInfo>, errorMessageIDs : Array<string>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ infos: mZIMMessageReceiptInfoList(infos), errorMessageIDs });
+                    }
+                });
+        });
+    }
+
+    // queryGroupMessageReceiptReadMemberList(by message: NZIMMessage, groupID: String, config: NZIMGroupMessageReceiptMemberQueryConfig, callback: @escaping NZIMGroupMessageReceiptMemberListQueriedCallback)
+    queryGroupMessageReceiptReadMemberList(message : ZIMMessage, groupID : string, config : ZIMGroupMessageReceiptMemberQueryConfig) : Promise<ZIMGroupMessageReceiptMemberListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupMessageReceiptMemberQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt32();
+
+            this._zim!.queryGroupMessageReceiptReadMemberList(by = oZIMMessage(message, false), groupID = groupID, config = _config, callback =
+                (groupID : string, infos : Array<NZIMGroupMemberInfo>, nextFlag : UInt32, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, nextFlag: Number.from(nextFlag), userList: mZIMGroupMemberInfoList(infos) });
+                    }
+                });
+        });
+    }
+
+    // queryGroupMessageReceiptUnreadMemberList(by message: NZIMMessage, groupID: String, config: NZIMGroupMessageReceiptMemberQueryConfig, callback: @escaping NZIMGroupMessageReceiptMemberListQueriedCallback)
+    queryGroupMessageReceiptUnreadMemberList(message : ZIMMessage, groupID : string, config : ZIMGroupMessageReceiptMemberQueryConfig) : Promise<ZIMGroupMessageReceiptMemberListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupMessageReceiptMemberQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt32();
+
+            this._zim!.queryGroupMessageReceiptUnreadMemberList(by = oZIMMessage(message, false), groupID = groupID, config = _config, callback =
+                (groupID : string, infos : Array<NZIMGroupMemberInfo>, nextFlag : UInt32, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, nextFlag: Number.from(nextFlag), userList: mZIMGroupMemberInfoList(infos) });
+                    }
+                });
+        });
+    }
+
+    // addMessageReaction(_ reactionType: String, message: NZIMMessage, callback: @escaping NZIMMessageReactionAddedCallback)
+    addMessageReaction(reactionType : string, message : ZIMMessage) : Promise<ZIMMessageReactionAddedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.addMessageReaction(reactionType, message = oZIMMessage(message, false), callback = (info : NZIMMessageReaction, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ reaction: mZIMMessageReaction(info) });
+                }
+            });
+        });
+    }
+
+    // deleteMessageReaction(_ reactionType: String, message: NZIMMessage, callback: @escaping NZIMMessageReactionDeletedCallback)
+    deleteMessageReaction(reactionType : string, message : ZIMMessage) : Promise<ZIMMessageReactionDeletedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.deleteMessageReaction(reactionType, message = oZIMMessage(message, false), callback = (info : NZIMMessageReaction, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ reaction: mZIMMessageReaction(info) });
+                }
+            });
+        });
+    }
+
+    // queryMessageReactionUserList(by message: NZIMMessage, config: NZIMMessageReactionUserQueryConfig, callback: @escaping NZIMMessageReactionUserListQueriedCallback)
+    queryMessageReactionUserList(message : ZIMMessage, config : ZIMMessageReactionUserQueryConfig) : Promise<ZIMMessageReactionUserListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMMessageReactionUserQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt64();
+            _config.reactionType = config.reactionType ?? '';
+
+            this._zim!.queryMessageReactionUserList(by = oZIMMessage(message, false), config = _config, callback =
+                (info : NZIMMessage, infos : Array<NZIMMessageReactionUserInfo>, reactionType : string, nextFlag : Int64, totalCount : Int32, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({
+                            message: mZIMMessage(info),
+                            reactionType,
+                            nextFlag: Number.from(nextFlag),
+                            totalCount: Number.from(totalCount),
+                            userList: mZIMMessageReactionUserInfoList(infos)
+                        });
+                    }
+                });
+        });
+    }
+
+
+    // queryMessageRepliedList(by message: NZIMMessage, config: NZIMMessageRepliedListQueryConfig, callback: @escaping NZIMMessageRepliedListQueriedCallback)
+    queryMessageRepliedList(message : ZIMMessage, config : ZIMMessageRepliedListQueryConfig) : Promise<ZIMMessageRepliedListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMMessageRepliedListQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toInt64();
+
+            this._zim!.queryMessageRepliedList(by = oZIMMessage(message, false), config = _config, callback =
+                (infos : Array<NZIMMessage>, nextFlag : Int64, info : NZIMMessageRootRepliedInfo, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        const _info = {
+                            state: info.state.rawValue,
+                            senderUserID: info.senderUserID,
+                            repliedCount: Number.from(info.repliedCount),
+                            sentTime: Number.from(info.sentTime),
+                        } as ZIMMessageRootRepliedInfo;
+                        if (info.message != null) {
+                            _info.message = mZIMMessage(info.message!);
+                        }
+                        resolve({ nextFlag: Number.from(nextFlag), rootRepliedInfo: _info, messageList: mZIMMessageList(infos) });
+                    }
+                });
+        });
+    }
+
+    // MARK: - Room
+
+    // createRoom(with roomInfo: NZIMRoomInfo, config: NZIMRoomAdvancedConfig, callback: @escaping NZIMRoomCreatedCallback)
+    createRoom(roomInfo : ZIMRoomInfo, config ?: ZIMRoomAdvancedConfig) : Promise<ZIMRoomCreatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+            
+            this._zim!.createRoom(with = oZIMRoomInfo(roomInfo), config = oZIMRoomAdvancedConfig(config), callback = (info : NZIMRoomFullInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomInfo: mZIMRoomFullInfo(info) });
+                }
+            });
+        });
+    }
+
+    // enterRoom(with roomInfo: NZIMRoomInfo, config: NZIMRoomAdvancedConfig?, callback: @escaping NZIMRoomEnteredCallback)
+    enterRoom(roomInfo : ZIMRoomInfo, config ?: ZIMRoomAdvancedConfig) : Promise<ZIMRoomEnteredResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.enterRoom(with = oZIMRoomInfo(roomInfo), config = oZIMRoomAdvancedConfig(config), callback = (info : NZIMRoomFullInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomInfo: mZIMRoomFullInfo(info) });
+                }
+            });
+        });
+    }
+
+    // switchRoom(fromRoomID roomID: String, to toRoomInfo: NZIMRoomInfo, isCreateWhenRoomNotExisted: Bool, config: NZIMRoomAdvancedConfig, callback: @escaping NZIMRoomSwitchedCallback)
+    switchRoom(fromRoomID : string, toRoomInfo : ZIMRoomInfo, isCreateWhenRoomNotExisted : boolean, config ?: ZIMRoomAdvancedConfig) : Promise<ZIMRoomSwitchedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.switchRoom(fromRoomID = fromRoomID, to = oZIMRoomInfo(toRoomInfo), isCreateWhenRoomNotExisted = isCreateWhenRoomNotExisted, config = oZIMRoomAdvancedConfig(config), callback =
+                (info : NZIMRoomFullInfo, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ roomInfo: mZIMRoomFullInfo(info) });
+                    }
+                });
+        });
+    }
+
+    // joinRoom(by roomID: String, callback: @escaping NZIMRoomJoinedCallback)
+    joinRoom(roomID : string) : Promise<ZIMRoomJoinedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.joinRoom(by = roomID, callback = (info : NZIMRoomFullInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomInfo: mZIMRoomFullInfo(info) });
+                }
+            });
+        });
+    }
+
+    // leaveRoom(by roomID: String, callback: @escaping NZIMRoomLeftCallback)
+    leaveRoom(roomID : string) : Promise<ZIMRoomLeftResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.leaveRoom(by = roomID, callback = (roomID : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomID });
+                }
+            });
+        });
+    }
+
+    // leaveAllRoom(_ callback: @escaping NZIMRoomAllLeftCallback)
+    leaveAllRoom() : Promise<ZIMRoomAllLeftResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.leaveAllRoom((infos : Array<string>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomIDs: infos });
+                }
+            });
+        });
+    }
+
+    // queryRoomMembers(by userIDs: [String], roomID: String, callback: @escaping NZIMRoomMembersQueriedCallback)
+    queryRoomMembers(userIDs : string[], roomID : string) : Promise<ZIMRoomMembersQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryRoomMembers(by = userIDs, roomID = roomID, callback =
+                (roomID : string, infos : Array<NZIMRoomMemberInfo>, errorUserList : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ roomID, memberList: mZIMRoomMemberInfoList(infos), errorUserList: mZIMErrorUserInfoList(errorUserList) });
+                    }
+                });
+        });
+    }
+
+    // queryRoomMemberList(by roomID: String, config: NZIMRoomMemberQueryConfig, callback: @escaping NZIMRoomMemberQueriedCallback)
+    queryRoomMemberList(roomID : string, config : ZIMRoomMemberQueryConfig) : Promise<ZIMRoomMemberQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMRoomMemberQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = config.nextFlag ?? '';
+
+            this._zim!.queryRoomMemberList(by = roomID, config = _config, callback = (roomID : string, infos : Array<NZIMUserInfo>, nextFlag : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomID, nextFlag, memberList: mZIMUserInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // queryRoomOnlineMemberCount(by roomID: String, callback: @escaping NZIMRoomOnlineMemberCountQueriedCallback)
+    queryRoomOnlineMemberCount(roomID : string) : Promise<ZIMRoomOnlineMemberCountQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryRoomOnlineMemberCount(by = roomID, callback = (roomID : string, count : UInt32, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomID, count: Number.from(count) });
+                }
+            });
+        });
+    }
+
+    // setRoomAttributes(_ roomAttributes: [String : String], roomID: String, config: NZIMRoomAttributesSetConfig?, callback: @escaping NZIMRoomAttributesOperatedCallback)
+    setRoomAttributes(roomAttributes : UTSJSONObject, roomID : string, config : ZIMRoomAttributesSetConfig) : Promise<ZIMRoomAttributesOperatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMRoomAttributesSetConfig();
+            _config.isForce = config.isForce ?? false;
+            _config.isUpdateOwner = config.isUpdateOwner ?? false;
+            _config.isDeleteAfterOwnerLeft = config.isDeleteAfterOwnerLeft ?? false;
+
+            this._zim!.setRoomAttributes(oMap(roomAttributes), roomID = roomID, config = _config, callback = (roomID : string, infos : Array<string>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomID, errorKeys: infos });
+                }
+            });
+        });
+    }
+
+    // deleteRoomAttributes(by keys: [String], roomID: String, config: NZIMRoomAttributesDeleteConfig?, callback: @escaping NZIMRoomAttributesOperatedCallback)
+    deleteRoomAttributes(keys : string[], roomID : string, config : ZIMRoomAttributesDeleteConfig) : Promise<ZIMRoomAttributesOperatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMRoomAttributesDeleteConfig();
+            _config.isForce = config.isForce ?? false;
+
+            this._zim!.deleteRoomAttributes(by = keys, roomID = roomID, config = _config, callback = (roomID : string, infos : Array<string>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomID, errorKeys: infos });
+                }
+            });
+        });
+    }
+
+    // beginRoomAttributesBatchOperation(with roomID: String, config: NZIMRoomAttributesBatchOperationConfig?)
+    beginRoomAttributesBatchOperation(roomID : string, config : ZIMRoomAttributesBatchOperationConfig) : void {
+        if (this._zim == null) {
+            return;
+        }
+
+        const _config = new NZIMRoomAttributesBatchOperationConfig();
+        _config.isForce = config.isForce ?? false;
+        _config.isUpdateOwner = config.isUpdateOwner ?? false;
+        _config.isDeleteAfterOwnerLeft = config.isDeleteAfterOwnerLeft ?? false;
+
+        this._zim!.beginRoomAttributesBatchOperation(with = roomID, config = _config);
+    }
+
+    // endRoomAttributesBatchOperation(with roomID: String, callback: @escaping NZIMRoomAttributesBatchOperatedCallback)
+    endRoomAttributesBatchOperation(roomID : string) : Promise<ZIMRoomAttributesBatchOperatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.endRoomAttributesBatchOperation(with = roomID, callback = (roomID : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomID });
+                }
+            });
+        });
+    }
+
+    // queryRoomAllAttributes(by roomID: String, callback: @escaping NZIMRoomAttributesQueriedCallback)
+    queryRoomAllAttributes(roomID : string) : Promise<ZIMRoomAttributesQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryRoomAllAttributes(by = roomID, callback = (roomID : string, roomAttributes : Map<string, string>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomID, roomAttributes: mMap(roomAttributes) });
+                }
+            });
+        });
+    }
+
+    // setRoomMembersAttributes(_ attributes: [String : String], userIDs: [String], roomID: String, config: NZIMRoomMemberAttributesSetConfig, callback: @escaping NZIMRoomMembersAttributesOperatedCallback)
+    setRoomMembersAttributes(attributes : UTSJSONObject, userIDs : string[], roomID : string, config : ZIMRoomMemberAttributesSetConfig) : Promise<ZIMRoomMembersAttributesOperatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMRoomMemberAttributesSetConfig();
+            _config.isDeleteAfterOwnerLeft = config.isDeleteAfterOwnerLeft ?? false;
+
+            this._zim!.setRoomMembersAttributes(oMap(attributes), userIDs = userIDs, roomID = roomID, config = _config, callback =
+                (roomID : string, infos : Array<NZIMRoomMemberAttributesOperatedInfo>, errorUserList : Array<string>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ roomID, infos: mZIMRoomMemberAttributesOperatedInfoList(infos), errorUserList });
+                    }
+                });
+        });
+    }
+
+    // queryRoomMembersAttributes(by userIDs: [String], roomID: String, callback: @escaping NZIMRoomMembersAttributesQueriedCallback)
+    queryRoomMembersAttributes(userIDs : string[], roomID : string) : Promise<ZIMRoomMembersAttributesQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryRoomMembersAttributes(by = userIDs, roomID = roomID, callback = (roomID : string, infos : Array<NZIMRoomMemberAttributesInfo>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ roomID, infos: mZIMRoomMemberAttributesInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // queryRoomMemberAttributesList(by roomID: String, config: NZIMRoomMemberAttributesQueryConfig, callback: @escaping NZIMRoomMemberAttributesListQueriedCallback)
+    queryRoomMemberAttributesList(roomID : string, config : ZIMRoomMemberAttributesQueryConfig) : Promise<ZIMRoomMemberAttributesListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMRoomMemberAttributesQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = config.nextFlag ?? '';
+
+            this._zim!.queryRoomMemberAttributesList(by = roomID, config = _config, callback =
+                (roomID : string, infos : Array<NZIMRoomMemberAttributesInfo>, nextFlag : string, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ roomID, nextFlag, infos: mZIMRoomMemberAttributesInfoList(infos) });
+                    }
+                });
+        });
+    }
+
+    // MARK: - Group
+
+    // createGroup(with groupInfo: NZIMGroupInfo, userIDs: [String], config: NZIMGroupAdvancedConfig, callback: @escaping NZIMGroupCreatedCallback)
+    createGroup(groupInfo : ZIMGroupInfo, userIDs : string[], config ?: ZIMGroupAdvancedConfig) : Promise<ZIMGroupCreatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _groupInfo = new NZIMGroupInfo();
+            _groupInfo.groupID = groupInfo.groupID ?? '';
+            _groupInfo.groupName = groupInfo.groupName ?? '';
+            _groupInfo.groupAvatarUrl = groupInfo.groupAvatarUrl ?? '';
+
+            const _config = new NZIMGroupAdvancedConfig();
+            if (config != null) {
+                _config.groupNotice = config!.groupNotice ?? '';
+                _config.groupAttributes = oMap(config!.groupAttributes ?? {});
+                _config.maxMemberCount = (config!.maxMemberCount ?? 0).toUInt32();
+                _config.joinMode = NZIMGroupJoinMode(rawValue = (config!.joinMode ?? 0).toUInt())!;
+                _config.inviteMode = NZIMGroupInviteMode(rawValue = (config!.inviteMode ?? 0).toUInt())!;
+                _config.beInviteMode = NZIMGroupBeInviteMode(rawValue = (config!.beInviteMode ?? 0).toUInt())!;
+            }
+
+            this._zim!.createGroup(with = _groupInfo, userIDs = userIDs, config = _config, callback =
+                (info : NZIMGroupFullInfo, infos : Array<NZIMGroupMemberInfo>, errorUserList : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupInfo: mZIMGroupFullInfo(info), userList: mZIMGroupMemberInfoList(infos), errorUserList: mZIMErrorUserInfoList(errorUserList) });
+                    }
+                });
+        });
+    }
+
+    // joinGroup(by groupID: String, callback: @escaping NZIMGroupJoinedCallback)
+    joinGroup(groupID : string) : Promise<ZIMGroupJoinedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.joinGroup(by = groupID, callback = (info : NZIMGroupFullInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupInfo: mZIMGroupFullInfo(info) });
+                }
+            });
+        });
+    }
+
+    // leaveGroup(by groupID: String, callback: @escaping NZIMGroupLeftCallback)
+    leaveGroup(groupID : string) : Promise<ZIMGroupLeftResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.leaveGroup(by = groupID, callback = (groupID : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID });
+                }
+            });
+        });
+    }
+
+    // dismissGroup(by groupID: String, callback: @escaping NZIMGroupDismissedCallback)
+    dismissGroup(groupID : string) : Promise<ZIMGroupDismissedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.dismissGroup(by = groupID, callback = (groupID : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID });
+                }
+            });
+        });
+    }
+
+    // queryGroupInfo(by groupID: String, callback: @escaping NZIMGroupInfoQueriedCallback)
+    queryGroupInfo(groupID : string) : Promise<ZIMGroupInfoQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryGroupInfo(by = groupID, callback = (info : NZIMGroupFullInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupInfo: mZIMGroupFullInfo(info) });
+                }
+            });
+        });
+    }
+
+    // queryGroupList(_ callback: @escaping NZIMGroupListQueriedCallback)
+    queryGroupList() : Promise<ZIMGroupListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryGroupList((infos : Array<NZIMGroup>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupList: mZIMGroupList(infos) });
+                }
+            });
+        });
+    }
+
+    // updateGroupName(_ groupName: String, groupID: String, callback: @escaping NZIMGroupNameUpdatedCallback)
+    updateGroupName(groupName : string, groupID : string) : Promise<ZIMGroupNameUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.updateGroupName(groupName, groupID = groupID, callback = (groupID : string, groupName : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, groupName });
+                }
+            });
+        });
+    }
+
+    // updateGroupAvatarUrl(_ groupAvatarUrl: String, groupID: String, callback: @escaping NZIMGroupAvatarUrlUpdatedCallback)
+    updateGroupAvatarUrl(groupAvatarUrl : string, groupID : string) : Promise<ZIMGroupAvatarUrlUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.updateGroupAvatarUrl(groupAvatarUrl, groupID = groupID, callback = (groupID : string, groupAvatarUrl : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, groupAvatarUrl });
+                }
+            });
+        });
+    }
+
+    // updateGroupNotice(_ groupNotice: String, groupID: String, callback: @escaping NZIMGroupNoticeUpdatedCallback)
+    updateGroupNotice(groupNotice : string, groupID : string) : Promise<ZIMGroupNoticeUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.updateGroupNotice(groupNotice, groupID = groupID, callback = (groupID : string, groupNotice : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, groupNotice });
+                }
+            });
+        });
+    }
+
+    // updateGroupAlias(_ groupAlias: String, groupID: String, callback: @escaping NZIMGroupAliasUpdatedCallback)
+    updateGroupAlias(groupAlias : string, groupID : string) : Promise<ZIMGroupAliasUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.updateGroupAlias(groupAlias, groupID = groupID, callback = (groupID : string, groupAlias : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, groupAlias });
+                }
+            });
+        });
+    }
+
+    // muteGroup(_ isMute: Bool, groupID: String, config: NZIMGroupMuteConfig, callback: @escaping NZIMGroupMutedCallback)
+    muteGroup(isMute : boolean, groupID : string, config : ZIMGroupMuteConfig) : Promise<ZIMGroupMutedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupMuteConfig();
+            _config.mode = NZIMGroupMuteMode(rawValue = (config.mode ?? 0).toUInt())!;
+            _config.duration = (config.duration ?? 0).toInt32();
+            _config.roles = config.roles ?? [];
+
+            this._zim!.muteGroup(isMute, groupID = groupID, config = _config, callback = (groupID : string, isMute : boolean, info : NZIMGroupMuteInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, isMute, mutedInfo: mZIMGroupMuteInfo(info) });
+                }
+            });
+        });
+    }
+
+    // setGroupAttributes(_ groupAttributes: [String : String], groupID: String, callback: @escaping NZIMGroupAttributesOperatedCallback)
+    setGroupAttributes(groupAttributes : UTSJSONObject, groupID : string) : Promise<ZIMGroupAttributesOperatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.setGroupAttributes(oMap(groupAttributes), groupID = groupID, callback = (groupID : string, errorKeys : Array<string>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, errorKeys });
+                }
+            });
+        });
+    }
+
+    // deleteGroupAttributes(by keys: [String], groupID: String, callback: @escaping NZIMGroupAttributesOperatedCallback)
+    deleteGroupAttributes(keys : string[], groupID : string) : Promise<ZIMGroupAttributesOperatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.deleteGroupAttributes(by = keys, groupID = groupID, callback = (groupID : string, errorKeys : Array<string>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, errorKeys });
+                }
+            });
+        });
+    }
+
+    // queryGroupAttributes(by keys: [String], groupID: String, callback: @escaping NZIMGroupAttributesQueriedCallback)
+    queryGroupAttributes(keys : string[], groupID : string) : Promise<ZIMGroupAttributesQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryGroupAttributes(by = keys, groupID = groupID, callback = (groupID : string, info : Map<string, string>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, groupAttributes: mMap(info) });
+                }
+            });
+        });
+    }
+
+    // queryGroupAllAttributes(by groupID: String, callback: @escaping NZIMGroupAttributesQueriedCallback)
+    queryGroupAllAttributes(groupID : string) : Promise<ZIMGroupAttributesQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryGroupAllAttributes(by = groupID, callback = (groupID : string, info : Map<string, string>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, groupAttributes: mMap(info) });
+                }
+            });
+        });
+    }
+
+    // setGroupMemberRole(_ role: NZIMGroupMemberRole, forUserID: String, groupID: String, callback: @escaping NZIMGroupMemberRoleUpdatedCallback)
+    setGroupMemberRole(role : number, forUserID : string, groupID : string) : Promise<ZIMGroupMemberRoleUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.setGroupMemberRole(role.toInt32(), forUserID = forUserID, groupID = groupID, callback =
+                (groupID : string, forUserID : string, role : Int32, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, forUserID, role: Number.from(role) });
+                    }
+                });
+        });
+    }
+
+    // setGroupMemberNickname(_ nickname: String, forUserID: String, groupID: String, callback: @escaping NZIMGroupMemberNicknameUpdatedCallback)
+    setGroupMemberNickname(nickname : string, forUserID : string, groupID : string) : Promise<ZIMGroupMemberNicknameUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.setGroupMemberNickname(nickname, forUserID = forUserID, groupID = groupID, callback =
+                (groupID : string, forUserID : string, nickname : string, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, forUserID, nickname, });
+                    }
+                });
+        });
+    }
+
+    // transferGroupOwner(to toUserID: String, groupID: String, callback: @escaping NZIMGroupOwnerTransferredCallback)
+    transferGroupOwner(toUserID : string, groupID : string) : Promise<ZIMGroupOwnerTransferredResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.transferGroupOwner(to = toUserID, groupID = groupID, callback = (groupID : string, toUserID : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, toUserID });
+                }
+            });
+        });
+    }
+
+    // inviteUsersIntoGroup(with userIDs: [String], groupID: String, callback: @escaping NZIMGroupUsersInvitedCallback)
+    inviteUsersIntoGroup(userIDs : string[], groupID : string) : Promise<ZIMGroupUsersInvitedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.inviteUsersIntoGroup(with = userIDs, groupID = groupID, callback =
+                (groupID : string, infos : Array<NZIMGroupMemberInfo>, errorUserList : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, userList: mZIMGroupMemberInfoList(infos), errorUserList: mZIMErrorUserInfoList(errorUserList) });
+                    }
+                });
+        });
+    }
+
+    // kickGroupMembers(by userIDs: [String], groupID: String, callback: @escaping NZIMGroupMemberKickedCallback)
+    kickGroupMembers(userIDs : string[], groupID : string) : Promise<ZIMGroupMemberKickedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.kickGroupMembers(by = userIDs, groupID = groupID, callback =
+                (groupID : string, infos : Array<string>, errorUserList : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, kickedUserIDs: infos, errorUserList: mZIMErrorUserInfoList(errorUserList) });
+                    }
+                });
+        });
+    }
+
+    // queryGroupMemberCount(by groupID: String, callback: @escaping NZIMGroupMemberCountQueriedCallback)
+    queryGroupMemberCount(groupID : string) : Promise<ZIMGroupMemberCountQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryGroupMemberCount(by = groupID, callback = (groupID : string, count : UInt32, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, count: Number.from(count) });
+                }
+            });
+        });
+    }
+
+    // queryGroupMemberInfo(by userID: String, groupID: String, callback: @escaping NZIMGroupMemberInfoQueriedCallback)
+    queryGroupMemberInfo(userID : string, groupID : string) : Promise<ZIMGroupMemberInfoQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryGroupMemberInfo(by = userID, groupID = groupID, callback = (groupID : string, info : NZIMGroupMemberInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID, userInfo: mZIMGroupMemberInfo(info) });
+                }
+            });
+        });
+    }
+
+    // queryGroupMemberList(by groupID: String, config: NZIMGroupMemberQueryConfig, callback: @escaping NZIMGroupMemberListQueriedCallback)
+    queryGroupMemberList(groupID : string, config : ZIMGroupMemberQueryConfig) : Promise<ZIMGroupMemberListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupMemberQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt32();
+
+            this._zim!.queryGroupMemberList(by = groupID, config = _config, callback =
+                (groupID : string, infos : Array<NZIMGroupMemberInfo>, nextFlag : UInt32, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, nextFlag: Number.from(nextFlag), userList: mZIMGroupMemberInfoList(infos) });
+                    }
+                });
+        });
+    }
+
+    // muteGroupMembers(_ isMute: Bool, userIDs: [String], groupID: String, config: NZIMGroupMemberMuteConfig, callback: @escaping NZIMGroupMembersMutedCallback)
+    muteGroupMembers(isMute : boolean, userIDs : string[], groupID : string, config : ZIMGroupMemberMuteConfig) : Promise<ZIMGroupMembersMutedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupMemberMuteConfig();
+            _config.duration = config.duration.toInt32();
+
+            this._zim!.muteGroupMembers(isMute, userIDs = userIDs, groupID = groupID, config = _config, callback =
+                (groupID : string, isMute : boolean, duration : Int32, infos : Array<string>, errorUserList : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, isMute, duration: Number.from(duration), mutedUserIDs: infos, errorUserList: mZIMErrorUserInfoList(errorUserList) });
+                    }
+                });
+        });
+    }
+
+    // queryGroupMemberMutedList(by groupID: String, config: NZIMGroupMemberMutedListQueryConfig, callback: @escaping NZIMGroupMemberMutedListQueriedCallback)
+    queryGroupMemberMutedList(groupID : string, config : ZIMGroupMemberQueryConfig) : Promise<ZIMGroupMemberMutedListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupMemberMutedListQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt64();
+
+            this._zim!.queryGroupMemberMutedList(by = groupID, config = _config, callback =
+                (groupID : string, nextFlag : UInt64, infos : Array<NZIMGroupMemberInfo>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, nextFlag: Number.from(nextFlag), userList: mZIMGroupMemberInfoList(infos) });
+                    }
+                });
+        });
+    }
+
+    // update(_ mode: NZIMGroupJoinMode, groupID: String, callback: @escaping NZIMGroupJoinModeUpdatedCallback)
+    updateGroupJoinMode(mode : ZIMGroupJoinMode, groupID : string) : Promise<ZIMGroupJoinModeUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.update(NZIMGroupJoinMode(rawValue = mode.toUInt())!, groupID = groupID, callback =
+                (groupID : string, mode : NZIMGroupJoinMode, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, mode: mode.rawValue });
+                    }
+                });
+        });
+    }
+
+    // update(_ mode: NZIMGroupInviteMode, groupID: String, callback: @escaping NZIMGroupInviteModeUpdatedCallback)
+    updateGroupInviteMode(mode : ZIMGroupInviteMode, groupID : string) : Promise<ZIMGroupInviteModeUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.update(NZIMGroupInviteMode(rawValue = mode.toUInt())!, groupID = groupID, callback =
+                (groupID : string, mode : NZIMGroupInviteMode, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, mode: mode.rawValue });
+                    }
+                });
+        });
+    }
+
+    // update(_ mode: NZIMGroupBeInviteMode, groupID: String, callback: @escaping NZIMGroupBeInviteModeUpdatedCallback)
+    updateGroupBeInviteMode(mode : ZIMGroupBeInviteMode, groupID : string) : Promise<ZIMGroupBeInviteModeUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.update(NZIMGroupBeInviteMode(rawValue = mode.toUInt())!, groupID = groupID, callback =
+                (groupID : string, mode : NZIMGroupBeInviteMode, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, mode: mode.rawValue });
+                    }
+                });
+        });
+    }
+
+    // sendGroupJoinApplication(toGroupID groupID: String, config: NZIMGroupJoinApplicationSendConfig, callback: @escaping NZIMGroupJoinApplicationSentCallback)
+    sendGroupJoinApplication(groupID : string, config : ZIMGroupJoinApplicationSendConfig) : Promise<ZIMGroupJoinApplicationSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupJoinApplicationSendConfig();
+            _config.wording = config.wording ?? '';
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.sendGroupJoinApplication(toGroupID = groupID, config = _config, callback = (groupID : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ groupID });
+                }
+            });
+        });
+    }
+
+    // acceptGroupJoinApplication(fromUserID userID: String, groupID: String, config: NZIMGroupJoinApplicationAcceptConfig, callback: @escaping NZIMGroupJoinApplicationAcceptedCallback)
+    acceptGroupJoinApplication(userID : string, groupID : string, config : ZIMGroupJoinApplicationAcceptConfig) : Promise<ZIMGroupJoinApplicationAcceptedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupJoinApplicationAcceptConfig();
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.acceptGroupJoinApplication(fromUserID = userID, groupID = groupID, config = _config, callback =
+                (groupID : string, userID : string, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, userID });
+                    }
+                });
+        });
+    }
+
+    // rejectGroupJoinApplication(fromUserID userID: String, groupID: String, config: NZIMGroupJoinApplicationRejectConfig, callback: @escaping NZIMGroupJoinApplicationRejectedCallback)
+    rejectGroupJoinApplication(userID : string, groupID : string, config : ZIMGroupJoinApplicationRejectConfig) : Promise<ZIMGroupJoinApplicationRejectedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupJoinApplicationRejectConfig();
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.rejectGroupJoinApplication(fromUserID = userID, groupID = groupID, config = _config, callback =
+                (groupID : string, userID : string, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, userID });
+                    }
+                });
+        });
+    }
+
+    // sendGroupInviteApplications(toUserIDs userIDs: [String], groupID: String, config: NZIMGroupInviteApplicationSendConfig, callback: @escaping NZIMGroupInviteApplicationsSentCallback)
+    sendGroupInviteApplications(userIDs : string[], groupID : string, config : ZIMGroupInviteApplicationSendConfig) : Promise<ZIMGroupInviteApplicationsSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupInviteApplicationSendConfig();
+            _config.wording = config.wording ?? '';
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.sendGroupInviteApplications(toUserIDs = userIDs, groupID = groupID, config = _config, callback =
+                (groupID : string, infos : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, errorUserList: mZIMErrorUserInfoList(infos) });
+                    }
+                });
+        });
+    }
+
+    // acceptGroupInviteApplication(fromInviterUserID inviterUserID: String, groupID: String, config: NZIMGroupInviteApplicationAcceptConfig, callback: @escaping NZIMGroupInviteApplicationAcceptedCallback)
+    acceptGroupInviteApplication(inviterUserID : string, groupID : string, config : ZIMGroupInviteApplicationAcceptConfig) : Promise<ZIMGroupInviteApplicationAcceptedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupInviteApplicationAcceptConfig();
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.acceptGroupInviteApplication(fromInviterUserID = inviterUserID, groupID = groupID, config = _config, callback =
+                (info : NZIMGroupFullInfo, inviterUserID : string, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupInfo: mZIMGroupFullInfo(info), inviterUserID });
+                    }
+                });
+        });
+    }
+
+    // rejectGroupInviteApplication(fromInviterUserID inviterUserID: String, groupID: String, config: NZIMGroupInviteApplicationRejectConfig, callback: @escaping NZIMGroupInviteApplicationRejectedCallback)
+    rejectGroupInviteApplication(inviterUserID : string, groupID : string, config : ZIMGroupInviteApplicationRejectConfig) : Promise<ZIMGroupInviteApplicationRejectedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupInviteApplicationRejectConfig();
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.rejectGroupInviteApplication(fromInviterUserID = inviterUserID, groupID = groupID, config = _config, callback =
+                (groupID : string, inviterUserID : string, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, inviterUserID });
+                    }
+                });
+        });
+    }
+
+    // queryGroupApplicationList(with config: NZIMGroupApplicationListQueryConfig, callback: @escaping NZIMGroupApplicationListQueriedCallback)
+    queryGroupApplicationList(config : ZIMGroupApplicationListQueryConfig) : Promise<ZIMGroupApplicationListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupApplicationListQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt32();
+
+            this._zim!.queryGroupApplicationList(with = _config, callback = (infos : Array<NZIMGroupApplicationInfo>, nextFlag : UInt32, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ nextFlag: Number.from(nextFlag), applicationList: mZIMGroupApplicationInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // MARK: - Call
+
+    // callInvite(with invitees: [String], config: NZIMCallInviteConfig, callback: @escaping NZIMCallInvitationSentCallback)
+    callInvite(invitees : string[], config : ZIMCallInviteConfig) : Promise<ZIMCallInvitationSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMCallInviteConfig();
+            _config.mode = NZIMCallInvitationMode(rawValue = (config.mode ?? 0).toInt())!;
+            _config.timeout = (config.timeout ?? 0).toUInt32();
+            _config.extendedData = config.extendedData ?? '';
+            _config.enableNotReceivedCheck = config.enableNotReceivedCheck ?? false;
+
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.callInvite(with = invitees, config = _config, callback = (callID : string, info : NZIMCallInvitationSentInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({
+                        callID,
+                        timeout: Number.from(info.timeout),
+                        errorUserList: mZIMErrorUserInfoList(info.errorUserList)
+                    });
+                }
+            });
+        });
+    }
+
+    // callCancel(with invitees: [String], callID: String, config: NZIMCallCancelConfig, callback: @escaping NZIMCallCancelSentCallback)
+    callCancel(invitees : string[], callID : string, config : ZIMCallCancelConfig) : Promise<ZIMCallCancelSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMCallCancelConfig();
+            _config.extendedData = config.extendedData ?? '';
+
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.callCancel(with = invitees, callID = callID, config = _config, callback = (callID : string, infos : Array<string>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ callID, errorInvitees: infos });
+                }
+            });
+        });
+    }
+
+    // callAccept(with callID: String, config: NZIMCallAcceptConfig, callback: @escaping NZIMCallAcceptanceSentCallback)
+    callAccept(callID : string, config : ZIMCallAcceptConfig) : Promise<ZIMCallAcceptanceSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMCallAcceptConfig();
+            _config.extendedData = config.extendedData ?? '';
+
+            this._zim!.callAccept(with = callID, config = _config, callback = (callID : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ callID });
+                }
+            });
+        });
+    }
+
+    // callReject(with callID: String, config: NZIMCallRejectConfig, callback: @escaping NZIMCallRejectionSentCallback)
+    callReject(callID : string, config : ZIMCallRejectConfig) : Promise<ZIMCallRejectionSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMCallRejectConfig();
+            _config.extendedData = config.extendedData ?? '';
+
+            this._zim!.callReject(with = callID, config = _config, callback = (callID : string, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ callID });
+                }
+            });
+        });
+    }
+
+    // callingInvite(with invitees: [String], callID: String, config: NZIMCallingInviteConfig, callback: @escaping NZIMCallingInvitationSentCallback)
+    callingInvite(invitees : string[], callID : string, config : ZIMCallingInviteConfig) : Promise<ZIMCallingInvitationSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMCallingInviteConfig();
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.callingInvite(with = invitees, callID = callID, config = _config, callback =
+                (callID : string, info : NZIMCallingInvitationSentInfo, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ callID, errorUserList: mZIMErrorUserInfoList(info.errorUserList) });
+                    }
+                });
+        });
+    }
+
+    // callJoin(by callID: String, config: NZIMCallJoinConfig, callback: @escaping NZIMCallJoinSentCallback)
+    callJoin(callID : string, config : ZIMCallJoinConfig) : Promise<ZIMCallJoinSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMCallJoinConfig();
+            _config.extendedData = config.extendedData ?? '';
+
+            this._zim!.callJoin(by = callID, config = _config, callback = (callID : string, info : NZIMCallJoinSentInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({
+                        callID,
+                        createTime: Number.from(info.createTime),
+                        joinTime: Number.from(info.joinTime),
+                        extendedData: info.extendedData,
+                        callUserList: mZIMCallUserInfoList(info.callUserList)
+                    });
+                }
+            });
+        });
+    }
+
+    // callQuit(by callID: String, config: NZIMCallQuitConfig, callback: @escaping NZIMCallQuitSentCallback)
+    callQuit(callID : string, config : ZIMCallQuitConfig) : Promise<ZIMCallQuitSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMCallQuitConfig();
+            _config.extendedData = config.extendedData ?? '';
+
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.callQuit(by = callID, config = _config, callback = (callID : string, info : NZIMCallQuitSentInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({
+                        callID,
+                        createTime: Number.from(info.createTime),
+                        acceptTime: Number.from(info.acceptTime),
+                        quitTime: Number.from(info.quitTime),
+                    });
+                }
+            });
+        });
+    }
+
+    // callEnd(by callID: String, config: NZIMCallEndConfig, callback: @escaping NZIMCallEndSentCallback)
+    callEnd(callID : string, config : ZIMCallEndConfig) : Promise<ZIMCallEndSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMCallEndConfig();
+            _config.extendedData = config.extendedData ?? '';
+
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.callEnd(by = callID, config = _config, callback = (callID : string, info : NZIMCallEndedSentInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({
+                        callID,
+                        createTime: Number.from(info.createTime),
+                        acceptTime: Number.from(info.acceptTime),
+                        endTime: Number.from(info.endTime),
+                    });
+                }
+            });
+        });
+    }
+
+    // queryCallInvitationList(with config: NZIMCallInvitationQueryConfig, callback: @escaping NZIMCallInvitationListQueriedCallback)
+    queryCallInvitationList(config : ZIMCallInvitationQueryConfig) : Promise<ZIMCallInvitationListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMCallInvitationQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toInt64();
+
+            this._zim!.queryCallInvitationList(with = _config, callback = (infos : Array<NZIMCallInfo>, nextFlag : Int64, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ nextFlag: Number.from(nextFlag), callList: mZIMCallInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // MARK: - DB Search
+
+    // searchLocalConversations(with config: NZIMConversationSearchConfig, callback: @escaping NZIMConversationsSearchedCallback)
+    searchLocalConversations(config : ZIMConversationSearchConfig) : Promise<ZIMConversationsSearchedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMConversationSearchConfig();
+            _config.keywords = config.keywords ?? [];
+            _config.senderUserIDs = config.senderUserIDs ?? [];
+            _config.subMessageTypes = config.subMessageTypes ?? [];
+            _config.messageTypes = config.messageTypes ?? [];
+            _config.startTime = (config.startTime ?? 0).toInt64();
+            _config.endTime = (config.endTime ?? 0).toInt64();
+            _config.totalConversationCount = (config.totalConversationCount ?? 0).toUInt32();
+            _config.conversationMessageCount = (config.conversationMessageCount ?? 0).toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt32();
+
+            this._zim!.searchLocalConversations(with = _config, callback = (infos : Array<NZIMConversationSearchInfo>, nextFlag : UInt32, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ nextFlag: Number.from(nextFlag), conversationSearchInfoList: mZIMConversationSearchInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // searchLocalMessages(by conversationID: String, conversationType: NZIMConversationType, config: NZIMMessageSearchConfig, callback: @escaping NZIMMessagesSearchedCallback)
+    searchLocalMessages(conversationID : string, conversationType : ZIMConversationType, config : ZIMMessageSearchConfig) : Promise<ZIMMessagesSearchedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _type = NZIMConversationType(rawValue = conversationType.toInt())!;
+
+            this._zim!.searchLocalMessages(by = conversationID, conversationType = _type, config = oZIMMessageSearchConfig(config, this.nextMessageMap), callback =
+                (conversationID : string, conversationType : NZIMConversationType, infos : Array<NZIMMessage>, nextMessage : NZIMMessage | null, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        const res : ZIMMessagesSearchedResult = { conversationID, conversationType: conversationType.rawValue, messageList: mZIMMessageList(infos) };
+                        if (nextMessage != null) {
+                            res.nextMessage = this.putNextMessage(nextMessage!);
+                        }
+                        resolve(res);
+                    }
+                });
+        });
+    }
+
+    // searchGlobalLocalMessages(with config: NZIMMessageSearchConfig, callback: @escaping NZIMMessagesGlobalSearchedCallback)
+    searchGlobalLocalMessages(config : ZIMMessageSearchConfig) : Promise<ZIMMessagesGlobalSearchedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.searchGlobalLocalMessages(with = oZIMMessageSearchConfig(config, this.nextMessageMap), callback = (infos : Array<NZIMMessage>, nextMessage : NZIMMessage | null, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    const res : ZIMMessagesGlobalSearchedResult = { messageList: mZIMMessageList(infos) };
+                    if (nextMessage != null) {
+                        res.nextMessage = this.putNextMessage(nextMessage!);
+                    }
+                    resolve(res);
+                }
+            });
+        });
+    }
+
+    // searchLocalGroups(with config: NZIMGroupSearchConfig, callback: @escaping NZIMGroupsSearchedCallback)
+    searchLocalGroups(config : ZIMGroupSearchConfig) : Promise<ZIMGroupsSearchedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupSearchConfig();
+            _config.keywords = config.keywords ?? [];
+            _config.isAlsoMatchGroupMemberNickname = config.isAlsoMatchGroupMemberNickname ?? false;
+            _config.isAlsoMatchGroupMemberUserName = config.isAlsoMatchGroupMemberUserName ?? false;
+            _config.count = (config.count ?? 0).toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt32();
+
+            this._zim!.searchLocalGroups(with = _config, callback = (infos : Array<NZIMGroupSearchInfo>, nextFlag : UInt32, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ nextFlag: Number.from(nextFlag), groupSearchInfoList: mZIMGroupSearchInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // searchLocalGroupMembers(by groupID: String, config: NZIMGroupMemberSearchConfig, callback: @escaping NZIMGroupMembersSearchedCallback)
+    searchLocalGroupMembers(groupID : string, config : ZIMGroupMemberSearchConfig) : Promise<ZIMGroupMembersSearchedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMGroupMemberSearchConfig();
+            _config.keywords = config.keywords ?? [];
+            _config.isAlsoMatchGroupMemberNickname = config.isAlsoMatchGroupMemberNickname ?? false;
+            _config.count = (config.count ?? 0).toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt32();
+
+            this._zim!.searchLocalGroupMembers(by = groupID, config = _config, callback =
+                (groupID : string, infos : Array<NZIMGroupMemberInfo>, nextFlag : UInt32, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ groupID, nextFlag: Number.from(nextFlag), userList: mZIMGroupMemberInfoList(infos) });
+                    }
+                });
+        });
+    }
+
+    // searchLocalFriends(with config: NZIMFriendSearchConfig, callback: @escaping NZIMFriendsSearchedCallback)
+    searchLocalFriends(config : ZIMFriendSearchConfig) : Promise<ZIMFriendsSearchedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMFriendSearchConfig();
+            _config.keywords = config.keywords ?? [];
+            _config.isAlsoMatchFriendAlias = config.isAlsoMatchFriendAlias ?? false;
+            _config.count = (config.count ?? 0).toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt32();
+
+            this._zim!.searchLocalFriends(with = _config, callback = (infos : Array<NZIMFriendInfo>, nextFlag : UInt32, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ nextFlag: Number.from(nextFlag), friendInfoList: mZIMFriendInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // MARK: - Friend
+
+    // addFriend(by userID: String, config: NZIMFriendAddConfig, callback: @escaping NZIMFriendAddedCallback)
+    addFriend(userID : string, config : ZIMFriendAddConfig) : Promise<ZIMFriendAddedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMFriendAddConfig();
+            _config.wording = config.wording ?? '';
+            _config.friendAlias = config.friendAlias ?? '';
+            _config.friendAttributes = oMap(config.friendAttributes ?? {});
+
+            this._zim!.addFriend(by = userID, config = _config, callback = (info : NZIMFriendInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ friendInfo: mZIMFriendInfo(info) });
+                }
+            });
+        });
+    }
+
+    // deleteFriends(by userIDs: [String], config: NZIMFriendDeleteConfig, callback: @escaping NZIMFriendsDeletedCallback)
+    deleteFriends(userIDs : string[], config : ZIMFriendDeleteConfig) : Promise<ZIMFriendsDeletedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMFriendDeleteConfig();
+            _config.type = NZIMFriendDeleteType(rawValue = (config.type ?? 0).toInt())!;
+
+            this._zim!.deleteFriends(by = userIDs, config = _config, callback = (infos : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ errorUserList: mZIMErrorUserInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // checkFriendsRelation(by userIDs: [String], config: NZIMFriendRelationCheckConfig, callback: @escaping NZIMFriendsRelationCheckedCallback)
+    checkFriendsRelation(userIDs : string[], config : ZIMFriendRelationCheckConfig) : Promise<ZIMFriendsRelationCheckedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMFriendRelationCheckConfig();
+            _config.type = NZIMFriendRelationCheckType(rawValue = (config.type ?? 0).toInt())!;
+
+            this._zim!.checkFriendsRelation(by = userIDs, config = _config, callback =
+                (infos : Array<NZIMFriendRelationInfo>, errorUserList : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                    if (isSucc(errorInfo, reject)) {
+                        resolve({ relationInfos: mZIMFriendRelationInfoList(infos), errorUserList: mZIMErrorUserInfoList(errorUserList) });
+                    }
+                });
+        });
+    }
+
+    // updateFriendAlias(_ friendAlias: String, userID: String, callback: @escaping NZIMFriendAliasUpdatedCallback)
+    updateFriendAlias(friendAlias : string, userID : string) : Promise<ZIMFriendAliasUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.updateFriendAlias(friendAlias, userID = userID, callback = (info : NZIMFriendInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ friendInfo: mZIMFriendInfo(info) });
+                }
+            });
+        });
+    }
+
+    // updateFriendAttributes(_ friendAttributes: [String : String] = [:], userID: String, callback: @escaping NZIMFriendAttributesUpdatedCallback)
+    updateFriendAttributes(friendAttributes : UTSJSONObject, userID : string) : Promise<ZIMFriendAttributesUpdatedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.updateFriendAttributes(oMap(friendAttributes), userID = userID, callback = (info : NZIMFriendInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ friendInfo: mZIMFriendInfo(info) });
+                }
+            });
+        });
+    }
+
+    // queryFriendsInfo(by userIDs: [String], callback: @escaping NZIMFriendsInfoQueriedCallback)
+    queryFriendsInfo(userIDs : string[]) : Promise<ZIMFriendsInfoQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.queryFriendsInfo(by = userIDs, callback = (infos : Array<NZIMFriendInfo>, errorUserList : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ friendInfos: mZIMFriendInfoList(infos), errorUserList: mZIMErrorUserInfoList(errorUserList) });
+                }
+            });
+        });
+    }
+
+    // queryFriendList(with config: NZIMFriendListQueryConfig, callback: @escaping NZIMFriendListQueriedCallback)
+    queryFriendList(config : ZIMFriendListQueryConfig) : Promise<ZIMFriendListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMFriendListQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt32();
+
+            this._zim!.queryFriendList(with = _config, callback = (infos : Array<NZIMFriendInfo>, nextFlag : UInt32, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ nextFlag: Number.from(nextFlag), friendList: mZIMFriendInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // sendFriendApplication(to userID: String, config: NZIMFriendApplicationSendConfig, callback: @escaping NZIMFriendApplicationSentCallback)
+    sendFriendApplication(userID : string, config : ZIMFriendApplicationSendConfig) : Promise<ZIMFriendApplicationSentResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMFriendApplicationSendConfig();
+            _config.wording = config.wording ?? '';
+            _config.friendAlias = config.friendAlias ?? '';
+            _config.friendAttributes = oMap(config.friendAttributes ?? {});
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.sendFriendApplication(to = userID, config = _config, callback = (info : NZIMFriendApplicationInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ applicationInfo: mZIMFriendApplicationInfo(info) });
+                }
+            });
+        });
+    }
+
+    // acceptFriendApplication(from userID: String, config: NZIMFriendApplicationAcceptConfig, callback: @escaping NZIMFriendApplicationAcceptedCallback)
+    acceptFriendApplication(userID : string, config : ZIMFriendApplicationAcceptConfig) : Promise<ZIMFriendApplicationAcceptedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMFriendApplicationAcceptConfig();
+            _config.friendAlias = config.friendAlias ?? '';
+            _config.friendAttributes = oMap(config.friendAttributes ?? {});
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.acceptFriendApplication(from = userID, config = _config, callback = (info : NZIMFriendInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ friendInfo: mZIMFriendInfo(info) });
+                }
+            });
+        });
+    }
+
+    // rejectFriendApplication(from userID: String, config: NZIMFriendApplicationRejectConfig, callback: @escaping NZIMFriendApplicationRejectedCallback)
+    rejectFriendApplication(userID : string, config : ZIMFriendApplicationRejectConfig) : Promise<ZIMFriendApplicationRejectedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMFriendApplicationRejectConfig();
+            if (config.pushConfig != null) {
+                _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+            }
+
+            this._zim!.rejectFriendApplication(from = userID, config = _config, callback = (info : NZIMUserInfo, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ userInfo: mZIMUserInfo(info) });
+                }
+            });
+        });
+    }
+
+    // queryFriendApplicationList(with config: NZIMFriendApplicationListQueryConfig, callback: @escaping NZIMFriendApplicationListQueriedCallback)
+    queryFriendApplicationList(config : ZIMFriendApplicationListQueryConfig) : Promise<ZIMFriendApplicationListQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMFriendApplicationListQueryConfig();
+            _config.count = config.count.toUInt32()
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt32();
+
+            this._zim!.queryFriendApplicationList(with = _config, callback = (infos : Array<NZIMFriendApplicationInfo>, nextFlag : UInt32, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ nextFlag: Number.from(nextFlag), applicationList: mZIMFriendApplicationInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // MARK: - Blacklist
+
+    // addUsersToBlacklist(with userIDs: [String], callback: @escaping NZIMBlacklistUsersAddedCallback)
+    addUsersToBlacklist(userIDs : string[]) : Promise<ZIMBlacklistUsersAddedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.addUsersToBlacklist(with = userIDs, callback = (infos : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ errorUserList: mZIMErrorUserInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // removeUsersFromBlacklist(with userIDs: [String], callback: @escaping NZIMBlacklistUsersRemovedCallback)
+    removeUsersFromBlacklist(userIDs : string[]) : Promise<ZIMBlacklistUsersRemovedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.removeUsersFromBlacklist(with = userIDs, callback = (infos : Array<NZIMErrorUserInfo>, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ errorUserList: mZIMErrorUserInfoList(infos) });
+                }
+            });
+        });
+    }
+
+    // checkUserIsInBlacklist(by userID: String, callback: @escaping NZIMBlacklistCheckedCallback)
+    checkUserIsInBlacklist(userID : string) : Promise<ZIMBlacklistCheckedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            this._zim!.checkUserIsInBlacklist(by = userID, callback = (isUserInBlacklist : boolean, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ isUserInBlacklist });
+                }
+            });
+        });
+    }
+
+    // queryBlacklist(with config: NZIMBlacklistQueryConfig, callback: @escaping NZIMBlacklistQueriedCallback)
+    queryBlacklist(config : ZIMBlacklistQueryConfig) : Promise<ZIMBlacklistQueriedResult> {
+        return new Promise((resolve, reject) => {
+            if (this._zim == null) {
+                return reject(this.NoInitErr);
+            }
+
+            const _config = new NZIMBlacklistQueryConfig();
+            _config.count = config.count.toUInt32();
+            _config.nextFlag = (config.nextFlag ?? 0).toUInt32();
+
+            this._zim!.queryBlacklist(with = _config, callback = (infos : Array<NZIMUserInfo>, nextFlag : UInt32, errorInfo : NZIMError) => {
+                if (isSucc(errorInfo, reject)) {
+                    resolve({ nextFlag: Number.from(nextFlag), blacklist: mZIMUserInfoList(infos) });
+                }
+            });
+        });
+    }
+    
+    
+    // MARK: - Event
+    
+    @UTSJS.keepAlive
+    onError(callback: null | ((error: ZIMError) => void)): void {
+        this._event!.eventMap.onError = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onConnectionStateChanged(callback: null | ((data: ZIMEventOfConnectionStateChangedResult) => void)): void {
+        this._event!.eventMap.onConnectionStateChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onTokenWillExpire(callback: null | ((data: ZIMEventOfTokenWillExpireResult) => void)): void {
+        this._event!.eventMap.onTokenWillExpire = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onUserInfoUpdated(callback: null | ((data: ZIMEventOfUserInfoUpdatedResult) => void)): void {
+        this._event!.eventMap.onUserInfoUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onUserStatusUpdated(callback: null | ((data: ZIMEventOfUserStatusUpdatedResult) => void)): void {
+        this._event!.eventMap.onUserStatusUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onUserRuleUpdated(callback: null | ((data: ZIMEventOfUserRuleUpdatedResult) => void)): void {
+        this._event!.eventMap.onUserRuleUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onConversationsAllDeleted(callback: null | ((data: ZIMEventOfConversationsAllDeletedResult) => void)): void {
+        this._event!.eventMap.onConversationsAllDeleted = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onConversationChanged(callback: null | ((data: ZIMEventOfConversationChangedResult) => void)): void {
+        this._event!.eventMap.onConversationChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onConversationSyncStateChanged(callback: null | ((data: ZIMEventOfConversationSyncStateChangedResult) => void)): void {
+        this._event!.eventMap.onConversationSyncStateChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onConversationTotalUnreadMessageCountUpdated(callback: null | ((data: ZIMEventOfConversationTotalUnreadMessageCountUpdatedResult) => void)): void  {
+        this._event!.eventMap.onConversationTotalUnreadMessageCountUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onConversationMessageReceiptChanged(callback: null | ((data: ZIMEventOfMessageReceiptChangedResult) => void)): void {
+        this._event!.eventMap.onConversationMessageReceiptChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onMessageRevokeReceived(callback: null | ((data: ZIMEventOfMessageRevokeReceivedResult) => void)): void {
+        this._event!.eventMap.onMessageRevokeReceived = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onMessageReceiptChanged(callback: null | ((data: ZIMEventOfMessageReceiptChangedResult) => void)): void {
+        this._event!.eventMap.onMessageReceiptChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onMessageReactionsChanged(callback: null | ((data: ZIMEventOfMessageReactionsChangedResult) => void)): void {
+        this._event!.eventMap.onMessageReactionsChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onMessageRepliedCountChanged(callback: null | ((data: ZIMEventOfMessageRepliedCountChangedResult) => void)): void {
+        this._event!.eventMap.onMessageRepliedCountChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onMessageRepliedInfoChanged(callback: null | ((data: ZIMEventOfMessageRepliedInfoChangedResult) => void)): void {
+        this._event!.eventMap.onMessageRepliedInfoChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onMessagePinStatusChanged(callback: null | ((data: ZIMEventOfMessagePinStatusChangedResult) => void)): void {
+        this._event!.eventMap.onMessagePinStatusChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onMessageDeleted(callback: null | ((data: ZIMEventOfMessageDeletedResult) => void)): void {
+        this._event!.eventMap.onMessageDeleted = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onMessageEdited(callback: null | ((data: ZIMEventOfMessageEditedResult) => void)): void {
+        this._event!.eventMap.onMessageEdited = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onMessageSentStatusChanged(callback: null | ((data: ZIMEventOfMessageSentStatusChangedResult) => void)): void {
+        this._event!.eventMap.onMessageSentStatusChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onBroadcastMessageReceived(callback: null | ((data: ZIMEventOfBroadcastMessageReceivedResult) => void)): void {
+        this._event!.eventMap.onBroadcastMessageReceived = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onPeerMessageReceived(callback: null | ((data: ZIMEventOfConversationMessageReceivedResult) => void)): void {
+        this._event!.eventMap.onPeerMessageReceived = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupMessageReceived(callback: null | ((data: ZIMEventOfConversationMessageReceivedResult) => void)): void {
+        this._event!.eventMap.onGroupMessageReceived = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onRoomMessageReceived(callback: null | ((data: ZIMEventOfConversationMessageReceivedResult) => void)): void {
+        this._event!.eventMap.onRoomMessageReceived = callback;
+    }
+        
+    @UTSJS.keepAlive
+    onRoomStateChanged(callback: null | ((data: ZIMEventOfRoomStateChangedResult) => void)): void {
+        this._event!.eventMap.onRoomStateChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onRoomMemberJoined(callback: null | ((data: ZIMEventOfRoomMemberChangedResult) => void)): void {
+        this._event!.eventMap.onRoomMemberJoined = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onRoomMemberLeft(callback: null | ((data: ZIMEventOfRoomMemberChangedResult) => void)): void {
+        this._event!.eventMap.onRoomMemberLeft = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onRoomAttributesUpdated(callback: null | ((data: ZIMEventOfRoomAttributesUpdatedResult) => void)): void {
+        this._event!.eventMap.onRoomAttributesUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onRoomAttributesBatchUpdated(callback: null | ((data: ZIMEventOfRoomAttributesUpdatedResult) => void)): void {
+        this._event!.eventMap.onRoomAttributesBatchUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onRoomMemberAttributesUpdated(callback: null | ((data: ZIMEventOfRoomMembersAttributesUpdatedResult) => void)): void {
+        this._event!.eventMap.onRoomMemberAttributesUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupStateChanged(callback: null | ((data: ZIMEventOfGroupStateChangedResult) => void)): void {
+        this._event!.eventMap.onGroupStateChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupNameUpdated(callback: null | ((data: ZIMEventOfGroupNameUpdatedResult) => void)): void {
+        this._event!.eventMap.onGroupNameUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupAvatarUrlUpdated(callback: null | ((data: ZIMEventOfGroupAvatarUrlUpdatedResult) => void)): void {
+        this._event!.eventMap.onGroupAvatarUrlUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupNoticeUpdated(callback: null | ((data: ZIMEventOfGroupNoticeUpdatedResult) => void)): void {
+        this._event!.eventMap.onGroupNoticeUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupAliasUpdated(callback: null | ((data: ZIMEventOfGroupAliasUpdatedResult) => void)): void {
+        this._event!.eventMap.onGroupAliasUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupAttributesUpdated(callback: null | ((data: ZIMEventOfGroupAttributesUpdatedResult) => void)): void {
+        this._event!.eventMap.onGroupAttributesUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupMutedInfoUpdated(callback: null | ((data: ZIMEventOfGroupMutedInfoUpdatedResult) => void)): void {
+        this._event!.eventMap.onGroupMutedInfoUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupVerifyInfoUpdated(callback: null | ((data: ZIMEventOfGroupVerifyInfoUpdatedResult) => void)): void {
+        this._event!.eventMap.onGroupVerifyInfoUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupApplicationListChanged(callback: null | ((data: ZIMEventOfGroupApplicationListChangedResult) => void)): void {
+        this._event!.eventMap.onGroupApplicationListChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupApplicationUpdated(callback: null | ((data: ZIMEventOfGroupApplicationUpdatedResult) => void)): void {
+        this._event!.eventMap.onGroupApplicationUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupMemberStateChanged(callback: null | ((data: ZIMEventOfGroupMemberStateChangedResult) => void)): void {
+        this._event!.eventMap.onGroupMemberStateChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onGroupMemberInfoUpdated(callback: null | ((data: ZIMEventOfGroupMemberInfoUpdatedResult) => void)): void {
+        this._event!.eventMap.onGroupMemberInfoUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onCallInvitationCreated(callback: null | ((data: ZIMEventOfCallInvitationCreatedResult) => void)): void {
+        this._event!.eventMap.onCallInvitationCreated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onCallInvitationReceived(callback: null | ((data: ZIMEventOfCallInvitationReceivedResult) => void)): void {
+        this._event!.eventMap.onCallInvitationReceived = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onCallInvitationCancelled(callback: null | ((data: ZIMEventOfCallInvitationCancelledResult) => void)): void {
+        this._event!.eventMap.onCallInvitationCancelled = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onCallInvitationTimeout(callback: null | ((data: ZIMEventOfCallInvitationTimeoutResult) => void)): void {
+        this._event!.eventMap.onCallInvitationTimeout = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onCallInvitationEnded(callback: null | ((data: ZIMEventOfCallInvitationEndedResult) => void)): void {
+        this._event!.eventMap.onCallInvitationEnded = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onCallUserStateChanged(callback: null | ((data: ZIMEventOfCallUserStateChangedResult) => void)): void {
+        this._event!.eventMap.onCallUserStateChanged = callback;
+    }
+        
+    @UTSJS.keepAlive
+    onBlacklistChanged(callback: null | ((data: ZIMEventOfBlacklistChangedResult) => void)): void {
+        this._event!.eventMap.onBlacklistChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onFriendListChanged(callback: null | ((data: ZIMEventOfFriendListChangedResult) => void)): void {
+        this._event!.eventMap.onFriendListChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onFriendInfoUpdated(callback: null | ((data: ZIMEventOfFriendInfoUpdatedResult) => void)): void {
+        this._event!.eventMap.onFriendInfoUpdated = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onFriendApplicationListChanged(callback: null | ((data: ZIMEventOfFriendApplicationListChangedResult) => void)): void {
+        this._event!.eventMap.onFriendApplicationListChanged = callback;
+    }
+    
+    @UTSJS.keepAlive
+    onFriendApplicationUpdated(callback: null | ((data: ZIMEventOfFriendApplicationUpdatedResult) => void)): void {
+        this._event!.eventMap.onFriendApplicationUpdated = callback;
+    }
+}
+
+/**
+ * 1、@argumentLabel('') 不能去掉，否则会导致 event 失效
+ * 2、有多个空标签参数时，参数名不能更改，否则会导致 event 失效
+ */
+@UTSiOS.keyword("fileprivate")
+class ZIMEventHandlerImpl implements NZIMEventHandler {
+
+    @UTSJS.keepAlive
+    eventMap = {} as ZIMEventHandler;
+    
+    // MARK: - Main
+
+    zim(zim : NZIM, @argumentLabel('') errorInfo : NZIMError) : void {
+        this.eventMap.onError?.({ code: errorInfo.code.rawValue, message: errorInfo.message });
+    }
+
+    zim(zim : NZIM, @argumentLabel('connectionStateChanged') state : NZIMConnectionState,
+        @argumentLabel('') event : NZIMConnectionEvent,
+        @argumentLabel('') extendedData : UTSJSONObject
+    ) : void {
+        this.eventMap.onConnectionStateChanged?.({ state: state.rawValue, event: event.rawValue, extendedData });
+    }
+
+    zim(zim : NZIM, @argumentLabel('tokenWillExpire') second : UInt32) : void {
+        this.eventMap.onTokenWillExpire?.({ second: Number.from(second) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('userInfoUpdated') info : NZIMUserFullInfo) : void {
+        this.eventMap.onUserInfoUpdated?.({ info: mZIMUserFullInfo(info) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('userRuleUpdated') info : NZIMUserRule) : void {
+        this.eventMap.onUserRuleUpdated?.({ userRule: { offlinePushRule: mZIMUserOfflinePushRule(info.offlinePushRule) } });
+    }
+
+    zim(zim : NZIM, @argumentLabel('userStatusUpdated') infos : Array<NZIMUserStatus>) : void {
+        this.eventMap.onUserStatusUpdated?.({ userStatusList: mZIMUserStatusList(infos) });
+    }
+
+    // MARK: - Conversation
+
+    zim(zim : NZIM, @argumentLabel('conversationChanged') infos : Array<NZIMConversationChangeInfo>) : void {
+        this.eventMap.onConversationChanged?.({ infoList: mZIMConversationChangeInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('conversationSyncStateChanged') state : NZIMConversationSyncState) : void {
+        this.eventMap.onConversationSyncStateChanged?.({ state: state.rawValue });
+    }
+    
+    zim(zim : NZIM, @argumentLabel('conversationTotalUnreadMessageCountUpdated') count : UInt32) : void {
+        this.eventMap.onConversationTotalUnreadMessageCountUpdated?.({ totalUnreadMessageCount: Number.from(count) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('conversationsAllDeleted') info : NZIMConversationsAllDeletedInfo) : void {
+        this.eventMap.onConversationsAllDeleted?.({ count: Number.from(info.count) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('conversationMessageReceiptChanged') infos : Array<NZIMMessageReceiptInfo>) : void {
+        this.eventMap.onConversationMessageReceiptChanged?.({ infos: mZIMMessageReceiptInfoList(infos) });
+    }
+
+    // MARK: - Message
+
+    zim(zim : NZIM, @argumentLabel('peerMessageReceived') messageList : Array<NZIMMessage>,
+        @argumentLabel('') info : NZIMMessageReceivedInfo,
+        @argumentLabel('') fromUserID : string
+    ) : void {
+        this.eventMap.onPeerMessageReceived?.({ fromConversationID: fromUserID, info: { isOfflineMessage: info.isOfflineMessage }, messageList: mZIMMessageList(messageList) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('roomMessageReceived') messageList : Array<NZIMMessage>,
+        @argumentLabel('') info : NZIMMessageReceivedInfo,
+        @argumentLabel('') fromRoomID : string
+    ) : void {
+        this.eventMap.onRoomMessageReceived?.({ fromConversationID: fromRoomID, info: { isOfflineMessage: info.isOfflineMessage }, messageList: mZIMMessageList(messageList) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupMessageReceived') messageList : Array<NZIMMessage>,
+        @argumentLabel('') info : NZIMMessageReceivedInfo,
+        @argumentLabel('') fromGroupID : string
+    ) : void {
+        this.eventMap.onGroupMessageReceived?.({ fromConversationID: fromGroupID, info: { isOfflineMessage: info.isOfflineMessage }, messageList: mZIMMessageList(messageList) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('broadcastMessageReceived') info : NZIMMessage) : void {
+        this.eventMap.onBroadcastMessageReceived?.({ message: mZIMMessage(info) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('messageSentStatusChanged') infos : Array<NZIMMessageSentStatusChangeInfo>) : void {
+        this.eventMap.onMessageSentStatusChanged?.({ infos: mZIMMessageSentStatusChangeInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('messageDeleted') info : NZIMMessageDeletedInfo) : void {
+        this.eventMap.onMessageDeleted?.({
+            conversationID: info.conversationID,
+            conversationType: info.conversationType.rawValue,
+            messageDeleteType: info.messageDeleteType.rawValue,
+            isDeleteConversationAllMessage: info.isDeleteConversationAllMessage,
+            messageList: mZIMMessageList(info.messageList)
+        });
+    }
+
+    zim(zim : NZIM, @argumentLabel('messageEdited') infos : Array<NZIMMessage>) : void {
+        this.eventMap.onMessageEdited?.({ messageList: mZIMMessageList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('messageRevokeReceived') infos : Array<NZIMRevokeMessage>) : void {
+        this.eventMap.onMessageRevokeReceived?.({ messageList: mZIMMessageList(infos as Array<NZIMMessage>) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('messageReceiptChanged') infos : Array<NZIMMessageReceiptInfo>) : void {
+        this.eventMap.onMessageReceiptChanged?.({ infos: mZIMMessageReceiptInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('messageReactionsChanged') infos : Array<NZIMMessageReaction>) : void {
+        this.eventMap.onMessageReactionsChanged?.({ reactions: mZIMMessageReactionList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('messageRepliedInfoChanged') infos : Array<NZIMMessage>) : void {
+        this.eventMap.onMessageRepliedInfoChanged?.({ messageList: mZIMMessageList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('messageRepliedCountChanged') infos : Array<NZIMMessageRootRepliedCountInfo>) : void {
+        this.eventMap.onMessageRepliedCountChanged?.({ infos: mZIMMessageRootRepliedCountInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('messagePinStatusChanged') infos : Array<NZIMMessagePinStatusChangeInfo>) : void {
+        this.eventMap.onMessagePinStatusChanged?.({ infos: mZIMMessagePinStatusChangeInfoList(infos) });
+    }
+    
+    // MARK: - Room
+
+    zim(zim : NZIM, @argumentLabel('roomStateChanged') state : NZIMRoomState,
+        @argumentLabel('') event : NZIMRoomEvent,
+        @argumentLabel('') extendedData : UTSJSONObject,
+        @argumentLabel('') roomID : string
+    ) : void {
+        this.eventMap.onRoomStateChanged?.({ roomID, state: state.rawValue, event: event.rawValue, extendedData });
+    }
+
+    zim(zim : NZIM, @argumentLabel('roomMemberJoined') infos : Array<NZIMUserInfo>, @argumentLabel('') roomID : string) : void {
+        this.eventMap.onRoomMemberJoined?.({ roomID, memberList: mZIMUserInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('roomMemberLeft') infos : Array<NZIMUserInfo>, @argumentLabel('') roomID : string) : void {
+        this.eventMap.onRoomMemberLeft?.({ roomID, memberList: mZIMUserInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('roomAttributesUpdated') info : NZIMRoomAttributesUpdateInfo, @argumentLabel('') roomID : string) : void {
+        this.eventMap.onRoomAttributesUpdated?.({ roomID, infos: [{ action: info.action.rawValue, roomAttributes: mMap(info.roomAttributes) }] });
+    }
+
+    zim(zim : NZIM, @argumentLabel('roomAttributesBatchUpdated') infos : Array<NZIMRoomAttributesUpdateInfo>, @argumentLabel('') roomID : string) : void {
+        this.eventMap.onRoomAttributesBatchUpdated?.({ roomID, infos: mZIMRoomAttributesUpdateInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('roomMemberAttributesUpdated') infos : Array<NZIMRoomMemberAttributesUpdateInfo>,
+        @argumentLabel('') operatedInfo : NZIMRoomOperatedInfo,
+        @argumentLabel('') roomID : string
+    ) : void {
+        this.eventMap.onRoomMemberAttributesUpdated?.({ roomID, infos: mZIMRoomMemberAttributesUpdateInfoList(infos), operatedInfo: { userID: operatedInfo.userID } });
+    }
+
+    // MARK: - Group
+
+    zim(zim : NZIM, @argumentLabel('groupStateChanged') state : NZIMGroupState,
+        @argumentLabel('') event : NZIMGroupEvent,
+        @argumentLabel('') operatedInfo : NZIMGroupOperatedInfo,
+        @argumentLabel('') groupInfo : NZIMGroupFullInfo
+    ) : void {
+        this.eventMap.onGroupStateChanged?.({
+            state: state.rawValue,
+            event: event.rawValue,
+            operatedInfo: mZIMGroupOperatedInfo(operatedInfo),
+            groupInfo: mZIMGroupFullInfo(groupInfo),
+        });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupNameUpdated') groupName : string,
+        @argumentLabel('') operatedInfo : NZIMGroupOperatedInfo,
+        @argumentLabel('') groupID : string
+    ) : void {
+        this.eventMap.onGroupNameUpdated?.({ groupID, groupName, operatedInfo: mZIMGroupOperatedInfo(operatedInfo) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupAvatarUrlUpdated') groupAvatarUrl : string,
+        @argumentLabel('') operatedInfo : NZIMGroupOperatedInfo,
+        @argumentLabel('') groupID : string
+    ) : void {
+        this.eventMap.onGroupAvatarUrlUpdated?.({ groupID, groupAvatarUrl, operatedInfo: mZIMGroupOperatedInfo(operatedInfo) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupNoticeUpdated') groupNotice : string,
+        @argumentLabel('') operatedInfo : NZIMGroupOperatedInfo,
+        @argumentLabel('') groupID : string
+    ) : void {
+        this.eventMap.onGroupNoticeUpdated?.({ groupID, groupNotice, operatedInfo: mZIMGroupOperatedInfo(operatedInfo) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupAliasUpdated') groupAlias : string,
+        @argumentLabel('') operatedUserID : string,
+        @argumentLabel('') groupID : string
+    ) : void {
+        this.eventMap.onGroupAliasUpdated?.({ groupID, groupAlias, operatedUserID });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupAttributesUpdated') infos : Array<NZIMGroupAttributesUpdateInfo>,
+        @argumentLabel('') operatedInfo : NZIMGroupOperatedInfo,
+        @argumentLabel('') groupID : string
+    ) : void {
+        this.eventMap.onGroupAttributesUpdated?.({ groupID, infoList: mZIMGroupAttributesUpdateInfoList(infos), operatedInfo: mZIMGroupOperatedInfo(operatedInfo) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupMutedInfoUpdated') info : NZIMGroupMuteInfo,
+        @argumentLabel('') operatedInfo : NZIMGroupOperatedInfo,
+        @argumentLabel('') groupID : string
+    ) : void {
+        this.eventMap.onGroupMutedInfoUpdated?.({ groupID, mutedInfo: mZIMGroupMuteInfo(info), operatedInfo: mZIMGroupOperatedInfo(operatedInfo) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupVerifyInfoUpdated') info : NZIMGroupVerifyInfo,
+        @argumentLabel('') operatedInfo : NZIMGroupOperatedInfo,
+        @argumentLabel('') groupID : string
+    ) : void {
+        this.eventMap.onGroupVerifyInfoUpdated?.({ groupID, verifyInfo: mZIMGroupVerifyInfo(info), operatedInfo: mZIMGroupOperatedInfo(operatedInfo) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupMemberStateChanged') state : NZIMGroupMemberState,
+        @argumentLabel('') event : NZIMGroupMemberEvent,
+        @argumentLabel('') userList : Array<NZIMGroupMemberInfo>,
+        @argumentLabel('') operatedInfo : NZIMGroupOperatedInfo,
+        @argumentLabel('') groupID : string
+    ) : void {
+        this.eventMap.onGroupMemberStateChanged?.({
+            groupID,
+            state: state.rawValue,
+            event: event.rawValue,
+            userList: mZIMGroupMemberInfoList(userList),
+            operatedInfo: mZIMGroupOperatedInfo(operatedInfo),
+        });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupMemberInfoUpdated') infos : Array<NZIMGroupMemberInfo>,
+        @argumentLabel('') operatedInfo : NZIMGroupOperatedInfo,
+        @argumentLabel('') groupID : string
+    ) : void {
+        this.eventMap.onGroupMemberInfoUpdated?.({ groupID, userList: mZIMGroupMemberInfoList(infos), operatedInfo: mZIMGroupOperatedInfo(operatedInfo) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupApplicationUpdated') infos : Array<NZIMGroupApplicationInfo>) : void {
+        this.eventMap.onGroupApplicationUpdated?.({ applicationList: mZIMGroupApplicationInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('groupApplicationListChanged') infos : Array<NZIMGroupApplicationInfo>,
+        @argumentLabel('') action : NZIMGroupApplicationListChangeAction
+    ) : void {
+        this.eventMap.onGroupApplicationListChanged?.({ action: action.rawValue, applicationList: mZIMGroupApplicationInfoList(infos) });
+    }
+
+    // MARK: - Call
+
+    zim(zim : NZIM, @argumentLabel('callInvitationCreated') info : NZIMCallInvitationCreatedInfo, @argumentLabel('') callID : string) : void {
+        this.eventMap.onCallInvitationCreated?.({
+            callID,
+            mode: info.mode.rawValue,
+            caller: info.caller,
+            extendedData: info.extendedData,
+            timeout: Number.from(info.timeout),
+            createTime: Number.from(info.createTime),
+            callUserList: mZIMCallUserInfoList(info.callUserList)
+        });
+    }
+
+    zim(zim : NZIM, @argumentLabel('callInvitationReceived') info : NZIMCallInvitationReceivedInfo, @argumentLabel('') callID : string) : void {
+        this.eventMap.onCallInvitationReceived?.({
+            callID,
+            mode: info.mode.rawValue,
+            caller: info.caller,
+            inviter: info.inviter,
+            extendedData: info.extendedData,
+            timeout: Number.from(info.timeout),
+            createTime: Number.from(info.createTime),
+            callUserList: mZIMCallUserInfoList(info.callUserList)
+        });
+    }
+
+    zim(zim : NZIM, @argumentLabel('callInvitationCancelled') info : NZIMCallInvitationCancelledInfo, @argumentLabel('') callID : string) : void {
+        this.eventMap.onCallInvitationCancelled?.({ callID, mode: info.mode.rawValue, inviter: info.inviter, extendedData: info.extendedData });
+    }
+
+    zim(zim : NZIM, @argumentLabel('callInvitationTimeout') info : NZIMCallInvitationTimeoutInfo, @argumentLabel('') callID : string) : void {
+        this.eventMap.onCallInvitationTimeout?.({ callID, mode: info.mode.rawValue });
+    }
+
+    zim(zim : NZIM, @argumentLabel('callInvitationEnded') info : NZIMCallInvitationEndedInfo, @argumentLabel('') callID : string) : void {
+        this.eventMap.onCallInvitationEnded?.({
+            callID,
+            mode: info.mode.rawValue,
+            caller: info.caller,
+            operatedUserID: info.operatedUserID,
+            extendedData: info.extendedData,
+            endTime: Number.from(info.endTime),
+        });
+    }
+
+    zim(zim : NZIM, @argumentLabel('callUserStateChanged') info : NZIMCallUserStateChangeInfo, @argumentLabel('') callID : string) : void {
+        this.eventMap.onCallUserStateChanged?.({ callID, callUserList: mZIMCallUserInfoList(info.callUserList) });
+    }
+
+    // MARK: - Friend
+
+    zim(zim : NZIM, @argumentLabel('blacklistChanged') infos : Array<NZIMUserInfo>, @argumentLabel('') action : NZIMBlacklistChangeAction) : void {
+        this.eventMap.onBlacklistChanged?.({ action: action.rawValue, userList: mZIMUserInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('friendInfoUpdated') infos : Array<NZIMFriendInfo>) : void {
+        this.eventMap.onFriendInfoUpdated?.({ friendList: mZIMFriendInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('friendListChanged') infos : Array<NZIMFriendInfo>, @argumentLabel('') action : NZIMFriendListChangeAction) : void {
+        this.eventMap.onFriendListChanged?.({ action: action.rawValue, friendList: mZIMFriendInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('friendApplicationUpdated') infos : Array<NZIMFriendApplicationInfo>) : void {
+        this.eventMap.onFriendApplicationUpdated?.({ applicationList: mZIMFriendApplicationInfoList(infos) });
+    }
+
+    zim(zim : NZIM, @argumentLabel('friendApplicationListChanged') infos : Array<NZIMFriendApplicationInfo>,
+        @argumentLabel('') action : NZIMFriendApplicationListChangeAction
+    ) : void {
+        this.eventMap.onFriendApplicationListChanged?.({ action: action.rawValue, applicationList: mZIMFriendApplicationInfoList(infos) });
+    }
+}

@@ -1,0 +1,7 @@
+{
+	"minSdkVersion": "21",
+	"dependencies": ["im.zego:zim:2.26.0"],
+	"project": {
+		"repositories": ["maven { url 'https://maven.zego.im' }"]
+	}
+}

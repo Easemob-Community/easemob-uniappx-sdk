@@ -3,13 +3,19 @@
  * 实现初始化 + 登录 + 登出 + 连接监听 + 状态查询
  */
 
-import { EMClient, EMOptions, EMClientDelegate, EMError, EMErrorCode, EMConnectionState } from 'HyphenateChat';
+import {
+  EMClient,
+  EMOptions,
+  EMError,
+  EMErrorCode,
+} from 'HyphenateChat';
 import {
   EasemobClient,
   EMInitConfig,
   EMErrorListener,
   EMTokenWillExpireListener,
   EMTokenExpiredListener,
+  Message,
 } from '../interface.uts';
 
 // em_bridge.swift 中的独立函数由 UTS 编译器自动识别，无需 declare
@@ -30,6 +36,11 @@ export class EMClientImpl implements EasemobClient {
     return this._instance!;
   }
 
+  static getClient(): EasemobClient | null {
+    const instance = EMClientImpl.getInstance();
+    return instance._isInitialized ? instance : null;
+  }
+
   static create(config: EMInitConfig): EasemobClient {
     const instance = EMClientImpl.getInstance();
     if (!instance._isInitialized) {
@@ -39,6 +50,9 @@ export class EMClientImpl implements EasemobClient {
       options.isAutoLogin = autoLogin;
       EMClient.shared().initializeSDK(with = options);
       emBridgeSetupDelegate();
+      emBridgeSetupMessageDelegate();
+      console.log('[iOS] EMMessageDelegateNative registered');
+
       instance._client = EMClient.shared();
       instance._isInitialized = true;
       console.log('[iOS] EMClient SDK initialized');
@@ -104,6 +118,7 @@ export class EMClientImpl implements EasemobClient {
 
   destroy(): void {
     emBridgeTeardownDelegate();
+    emBridgeTeardownMessageDelegate();
     this._client = null;
     this._isInitialized = false;
     console.log('[iOS] EMClient SDK destroyed');
@@ -136,6 +151,22 @@ export class EMClientImpl implements EasemobClient {
     emBridgeSetOnTokenExpired(callback = listener);
   }
 
+  @UTSJS.keepAlive
+  onMessageReceived(listener: ((messages: Message[]) => void) | null): void {
+    emBridgeSetOnMessageReceived(callback = (jsonString: string) => {
+      try {
+        const messages = JSON.parse(jsonString) as Message[];
+        listener?.(messages);
+      } catch (e) {
+        console.error('[iOS] onMessageReceived JSON parse error:', e);
+      }
+    });
+  }
+
+  onCmdMessageReceived(_listener: ((messages: Message[]) => void) | null): void {
+    // 桩函数：待 iOS 桥接实现
+  }
+
   // MARK: - 状态查询
 
   getVersion(): string {
@@ -156,8 +187,14 @@ export class EMClientImpl implements EasemobClient {
 
   // MARK: - 桩函数
 
-  onError(_listener: EMErrorListener | null): void {
+  onError(listener: EMErrorListener | null): void {
     // 桩函数：待实现
+  }
+
+  sendTextMessage(_content: string, _to: string, _chatType: string, _ext: UTSJSONObject | null): Promise<Message> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('sendTextMessage is not implemented on iOS yet'));
+    });
   }
 }
 
@@ -165,4 +202,8 @@ export class EMClientImpl implements EasemobClient {
 
 export function create(config: EMInitConfig): EasemobClient {
   return EMClientImpl.create(config);
+}
+
+export function getClient(): EasemobClient | null {
+  return EMClientImpl.getClient();
 }

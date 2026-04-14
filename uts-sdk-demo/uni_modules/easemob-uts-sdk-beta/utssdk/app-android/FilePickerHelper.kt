@@ -1,4 +1,4 @@
-package uts.sdk.modules.easemobUtsSdk
+package uts.sdk.modules.easemobUtsSdkBeta
 
 import android.app.Activity
 import android.content.Context
@@ -32,12 +32,12 @@ interface FilePickerCallback {
  * 文件选择器工具类
  */
 object FilePickerHelper {
-    
+
     private const val TAG = "FilePickerHelper"
     private const val REQUEST_CODE_PICK_FILE = 10001
-    
+
     private var currentCallback: FilePickerCallback? = null
-    
+
     /**
      * 打开文件选择器
      * @param callback 选择结果回调
@@ -49,16 +49,16 @@ object FilePickerHelper {
             callback.onError(-1, "无法获取应用上下文")
             return
         }
-        
+
         currentCallback = callback
-        
+
         try {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = "*/*"
                 putExtra(Intent.EXTRA_LOCAL_ONLY, true)
             }
-            
+
             val activity = UTSAndroid.getUniActivity()
             if (activity != null) {
                 activity.startActivityForResult(intent, REQUEST_CODE_PICK_FILE)
@@ -72,7 +72,7 @@ object FilePickerHelper {
             currentCallback = null
         }
     }
-    
+
     /**
      * 处理 Activity 结果
      */
@@ -81,14 +81,14 @@ object FilePickerHelper {
         if (requestCode != REQUEST_CODE_PICK_FILE) {
             return false
         }
-        
+
         val callback = currentCallback
         currentCallback = null
-        
+
         if (callback == null) {
             return true
         }
-        
+
         if (resultCode == Activity.RESULT_OK && data != null) {
             val uri = data.data
             if (uri != null) {
@@ -108,10 +108,10 @@ object FilePickerHelper {
         } else {
             callback.onError(-6, "文件选择失败")
         }
-        
+
         return true
     }
-    
+
     /**
      * 从 Uri 获取文件选择结果
      */
@@ -121,7 +121,7 @@ object FilePickerHelper {
         val fileSize = getFileSize(context, uri)
         val mimeType = context.contentResolver.getType(uri) ?: "application/octet-stream"
         val filePath = uri.toString()
-        
+
         return FilePickResult(
             filePath = filePath,
             fileName = fileName,
@@ -129,14 +129,14 @@ object FilePickerHelper {
             mimeType = mimeType
         )
     }
-    
+
     /**
      * 获取文件名
      */
     @JvmStatic
     fun getFileName(context: Context, uri: Uri): String {
         var fileName = "unknown"
-        
+
         if (uri.scheme == "content") {
             var cursor: Cursor? = null
             try {
@@ -155,17 +155,17 @@ object FilePickerHelper {
         } else if (uri.scheme == "file") {
             fileName = uri.lastPathSegment ?: "unknown"
         }
-        
+
         return fileName
     }
-    
+
     /**
      * 获取文件大小
      */
     @JvmStatic
     fun getFileSize(context: Context, uri: Uri): Long {
         var fileSize: Long = 0
-        
+
         if (uri.scheme == "content") {
             var cursor: Cursor? = null
             try {
@@ -182,7 +182,7 @@ object FilePickerHelper {
                 cursor?.close()
             }
         }
-        
+
         return fileSize
     }
 }

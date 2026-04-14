@@ -1,0 +1,1153 @@
+import { Data } from 'Foundation';
+import { CGFloat, CGSize } from 'CoreFoundation';
+
+import {
+    ZIMCallInfo,
+    ZIMCallUserInfo,
+    ZIMConversation,
+    ZIMConversationBaseInfo,
+    ZIMConversationChangeInfo,
+    ZIMConversationSearchInfo,
+    ZIMConversationType,
+    ZIMErrorUserInfo,
+    ZIMFriendApplicationInfo,
+    ZIMFriendInfo,
+    ZIMFriendRelationInfo,
+    ZIMGroup,
+    ZIMGroupApplicationInfo,
+    ZIMGroupAttributesUpdateInfo,
+    ZIMGroupEnterInfo,
+    ZIMGroupFullInfo,
+    ZIMGroupInfo,
+    ZIMGroupMemberInfo,
+    ZIMGroupMemberSimpleInfo,
+    ZIMGroupMuteInfo,
+    ZIMGroupOperatedInfo,
+    ZIMGroupSearchInfo,
+    ZIMGroupVerifyInfo,
+    ZIMMessage,
+    ZIMMessageDirection,
+    ZIMMessageLiteInfo,
+    ZIMMessageMentionedInfo,
+    ZIMMessageReaction,
+    ZIMMessageReactionUserInfo,
+    ZIMMessageReceiptInfo,
+    ZIMMessageReceiptStatus,
+    ZIMMessageRepliedInfo,
+    ZIMMessageRevokeStatus,
+    ZIMMessageRootRepliedCountInfo,
+    ZIMMessagePinStatusChangeInfo,
+    ZIMMessageSearchConfig,
+    ZIMMessageSendConfig,
+    ZIMMessageSentStatus,
+    ZIMMessageSentStatusChangeInfo,
+    ZIMMessageType,
+    ZIMPushConfig,
+    ZIMRevokeType,
+    ZIMRoomAdvancedConfig,
+    ZIMRoomAttributesUpdateInfo,
+    ZIMRoomFullInfo,
+    ZIMRoomInfo,
+    ZIMRoomMemberAttributesInfo,
+    ZIMRoomMemberAttributesOperatedInfo,
+    ZIMRoomMemberAttributesUpdateInfo,
+    ZIMRoomMemberInfo,
+    ZIMTipsMessageChangeInfo,
+    ZIMTipsMessageChangeInfoType,
+    ZIMTipsMessageEvent,
+    ZIMUserFullInfo,
+    ZIMUserInfo,
+    ZIMUserOfflinePushRule,
+    ZIMUserStatus,
+    ZIMUserStatusSubscription,
+} from '../interface.uts';
+
+const unCombineMessageTypes = [2, 20, 31, 32, 100];
+const multipleMessageTypes = [1, 200, 11, 12, 13, 14];
+
+/**
+ * 1、非可选的对象类型属性，创建对象时就需要赋非空对象值，否则会运行时崩溃
+ */
+
+// MARK: - Public
+
+export const oMap = (json: UTSJSONObject): Map<string, string> => {
+    return json.toMap() as Map<string, string>;
+};
+
+export const mMap = (map: Map<string, string>): UTSJSONObject => {
+    const json = {} as UTSJSONObject;
+    map.forEach((v, k) => {
+        json[k] = v;
+    });
+    return json;
+};
+
+export const oZIMPushConfig = (info: ZIMPushConfig): NZIMPushConfig => {
+    const obj: NZIMPushConfig = new NZIMPushConfig();
+    obj.title = info.title ?? '';
+    obj.content = info.content ?? '';
+    obj.payload = info.payload ?? '';
+    obj.resourcesID = info.resourcesID ?? '';
+    obj.enableBadge = info.enableBadge ?? false;
+    if (info.badgeIncrement != null) {
+        obj.badgeIncrement = info.badgeIncrement!.toInt32();
+    }
+    if (info.voIPConfig != null) {
+        obj.voIPConfig = new NZIMVoIPConfig();
+        obj.voIPConfig.iOSVoIPHandleType = NZIMCXHandleType(rawValue = info.voIPConfig!.iOSVoIPHandleType.toInt())!;
+        obj.voIPConfig.iOSVoIPHandleValue = info.voIPConfig!.iOSVoIPHandleValue ?? '';
+        obj.voIPConfig.iOSVoIPHasVideo = info.voIPConfig!.iOSVoIPHasVideo ?? false;
+    }
+    if (info.privateMessageTemplate != null) {
+        obj.privateMessageTemplate = new NZIMOfflinePushPrivateMessageTemplate();
+        obj.privateMessageTemplate.templateID = info.privateMessageTemplate!.templateID ?? '';
+        obj.privateMessageTemplate.titleParameters = info.privateMessageTemplate!.titleParameters ?? '';
+        obj.privateMessageTemplate.contentParameters = info.privateMessageTemplate!.contentParameters ?? '';
+    }
+
+    return obj;
+};
+
+// MARK: - User
+
+export const mZIMUserInfo = (info: NZIMUserInfo) => {
+    return {
+        userID: info.userID,
+        userName: info.userName,
+        userAvatarUrl: info.userAvatarUrl,
+        userExtendedData: info.userExtendedData,
+    } as ZIMUserInfo;
+};
+
+export const mZIMUserInfoList = (infos: Array<NZIMUserInfo>) => {
+    return infos.map((v) => mZIMUserInfo(v));
+};
+
+export const mZIMUserFullInfo = (info: NZIMUserFullInfo) => {
+    return {
+        baseInfo: mZIMUserInfo(info.baseInfo),
+        extendedData: info.extendedData,
+    } as ZIMUserFullInfo;
+};
+
+export const mZIMUserFullInfoList = (infos: Array<NZIMUserFullInfo>) => {
+    return infos.map((v) =>  mZIMUserFullInfo(v));
+};
+
+export const mZIMErrorUserInfoList = (infos: Array<NZIMErrorUserInfo>) => {
+    return infos.map((v) => {
+        return { userID: v.userID, reason: Number.from(v.reason) } as ZIMErrorUserInfo;
+    });
+};
+
+export const mZIMUserStatus = (info: NZIMUserStatus) => {
+    return {
+        userID: info.userID,
+        customStatus: info.customStatus,
+        onlineStatus: info.onlineStatus.rawValue,
+        onlinePlatforms: info.onlinePlatforms,
+        lastUpdateTime: Number.from(info.lastUpdateTime),
+        lastOnlineStatusUpdateTime: Number.from(info.lastOnlineStatusUpdateTime),
+        lastCustomStatusUpdateTime: Number.from(info.lastCustomStatusUpdateTime),
+    } as ZIMUserStatus;
+};
+
+export const mZIMUserStatusList = (infos: Array<NZIMUserStatus>) => {
+    return infos.map((v) => mZIMUserStatus(v));
+};
+
+export const mZIMUserOfflinePushRule = (info: NZIMUserOfflinePushRule) => {
+    return {
+        onlinePlatforms: info.onlinePlatforms,
+        notToReceiveOfflinePushPlatforms: info.notToReceiveOfflinePushPlatforms,
+    } as ZIMUserOfflinePushRule;
+};
+
+export const mZIMUserStatusSubscriptionList = (infos: Array<NZIMUserStatusSubscription>) => {
+    return infos.map((v) => {
+        return {
+            userStatus: mZIMUserStatus(v.userStatus),
+            subscribeExpiredTime: Number.from(v.subscribeExpiredTime)
+        } as ZIMUserStatusSubscription;
+    });
+};
+
+// MARK: - Conversation
+
+export const oZIMConversation = (info: ZIMConversation): NZIMConversation => {
+    const obj: NZIMConversation = new NZIMConversation();
+    obj.conversationID = info.conversationID;
+    obj.conversationName = info.conversationName;
+    obj.type = NZIMConversationType(rawValue = info.type.toInt())!;
+    obj.orderKey = info.orderKey.toInt64();
+    return obj;
+};
+
+export const mZIMConversation = (info: NZIMConversation) => {
+    const map = {
+        conversationID: info.conversationID,
+        conversationName: info.conversationName,
+        conversationAlias: info.conversationAlias,
+        conversationAvatarUrl: info.conversationAvatarUrl,
+        type: info.type.rawValue,
+        notificationStatus: info.notificationStatus.rawValue,
+        unreadMessageCount: Number.from(info.unreadMessageCount),
+        orderKey: Number.from(info.orderKey),
+        isPinned: info.isPinned,
+        pinnedTime: Number.from(info.pinnedTime),
+        draft: info.draft,
+        marks: info.marks,
+        mentionedInfoList: [],
+    } as ZIMConversation;
+
+    const infos: NZIMMessageMentionedInfo[] = info.mentionedInfoList;
+    if (infos != null && infos.length > 0) {
+        map.mentionedInfoList = infos.map((v) => {
+            return {
+                type: v.type.rawValue,
+                fromUserID: v.fromUserID,
+                messageID: Number.from(v.messageID).toString(),
+                messageSeq: Number.from(v.messageSeq),
+            } as ZIMMessageMentionedInfo;
+        });
+    }
+    if (info.lastMessage != null) {
+        map.lastMessage = mZIMMessage(info.lastMessage);
+    }
+    if (info instanceof NZIMGroupConversation) {
+        map.isDisabled = (info as NZIMGroupConversation).isDisabled;
+        map.mutedExpiredTime = Number.from((info as NZIMGroupConversation).mutedExpiredTime);
+    }
+
+    return map;
+};
+
+export const mZIMConversationList = (infos: Array<NZIMConversation>) => {
+    return infos.map((v) => mZIMConversation(v));
+};
+
+export const mZIMConversationChangeInfoList = (infos: Array<NZIMConversationChangeInfo>) => {
+    return infos.map((v) => {
+        return {
+            event: v.event.rawValue,
+            conversation: mZIMConversation(v.conversation),
+        } as ZIMConversationChangeInfo;
+    });
+};
+
+export const oZIMConversationBaseInfoList = (infos: ZIMConversationBaseInfo[]): Array<NZIMConversationBaseInfo> => {
+    return infos.map((v): NZIMConversationBaseInfo => {
+        const obj: NZIMConversationBaseInfo = new NZIMConversationBaseInfo();
+        obj.conversationID = v.conversationID;
+        obj.conversationType = NZIMConversationType(rawValue = v.conversationType.toInt())!;
+        return obj;
+    });
+};
+
+export const mZIMConversationBaseInfoList = (infos: Array<NZIMConversationBaseInfo>) => {
+    return infos.map((v) => {
+        return {
+            conversationID: v.conversationID,
+            conversationType: v.conversationType.rawValue,
+        } as ZIMConversationBaseInfo;
+    });
+};
+
+// MARK: - Message
+
+export const oZIMMessage = (info: ZIMMessage, isSend: boolean): NZIMMessage => {
+    const type = info.type!;
+    let obj = oZIMCombineMessage(info, isSend);
+    // 合并消息子项
+    if (unCombineMessageTypes.indexOf(type) == -1) {
+        return obj;
+    }
+
+    // 根据消息类型赋值
+    if (type == 2) {
+        const bytes = (info.message! as number[]).map((v): UInt8 => v.toUInt8());
+        obj = new NZIMCommandMessage(message = new Data(bytes));
+    } else if (type == 20) {
+        obj = new NZIMBarrageMessage(message = (info.message ?? '') as string);
+    } else if (type == 31) {
+        obj = new NZIMRevokeMessage();
+        setReadonlyProperty(obj = obj, key = 'revokeType', value = NZIMRevokeType(rawValue = info.revokeType!.toInt())!);
+        setReadonlyProperty(obj = obj, key = 'revokeStatus', value = NZIMMessageRevokeStatus(rawValue = info.revokeStatus!.toInt())!);
+        setReadonlyProperty(obj = obj, key = 'originalMessageType', value = NZIMMessageType(rawValue = info.originalMessageType!.toUInt())!);
+                
+        obj.setValue(info.originalTextMessageContent!, forKey = 'originalTextMessageContent');
+        obj.setValue(info.revokeTimestamp!.toUInt64(), forKey = 'revokeTimestamp');
+        obj.setValue(info.operatedUserID!, forKey = 'operatedUserID');
+        obj.setValue(info.revokeExtendedData!, forKey = 'revokeExtendedData');
+    } else if (type == 32) {
+        const map = new NZIMTipsMessage();
+        obj = map;
+        map.event = NZIMTipsMessageEvent(rawValue = info.event!.toUInt())!;
+        if (info.operatedUser != null) {
+            map.operatedUser = oZIMUserOrGroupMember(info.operatedUser!);
+        }
+        if (info.targetUserList != null) {
+            map.targetUserList = info.targetUserList!.map((v): NZIMGroupMemberSimpleInfo => oZIMUserOrGroupMember(v));
+        }
+        if (info.changeInfo != null) {
+            const _type = info.changeInfo!.type!;
+            if (_type < 10) {
+                map.changeInfo = new NZIMTipsMessageGroupChangeInfo();
+            } else if (_type >= 10 && _type < 20) {
+                map.changeInfo = new NZIMTipsMessageGroupMemberChangeInfo();
+            } else if (_type == 21) {
+                map.changeInfo = new NZIMTipsMessagePinStatusChangeInfo();
+            }
+        }
+    } else if (type == 100) {
+        const messageList = info.messageList!.map((v): NZIMMessage => {
+            if (v.type == 100) {
+                const msg = new NZIMCombineMessage(title = v.title ?? '', summary = v.summary ?? '', messageList = []);
+                if (v.combineID != null) {
+                    msg.setValue(v.combineID!, forKey = 'combineID');
+                }
+                setZIMMessageValue(msg, v, isSend);
+                return msg;
+            }
+            return oZIMCombineMessage(v, isSend);
+        });
+        obj = new NZIMCombineMessage(title = info.title ?? '', summary = info.summary ?? '', messageList = messageList);
+        if (info.combineID != null) {
+            obj.setValue(info.combineID!, forKey = 'combineID');
+        }
+    }
+
+    setZIMMessageValue(obj, info, isSend);
+
+    return obj;
+};
+/**
+ * Error: circular reference
+ */
+const oZIMCombineMessage = (info: ZIMMessage, isSend: boolean): NZIMMessage => {
+    let obj: NZIMMessage = new NZIMMessage();
+
+    // 根据消息类型赋值
+    const type = info.type;
+    if (type == 1) {
+        obj = new NZIMTextMessage(message = (info.message ?? '') as string);
+    } else if (type == 200) {
+        obj = new NZIMCustomMessage(message = (info.message ?? '') as string, subType = (info.subType ?? 0).toUInt32());
+        (obj as NZIMCustomMessage).searchedContent = info.searchedContent ?? '';
+    } else if (type == 10) {
+        const messageInfoList = info.messageInfoList!.map((v): NZIMMessageLiteInfo => oZIMMessageLiteInfo(v));
+        obj = new NZIMMultipleMessage(messageInfoList = messageInfoList);
+    } else if (type == 11) {
+        const map = new NZIMImageMessage(fileLocalPath = (info.fileLocalPath ?? '') as string);
+        obj = map;
+        map.thumbnailDownloadUrl = info.thumbnailDownloadUrl ?? '';
+        map.largeImageDownloadUrl = info.largeImageDownloadUrl ?? '';
+        map.originalImageSize = new CGSize(
+            width = new CGFloat(integerLiteral = (info.originalImageWidth ?? 0).toInt()),
+            height = new CGFloat(integerLiteral = (info.originalImageHeight ?? 0).toInt()),
+        );
+        map.thumbnailSize = new CGSize(
+            width = new CGFloat(integerLiteral = (info.thumbnailWidth ?? 0).toInt()),
+            height = new CGFloat(integerLiteral = (info.thumbnailHeight ?? 0).toInt()),
+        );
+        map.largeImageSize = new CGSize(
+            width = new CGFloat(integerLiteral = (info.largeImageWidth ?? 0).toInt()),
+            height = new CGFloat(integerLiteral = (info.largeImageHeight ?? 0).toInt()),
+        );
+        map.setValue(info.thumbnailLocalPath ?? '', forKey = 'thumbnailLocalPath');
+        map.setValue(info.largeImageLocalPath ?? '', forKey = 'largeImageLocalPath');
+    } else if (type == 12) {
+        obj = new NZIMFileMessage(fileLocalPath = (info.fileLocalPath ?? '') as string);
+    } else if (type == 13) {
+        obj = new NZIMAudioMessage(fileLocalPath = (info.fileLocalPath ?? '') as string, audioDuration = (info.audioDuration ?? 0).toUInt32());
+    } else if (type == 14) {
+        const map = new NZIMVideoMessage(fileLocalPath = (info.fileLocalPath ?? '') as string, videoDuration = (info.videoDuration ?? 0).toUInt32());
+        obj = map;
+        map.videoFirstFrameDownloadUrl = info.videoFirstFrameDownloadUrl ?? '';
+        map.videoFirstFrameSize = new CGSize(
+            width = new CGFloat(integerLiteral = (info.videoFirstFrameWidth ?? 0).toInt()),
+            height = new CGFloat(integerLiteral = (info.videoFirstFrameHeight ?? 0).toInt()),
+        );
+        map.setValue(info.videoFirstFrameLocalPath ?? '', forKey = 'videoFirstFrameLocalPath');
+    }
+
+    if (obj instanceof NZIMMediaMessage) {
+        const map = obj as NZIMMediaMessage;
+        map.fileDownloadUrl = info.fileDownloadUrl ?? '';
+        map.fileName = info.fileName ?? '';
+        map.setValue((info.fileSize ?? 0).toInt64(), forKey = 'fileSize');
+        map.setValue(info.fileUID ?? '', forKey = 'fileUID');
+    }
+
+    setZIMMessageValue(obj, info, isSend);
+
+    return obj;
+};
+/**
+ * 设置公共属性
+ */
+const setZIMMessageValue = (obj: NZIMMessage, info: ZIMMessage, isSend: boolean) => {
+    if (info.mentionedUserIDs != null) {
+        obj.mentionedUserIDs = info.mentionedUserIDs!;
+    }
+    obj.isMentionAll = info.isMentionAll ?? false;
+    obj.extendedData = info.extendedData ?? '';
+    obj.localExtendedData = info.localExtendedData ?? '';
+
+    if (!isSend) {
+        if (info.repliedInfo != null) {
+            obj.setValue(oZIMMessageRepliedInfo(info.repliedInfo!), forKey = 'repliedInfo');
+        }
+                
+        setReadonlyProperty(obj = obj, key = 'conversationType', value = NZIMConversationType(rawValue = info.conversationType!.toInt())!);
+        setReadonlyProperty(obj = obj, key = 'direction', value = NZIMMessageDirection(rawValue = info.direction!.toUInt())!);
+        setReadonlyProperty(obj = obj, key = 'sentStatus', value = NZIMMessageSentStatus(rawValue = info.sentStatus!.toUInt())!);
+        setReadonlyProperty(obj = obj, key = 'receiptStatus', value = NZIMMessageReceiptStatus(rawValue = info.receiptStatus!.toUInt())!);
+
+        obj.setValue(info.isUserInserted ?? false, forKey = 'isUserInserted');
+        obj.setValue(info.isServerMessage ?? false, forKey = 'isServerMessage');
+        obj.setValue(info.isBroadcastMessage ?? false, forKey = 'isBroadcastMessage');
+        obj.setValue(info.isGroupTargetedMessage ?? false, forKey = 'isGroupTargetedMessage');
+        obj.setValue(info.messageID != null && info.messageID != '' ? parseInt(info.messageID!, 10).toInt64() : 0, forKey = 'messageID');
+        obj.setValue(info.localMessageID != null && info.localMessageID != '' ? parseInt(info.localMessageID!, 10).toInt64() : 0, forKey = 'localMessageID');
+        obj.setValue(info.messageSeq!.toInt64(), forKey = 'messageSeq');
+        obj.setValue(info.messageSeq!.toInt64(), forKey = 'conversationSeq');
+        obj.setValue(info.orderKey!.toInt64(), forKey = 'orderKey');
+        obj.setValue(info.timestamp!.toUInt64(), forKey = 'timestamp');
+        obj.setValue(info.rootRepliedCount!.toUInt32(), forKey = 'rootRepliedCount');
+        obj.setValue(info.editedTime!.toInt64(), forKey = 'editedTime');
+        obj.setValue(info.editorUserID ?? '', forKey = 'editorUserID');
+        obj.setValue(info.pinnedTime!.toInt64(), forKey = 'pinnedTime');
+        obj.setValue(info.pinnedUserID ?? '', forKey = 'pinnedUserID');
+        obj.setValue(info.senderUserID ?? '', forKey = 'senderUserID');
+        obj.setValue(info.conversationID ?? '', forKey = 'conversationID');
+    }
+};
+
+export const mZIMMessage = (info: NZIMMessage) => {
+    const type = info.type.rawValue as ZIMMessageType;
+    const map = mZIMCombineMessage(info);
+    // 合并消息子项
+    if (unCombineMessageTypes.indexOf(type) == -1) {
+        return map;
+    }
+
+    // 根据消息类型赋值
+    if (type == 2) {
+        map.message = Array.from((info as NZIMCommandMessage).message);
+    } else if (type == 20) {
+        map.message = (info as NZIMBarrageMessage).message;
+    } else if (type == 31) {
+        const _info = info as NZIMRevokeMessage;
+        map.revokeType = _info.revokeType.rawValue as ZIMRevokeType;
+        map.revokeStatus = _info.revokeStatus.rawValue as ZIMMessageRevokeStatus;
+        map.originalMessageType = _info.originalMessageType.rawValue as ZIMMessageType;
+        map.originalTextMessageContent = _info.originalTextMessageContent;
+        map.revokeTimestamp = Number.from(_info.revokeTimestamp);
+        map.operatedUserID = _info.operatedUserID;
+        map.revokeExtendedData = _info.revokeExtendedData;
+    } else if (type == 32) {
+        const _info = info as NZIMTipsMessage;
+        map.event = _info.event.rawValue as ZIMTipsMessageEvent;
+        map.operatedUser = mZIMUserOrGroupMember(_info.operatedUser);
+        map.targetUserList = mZIMUserOrGroupMemberList(_info.targetUserList);
+        if (_info.changeInfo != null) {
+            map.changeInfo = mZIMTipsMessageChangeInfo(_info.changeInfo!);
+        }
+    } else if (type == 100) {
+        const _info = info as NZIMCombineMessage;
+        map.title = _info.title;
+        map.summary = _info.summary;
+        map.combineID = _info.combineID;
+        map.messageList = _info.messageList.map((v: NZIMMessage): ZIMMessage => {
+            const msg = mZIMCombineMessage(v);
+            if (msg.type == 100) {
+                const _v = v as NZIMCombineMessage;
+                msg.title = _v.title;
+                msg.summary = _v.summary;
+                msg.combineID = _v.combineID;
+                msg.messageList = [];
+            }
+            return msg;
+        });
+    }
+
+    return map;
+};
+/**
+ * Error: circular reference
+ */
+const mZIMCombineMessage = (info: NZIMMessage) => {
+    const type = info.type.rawValue as ZIMMessageType;
+    const map = { type } as ZIMMessage;
+
+    // 公共属性
+    const messageID = Number.from(info.messageID).toString();
+    map.extendedData = info.extendedData;
+    map.localExtendedData = info.localExtendedData;
+    map.isMentionAll = info.isMentionAll;
+    map.mentionedUserIDs = info.mentionedUserIDs;
+    map.messageID = messageID.length > 1 ? messageID : '';
+    map.localMessageID = Number.from(info.localMessageID).toString();
+    map.senderUserID = info.senderUserID;
+    map.timestamp = Number.from(info.timestamp);
+    map.messageSeq = Number.from(info.messageSeq);
+    map.orderKey = Number.from(info.orderKey);
+    map.conversationID = info.conversationID;
+    map.conversationType = info.conversationType.rawValue as ZIMConversationType;
+    map.direction = info.direction.rawValue as ZIMMessageDirection;
+    map.sentStatus = info.sentStatus.rawValue as ZIMMessageSentStatus;
+    map.receiptStatus = info.receiptStatus.rawValue as ZIMMessageReceiptStatus;
+    map.isUserInserted = info.isUserInserted;
+    map.isServerMessage = info.isServerMessage;
+    map.isBroadcastMessage = info.isBroadcastMessage;
+    map.isGroupTargetedMessage = info.isGroupTargetedMessage;
+    map.reactions = mZIMMessageReactionList(info.reactions);
+    map.rootRepliedCount = Number.from(info.rootRepliedCount);
+    map.editorUserID = info.editorUserID;
+    map.editedTime = Number.from(info.editedTime);
+    map.pinnedUserID = info.pinnedUserID;
+    map.pinnedTime = Number.from(info.pinnedTime);
+    if (info.repliedInfo != null) {
+        map.repliedInfo = mZIMMessageRepliedInfo(info.repliedInfo!);
+    }
+
+    // 根据消息类型赋值
+    if (type == 1) {
+        map.message = (info as NZIMTextMessage).message;
+    } else if (type == 200) {
+        const _info = info as NZIMCustomMessage;
+        map.message = _info.message;
+        map.subType = Number.from(_info.subType);
+        map.searchedContent = _info.searchedContent;
+    } else if (type == 10) {
+        const messageInfoList = (info as NZIMMultipleMessage).messageInfoList as NZIMMessageLiteInfo[];
+        map.messageInfoList = messageInfoList.map((v) => mZIMMessageLiteInfo(v));
+    } else if (type == 11) {
+        const _info = info as NZIMImageMessage;
+        map.thumbnailDownloadUrl = _info.thumbnailDownloadUrl;
+        map.thumbnailLocalPath = _info.thumbnailLocalPath;
+        map.largeImageDownloadUrl = _info.largeImageDownloadUrl;
+        map.largeImageLocalPath = _info.largeImageLocalPath;
+        map.originalImageWidth = Number.from(_info.originalImageSize.width);
+        map.originalImageHeight = Number.from(_info.originalImageSize.height);
+        map.thumbnailWidth = Number.from(_info.thumbnailSize.width);
+        map.thumbnailHeight = Number.from(_info.thumbnailSize.height);
+        map.largeImageWidth = Number.from(_info.largeImageSize.width);
+        map.largeImageHeight = Number.from(_info.largeImageSize.height);
+    } else if (type == 13) {
+        map.audioDuration = Number.from((info as NZIMAudioMessage).audioDuration);
+    } else if (type == 14) {
+        const _info = info as NZIMVideoMessage;
+        map.videoDuration = Number.from(_info.videoDuration);
+        map.videoFirstFrameDownloadUrl = _info.videoFirstFrameDownloadUrl;
+        map.videoFirstFrameLocalPath = _info.videoFirstFrameLocalPath;
+        map.videoFirstFrameWidth = Number.from(_info.videoFirstFrameSize.width);
+        map.videoFirstFrameHeight = Number.from(_info.videoFirstFrameSize.height);
+    }
+
+    if (info instanceof NZIMMediaMessage) {
+        const _info = info as NZIMMediaMessage;
+        map.fileDownloadUrl = _info.fileDownloadUrl;
+        map.fileLocalPath = _info.fileLocalPath;
+        map.fileUID = _info.fileUID;
+        map.fileName = _info.fileName;
+        map.fileSize = Number.from(_info.fileSize);
+    }
+
+    return map;
+};
+
+export const oZIMMessageLiteInfo = (info: ZIMMessageLiteInfo): NZIMMessageLiteInfo => {
+    const type = info.type!;
+    let obj = oZIMMultipleMessageLiteInfo(info);
+    // 组合消息子项
+    if (multipleMessageTypes.indexOf(type) != -1) {
+        return obj;
+    }
+
+    // 根据消息类型赋值
+    if (type == 31) {
+        obj = new NZIMRevokeMessageLiteInfo();
+    } else if (type == 100) {
+        obj = new NZIMCombineMessageLiteInfo();
+        (obj as NZIMCombineMessageLiteInfo).title = info.title ?? '';
+        (obj as NZIMCombineMessageLiteInfo).summary = info.summary ?? '';
+    } else if (type == 10) {
+        obj = new NZIMMultipleMessageLiteInfo();
+        if (info.messageInfoList != null) {            
+            (obj as NZIMMultipleMessageLiteInfo).messageInfoList = info.messageInfoList!.map(
+                (v): NZIMMessageLiteInfo => oZIMMultipleMessageLiteInfo(v),
+            );
+        }
+    }
+
+    return obj;
+};
+/**
+ * Error: circular reference
+ */
+const oZIMMultipleMessageLiteInfo = (info: ZIMMessageLiteInfo): NZIMMessageLiteInfo => {
+    let obj: NZIMMessageLiteInfo = new NZIMMessageLiteInfo();
+
+    // 根据消息类型赋值
+    const type = info.type;
+    if (type == 1) {
+        obj = new NZIMTextMessageLiteInfo();
+        (obj as NZIMTextMessageLiteInfo).message = info.message ?? '';
+    } else if (type == 200) {
+        const map = new NZIMCustomMessageLiteInfo();
+        obj = map;
+        map.message = info.message ?? '';
+        map.subType = (info.subType ?? 0).toUInt32();
+        map.searchedContent = info.searchedContent ?? '';
+    } else if (type == 11) {
+        const map = new NZIMImageMessageLiteInfo();
+        obj = map;
+        map.thumbnailDownloadUrl = info.thumbnailDownloadUrl ?? '';
+        map.thumbnailLocalPath = info.thumbnailLocalPath ?? '';
+        map.largeImageDownloadUrl = info.largeImageDownloadUrl ?? '';
+        map.largeImageLocalPath = info.largeImageLocalPath ?? '';
+        map.thumbnailSize = new CGSize(
+            width = new CGFloat(integerLiteral = (info.thumbnailWidth ?? 0).toInt()),
+            height = new CGFloat(integerLiteral = (info.thumbnailHeight ?? 0).toInt()),
+        );
+        map.originalImageSize = new CGSize(
+            width = new CGFloat(integerLiteral = (info.originalImageWidth ?? 0).toInt()),
+            height = new CGFloat(integerLiteral = (info.originalImageHeight ?? 0).toInt()),
+        );
+        map.largeImageSize = new CGSize(
+            width = new CGFloat(integerLiteral = (info.largeImageWidth ?? 0).toInt()),
+            height = new CGFloat(integerLiteral = (info.largeImageHeight ?? 0).toInt()),
+        );
+    } else if (type == 12) {
+        obj = new NZIMFileMessageLiteInfo();
+    } else if (type == 13) {
+        obj = new NZIMAudioMessageLiteInfo();
+        (obj as NZIMAudioMessageLiteInfo).audioDuration = (info.audioDuration ?? 0).toUInt32();
+    } else if (type == 14) {
+        const map = new NZIMVideoMessageLiteInfo();
+        obj = map;
+        map.videoDuration = (info.videoDuration ?? 0).toUInt32();
+        map.videoFirstFrameDownloadUrl = info.videoFirstFrameDownloadUrl ?? '';
+        map.videoFirstFrameLocalPath = info.videoFirstFrameLocalPath ?? '';
+        map.videoFirstFrameSize = new CGSize(
+            width = new CGFloat(integerLiteral = (info.videoFirstFrameWidth ?? 0).toInt()),
+            height = new CGFloat(integerLiteral = (info.videoFirstFrameHeight ?? 0).toInt()),
+        );
+    }
+
+    if (obj instanceof NZIMMediaMessageLiteInfo) {
+        const map = obj as NZIMMediaMessageLiteInfo;
+        map.fileDownloadUrl = info.fileDownloadUrl ?? '';
+        map.fileLocalPath = (info.fileLocalPath ?? '') as string;
+        map.fileName = info.fileName ?? '';
+        map.fileSize = (info.fileSize ?? 0).toInt64();
+    }
+
+    return obj;
+};
+
+export const mZIMMessageLiteInfo = (info: NZIMMessageLiteInfo) => {
+    const type = info.type.rawValue as ZIMMessageType;
+    const map = mZIMMultipleMessageLiteInfo(info);
+    // 组合消息子项
+    if (multipleMessageTypes.indexOf(type) != -1) {
+        return map;
+    }
+
+    // 根据消息类型赋值
+    if (type == 100) {
+        map.title = (info as NZIMCombineMessageLiteInfo).title;
+        map.summary = (info as NZIMCombineMessageLiteInfo).summary;
+    } else if (type == 10) {
+        const messageInfoList = (info as NZIMMultipleMessageLiteInfo).messageInfoList as NZIMMessageLiteInfo[];
+        map.messageInfoList = messageInfoList.map((v) => mZIMMultipleMessageLiteInfo(v));
+    }
+
+    return map;
+};
+/**
+ * Error: circular reference
+ */
+const mZIMMultipleMessageLiteInfo = (info: NZIMMessageLiteInfo) => {
+    const type = info.type.rawValue as ZIMMessageType;
+    const map = { type } as ZIMMessageLiteInfo;
+
+    // 根据消息类型赋值
+    if (type == 1) {
+        map.message = (info as NZIMTextMessageLiteInfo).message;
+    } else if (type == 200) {
+        const _info = info as NZIMCustomMessageLiteInfo;
+        map.message = _info.message;
+        map.subType = Number.from(_info.subType);
+        map.searchedContent = _info.searchedContent;
+    } else if (type == 11) {
+        const _info = info as NZIMImageMessageLiteInfo;
+        map.thumbnailDownloadUrl = _info.thumbnailDownloadUrl;
+        map.thumbnailLocalPath = _info.thumbnailLocalPath;
+        map.largeImageDownloadUrl = _info.largeImageDownloadUrl;
+        map.largeImageLocalPath = _info.largeImageLocalPath;
+        map.originalImageWidth = Number.from(_info.originalImageSize.width);
+        map.originalImageHeight = Number.from(_info.originalImageSize.height);
+        map.thumbnailWidth = Number.from(_info.thumbnailSize.width);
+        map.thumbnailHeight = Number.from(_info.thumbnailSize.height);
+        map.largeImageWidth = Number.from(_info.largeImageSize.width);
+        map.largeImageHeight = Number.from(_info.largeImageSize.height);
+    } else if (type == 13) {
+        map.audioDuration = Number.from((info as NZIMAudioMessageLiteInfo).audioDuration);
+    } else if (type == 14) {
+        const _info = info as NZIMVideoMessageLiteInfo;
+        map.videoDuration = Number.from(_info.videoDuration);
+        map.videoFirstFrameDownloadUrl = _info.videoFirstFrameDownloadUrl;
+        map.videoFirstFrameLocalPath = _info.videoFirstFrameLocalPath;
+        map.videoFirstFrameWidth = Number.from(_info.videoFirstFrameSize.width);
+        map.videoFirstFrameHeight = Number.from(_info.videoFirstFrameSize.height);
+    }
+
+    if (info instanceof NZIMMediaMessageLiteInfo) {
+        const _info = info as NZIMMediaMessageLiteInfo;
+        map.fileDownloadUrl = _info.fileDownloadUrl;
+        map.fileLocalPath = _info.fileLocalPath;
+        map.fileName = _info.fileName;
+        map.fileSize = Number.from(_info.fileSize);
+    }
+
+    return map;
+};
+
+export const oZIMMessageList = (infos: ZIMMessage[]) => {
+    return infos.map((v): NZIMMessage => oZIMMessage(v, false));
+};
+
+export const mZIMMessageList = (infos: Array<NZIMMessage>) => {
+    return infos.map((v): ZIMMessage => mZIMMessage(v));
+};
+
+export const mZIMMessageSentStatusChangeInfoList = (infos: Array<NZIMMessageSentStatusChangeInfo>) => {
+    return infos.map((v) => {
+        return {
+            reason: v.reason,
+            status: v.status.rawValue,
+            message: mZIMMessage(v.message),
+        } as ZIMMessageSentStatusChangeInfo;
+    });
+};
+
+export const mZIMMessageReactionUserInfoList = (infos: Array<NZIMMessageReactionUserInfo>) => {
+    return infos.map((v) => {
+        return { userID: v.userID } as ZIMMessageReactionUserInfo;
+    });
+};
+
+export const mZIMMessageReaction = (info: NZIMMessageReaction) => {
+    return {
+        conversationID: info.conversationID,
+        conversationType: info.conversationType.rawValue,
+        reactionType: info.reactionType,
+        isSelfIncluded: info.isSelfIncluded,
+        messageID: Number.from(info.messageID).toString(),
+        totalCount: Number.from(info.totalCount),
+        userList: mZIMMessageReactionUserInfoList(info.userList),
+    } as ZIMMessageReaction;
+};
+
+export const mZIMMessageReactionList = (infos: Array<NZIMMessageReaction>) => {
+    return infos.map((v) => mZIMMessageReaction(v));
+};
+
+export const mZIMMessageReceiptInfoList = (infos: Array<NZIMMessageReceiptInfo>) => {
+    return infos.map((v) => {
+        return {
+            conversationID: v.conversationID,
+            conversationType: v.conversationType.rawValue,
+            status: v.status.rawValue,
+            messageID: Number.from(v.messageID).toString(),
+            readMemberCount: Number.from(v.readMemberCount),
+            unreadMemberCount: Number.from(v.unreadMemberCount),
+            isSelfOperated: v.isSelfOperated,
+            readTime: Number.from(v.readTime),
+        } as ZIMMessageReceiptInfo;
+    });
+};
+
+export const oZIMMessageRepliedInfo = (info: ZIMMessageRepliedInfo): NZIMMessageRepliedInfo => {
+    const obj = new NZIMMessageRepliedInfo();
+    obj.state = NZIMMessageRepliedInfoState(rawValue = info.state.toUInt())!;
+    obj.messageSeq = info.messageSeq.toInt64();
+    obj.messageID = parseInt(info.messageID, 10).toInt64();
+    obj.sentTime = info.sentTime.toUInt64();
+    obj.senderUserID = info.senderUserID;
+    obj.messageInfo = oZIMMessageLiteInfo(info.messageInfo);
+    return obj;
+};
+
+export const mZIMMessageRepliedInfo = (info: NZIMMessageRepliedInfo) => {
+    return {
+        state: info.state.rawValue,
+        messageSeq: Number.from(info.messageSeq),
+        messageID: Number.from(info.messageID).toString(),
+        senderUserID: info.senderUserID,
+        sentTime: Number.from(info.sentTime),
+        messageInfo: mZIMMessageLiteInfo(info.messageInfo),
+    } as ZIMMessageRepliedInfo;
+};
+
+export const mZIMMessageRootRepliedCountInfoList = (infos: Array<NZIMMessageRootRepliedCountInfo>) => {
+    return infos.map((v) => {
+        return {
+            conversationID: v.conversationID,
+            conversationType: v.conversationType.rawValue,
+            count: Number.from(v.count),
+            messageID: Number.from(v.messageID).toString(),
+        } as ZIMMessageRootRepliedCountInfo;
+    });
+};
+
+export const mZIMMessagePinStatusChangeInfoList = (infos: Array<NZIMMessagePinStatusChangeInfo>) => {
+    return infos.map((v) => {
+        return {
+            pinStatus: v.pinStatus.rawValue,
+            message: mZIMMessage(v.message),
+        } as ZIMMessagePinStatusChangeInfo;
+    });
+};
+
+export const mZIMTipsMessageChangeInfo = (info: NZIMTipsMessageChangeInfo) => {
+    const type = info.type.rawValue as ZIMTipsMessageChangeInfoType;
+    const map = { type } as ZIMTipsMessageChangeInfo;
+    if (type < 10) {
+        const _info = info as NZIMTipsMessageGroupChangeInfo;
+        map.groupDataFlag = Number.from(_info.groupDataFlag);
+        map.groupName = _info.groupName;
+        map.groupAvatarUrl = _info.groupAvatarUrl;
+        map.groupNotice = _info.groupNotice;
+        if (_info.groupMutedInfo != null) {
+            map.groupMutedInfo = mZIMGroupMuteInfo(_info.groupMutedInfo);
+        }
+    } else if (type >= 10 && type < 20) {
+        const _info = info as NZIMTipsMessageGroupMemberChangeInfo;
+        map.memberRole = Number.from(_info.memberRole);
+        map.muteExpiredTime = Number.from(_info.muteExpiredTime);
+        if (_info.groupNewOwner != null) {
+            map.groupNewOwner = mZIMGroupMemberSimpleInfo(_info.groupNewOwner!);
+        }
+    } else if (type == 21) {
+        const _info = info as NZIMTipsMessagePinStatusChangeInfo;
+        map.isPinned = _info.isPinned;
+    }
+    return map;
+};
+
+export const mZIMConversationSearchInfoList = (infos: Array<NZIMConversationSearchInfo>) => {
+    return infos.map((v) => {
+        return {
+            conversationID: v.conversationID,
+            conversationType: v.conversationType.rawValue,
+            totalMessageCount: Number.from(v.totalMessageCount),
+            messageList: mZIMMessageList(v.messageList),
+        } as ZIMConversationSearchInfo;
+    });
+};
+
+export const oZIMMessageSendConfig = (config: ZIMMessageSendConfig): NZIMMessageSendConfig => {
+    const _config: NZIMMessageSendConfig = new NZIMMessageSendConfig();
+    _config.priority = NZIMMessagePriority(rawValue = config.priority.toUInt())!;
+    _config.hasReceipt = config.hasReceipt ?? false;
+    _config.isRetrySend = config.isRetrySend ?? false;
+    _config.isNotifyMentionedUsers = config.isNotifyMentionedUsers ?? true;
+    _config.disableUnreadMessageCount = config.disableUnreadMessageCount ?? false;
+    if (config.pushConfig != null) {
+        _config.pushConfig = oZIMPushConfig(config.pushConfig!);
+    }
+    return _config;
+};
+
+export const oZIMMessageSearchConfig = (config: ZIMMessageSearchConfig, nextMessageMap: Map<string, NZIMMessage>): NZIMMessageSearchConfig => {
+    const _config: NZIMMessageSearchConfig = new NZIMMessageSearchConfig();
+    _config.keywords = config.keywords ?? [];
+    _config.senderUserIDs = config.senderUserIDs ?? [];
+    _config.subMessageTypes = config.subMessageTypes ?? [];
+    _config.messageTypes = config.messageTypes ?? [];
+    _config.startTime = (config.startTime ?? 0).toInt64();
+    _config.endTime = (config.endTime ?? 0).toInt64();
+    _config.count = (config.count ?? 0).toUInt32();
+    _config.order = NZIMMessageOrder(rawValue = (config.order ?? 0).toUInt())!;
+    if (config.nextMessage != null) {
+        _config.nextMessage = nextMessageMap.get(config.nextMessage!);
+    }
+    return _config;
+};
+
+// MARK: - Room
+
+export const mZIMRoomFullInfo = (info: NZIMRoomFullInfo) => {
+    return {
+        baseInfo: {
+            roomID: info.baseInfo.roomID,
+            roomName: info.baseInfo.roomName,
+        },
+    } as ZIMRoomFullInfo;
+};
+
+export const mZIMRoomMemberInfoList = (infos: Array<NZIMRoomMemberInfo>) => {
+    return infos.map((v) => {
+        return { userID: v.userID, userName: v.userName, userAvatarUrl: v.userAvatarUrl, userExtendedData: v.userExtendedData } as ZIMRoomMemberInfo;
+    });
+};
+
+export const mZIMRoomMemberAttributesInfo = (info: NZIMRoomMemberAttributesInfo) => {
+    return {
+        userID: info.userID,
+        attributes: mMap(info.attributes),
+    } as ZIMRoomMemberAttributesInfo;
+};
+
+export const mZIMRoomMemberAttributesInfoList = (infos: Array<NZIMRoomMemberAttributesInfo>) => {
+    return infos.map((v) => mZIMRoomMemberAttributesInfo(v));
+};
+
+export const mZIMRoomAttributesUpdateInfoList = (infos: Array<NZIMRoomAttributesUpdateInfo>) => {
+    return infos.map((v) => {
+        return { action: v.action.rawValue, roomAttributes: mMap(v.roomAttributes) } as ZIMRoomAttributesUpdateInfo;
+    });
+};
+
+export const mZIMRoomMemberAttributesUpdateInfoList = (infos: Array<NZIMRoomMemberAttributesUpdateInfo>) => {
+    return infos.map((v) => {
+        return { attributesInfo: mZIMRoomMemberAttributesInfo(v.attributesInfo) } as ZIMRoomMemberAttributesUpdateInfo;
+    });
+};
+
+export const mZIMRoomMemberAttributesOperatedInfoList = (infos: Array<NZIMRoomMemberAttributesOperatedInfo>) => {
+    return infos.map((v) => {
+        return { attributesInfo: mZIMRoomMemberAttributesInfo(v.attributesInfo), errorKeys: v.errorKeys } as ZIMRoomMemberAttributesOperatedInfo;
+    });
+};
+
+export const oZIMRoomInfo = (info: ZIMRoomInfo): NZIMRoomInfo => {
+    const obj: NZIMRoomInfo = new NZIMRoomInfo();
+    obj.roomID = info.roomID;
+    obj.roomName = info.roomName;
+    return obj;
+};
+
+export const oZIMRoomAdvancedConfig = (config?: ZIMRoomAdvancedConfig): NZIMRoomAdvancedConfig => {
+    const _config: NZIMRoomAdvancedConfig = new NZIMRoomAdvancedConfig();
+    if (config != null) {
+        _config.roomAttributes = oMap(config!.roomAttributes ?? {});
+        _config.roomDestroyDelayTime = (config!.roomDestroyDelayTime ?? 0).toUInt32();
+    }
+    return _config;
+};
+
+// MARK: - Group
+
+export const mZIMGroupInfo = (info: NZIMGroupInfo) => {
+    return {
+        groupID: info.groupID,
+        groupName: info.groupName,
+        groupAvatarUrl: info.groupAvatarUrl,
+    } as ZIMGroupInfo;
+};
+
+export const mZIMGroupList = (infos: Array<NZIMGroup>) => {
+    return infos.map((v) => {
+        return { baseInfo: mZIMGroupInfo(v.baseInfo), groupAlias: v.groupAlias, notificationStatus: v.notificationStatus.rawValue } as ZIMGroup;
+    });
+};
+
+export const mZIMGroupMuteInfo = (info: NZIMGroupMuteInfo) => {
+    return {
+        mode: info.mode.rawValue,
+        expiredTime: Number.from(info.expiredTime),
+        roles: info.roles,
+    } as ZIMGroupMuteInfo;
+};
+
+export const mZIMGroupVerifyInfo = (info: NZIMGroupVerifyInfo) => {
+    return {
+        joinMode: info.joinMode.rawValue,
+        inviteMode: info.inviteMode.rawValue,
+        beInviteMode: info.beInviteMode.rawValue,
+    } as ZIMGroupVerifyInfo;
+};
+
+export const mZIMGroupOperatedInfo = (info: NZIMGroupOperatedInfo) => {
+    return {
+        userID: info.userID,
+        userName: info.userName,
+        memberRole: Number.from(info.memberRole),
+        memberNickname: info.memberNickname,
+    } as ZIMGroupOperatedInfo;
+};
+
+export const oZIMUserOrGroupMember = (info: ZIMGroupMemberSimpleInfo): NZIMGroupMemberSimpleInfo => {
+    const obj = new NZIMGroupMemberSimpleInfo();
+    obj.userID = info.userID;
+    obj.userName = info.userName;
+    obj.userAvatarUrl = info.userAvatarUrl;
+    obj.memberNickname = info.memberNickname;
+    obj.memberRole = info.memberRole.toInt32();
+    return obj;
+};
+
+export const mZIMUserOrGroupMember = (info: NZIMUserInfo) => {
+    const map = {
+        userID: info.userID,
+        userName: info.userName,
+        userAvatarUrl: info.userAvatarUrl,
+        memberRole: 0,
+        memberNickname: '',
+    } as ZIMGroupMemberSimpleInfo;
+    if (info instanceof NZIMGroupMemberSimpleInfo) {
+        map.memberRole = Number.from((info as NZIMGroupMemberSimpleInfo).memberRole);
+        map.memberNickname = (info as NZIMGroupMemberSimpleInfo).memberNickname;
+    }
+    return map;
+};
+
+export const mZIMUserOrGroupMemberList = (infos: Array<NZIMUserInfo>) => {
+    return infos.map((v) => mZIMUserOrGroupMember(v));
+};
+
+export const mZIMGroupMemberSimpleInfo = (info: NZIMGroupMemberSimpleInfo) => {
+    return {
+        userID: info.userID,
+        userName: info.userName,
+        userAvatarUrl: info.userAvatarUrl,
+        memberRole: Number.from(info.memberRole),
+        memberNickname: info.memberNickname,
+    } as ZIMGroupMemberSimpleInfo;
+};
+
+export const mZIMGroupMemberInfo = (info: NZIMGroupMemberInfo) => {
+    const groupEnterInfo: ZIMGroupEnterInfo = {
+        enterTime: Number.from(info.groupEnterInfo.enterTime),
+        enterType: info.groupEnterInfo.enterType.rawValue,
+    };
+    if (info.groupEnterInfo.operatedUser != null) {
+        groupEnterInfo.operatedUser = mZIMGroupMemberSimpleInfo(info.groupEnterInfo.operatedUser!);
+    }
+
+    return {
+        userID: info.userID,
+        userName: info.userName,
+        userAvatarUrl: info.userAvatarUrl,
+        memberRole: Number.from(info.memberRole),
+        memberNickname: info.memberNickname,
+        muteExpiredTime: Number.from(info.muteExpiredTime),
+        groupEnterInfo,
+    } as ZIMGroupMemberInfo;
+};
+
+export const mZIMGroupMemberInfoList = (infos: Array<NZIMGroupMemberInfo>) => {
+    return infos.map((v) => mZIMGroupMemberInfo(v));
+};
+
+export const mZIMGroupFullInfo = (info: NZIMGroupFullInfo) => {
+    return {
+        baseInfo: mZIMGroupInfo(info.baseInfo),
+        groupAlias: info.groupAlias,
+        groupNotice: info.groupNotice,
+        groupAttributes: mMap(info.groupAttributes),
+        notificationStatus: info.notificationStatus.rawValue,
+        createTime: Number.from(info.createTime),
+        maxMemberCount: Number.from(info.maxMemberCount),
+        mutedInfo: info.mutedInfo != null ? mZIMGroupMuteInfo(info.mutedInfo) : { mode: 0, expiredTime: 0, roles: [] },
+        verifyInfo: info.verifyInfo != null ? mZIMGroupVerifyInfo(info.verifyInfo) : { joinMode: 0, inviteMode: 0, beInviteMode: 0 };
+    } as ZIMGroupFullInfo;
+};
+
+export const mZIMGroupApplicationInfoList = (infos: Array<NZIMGroupApplicationInfo>) => {
+    return infos.map((v) => {
+        const json: ZIMGroupApplicationInfo = {
+            type: v.type.rawValue,
+            state: v.state.rawValue,
+            createTime: Number.from(v.createTime),
+            updateTime: Number.from(v.updateTime),
+            wording: v.wording,
+            applyUser: mZIMUserInfo(v.applyUser),
+            groupInfo: mZIMGroupInfo(v.groupInfo),
+        };
+        if (v.operatedUser != null) {
+            json.operatedUser = mZIMGroupMemberSimpleInfo(v.operatedUser!);
+        }
+        return json;
+    });
+};
+
+export const mZIMGroupAttributesUpdateInfoList = (infos: Array<NZIMGroupAttributesUpdateInfo>) => {
+    return infos.map((v) => {
+        return { action: v.action.rawValue, groupAttributes: mMap(v.groupAttributes) } as ZIMGroupAttributesUpdateInfo;
+    });
+};
+
+export const mZIMGroupSearchInfoList = (infos: Array<NZIMGroupSearchInfo>) => {
+    return infos.map((v) => {
+        return { groupInfo: mZIMGroupInfo(v.groupInfo), userList: mZIMGroupMemberInfoList(v.userList) } as ZIMGroupSearchInfo;
+    });
+};
+
+// MARK: - Call
+
+export const mZIMCallUserInfoList = (infos: Array<NZIMCallUserInfo>) => {
+    return infos.map((v) => {
+        return { userID: v.userID, state: v.state.rawValue, extendedData: v.extendedData } as ZIMCallUserInfo;
+    });
+};
+
+export const mZIMCallInfoList = (infos: Array<NZIMCallInfo>) => {
+    return infos.map((v) => {
+        return {            
+            callID: v.callID,
+            caller: v.caller,
+            mode: v.mode.rawValue,
+            state: v.state.rawValue,
+            extendedData: v.extendedData,
+            createTime: Number.from(v.createTime),
+            endTime: Number.from(v.endTime),
+            callUserList: mZIMCallUserInfoList(v.callUserList),
+        } as ZIMCallInfo;
+    });
+};
+
+// MARK: - Friend
+
+export const mZIMFriendInfo = (info: NZIMFriendInfo) => {
+    return {
+        userID: info.userID,
+        userName: info.userName,
+        userAvatarUrl: info.userAvatarUrl,
+        wording: info.wording,
+        createTime: Number.from(info.createTime),
+        friendAlias: info.friendAlias,
+        friendAttributes: mMap(info.friendAttributes),
+    } as ZIMFriendInfo;
+};
+
+export const mZIMFriendInfoList = (infos: Array<NZIMFriendInfo>) => {
+    return infos.map((v) => mZIMFriendInfo(v));
+};
+
+export const mZIMFriendRelationInfoList = (infos: Array<NZIMFriendRelationInfo>) => {
+    return infos.map((v) => {
+        return { userID: v.userID, type: v.type.rawValue } as ZIMFriendRelationInfo;
+    });
+};
+
+export const mZIMFriendApplicationInfo = (info: NZIMFriendApplicationInfo) => {
+    return {
+        applyUser: mZIMUserInfo(info.applyUser),
+        wording: info.wording,
+        createTime: Number.from(info.createTime),
+        updateTime: Number.from(info.updateTime),
+        type: info.type.rawValue,
+        state: info.type.rawValue,
+    } as ZIMFriendApplicationInfo;
+};
+
+export const mZIMFriendApplicationInfoList = (infos: Array<NZIMFriendApplicationInfo>) => {
+    return infos.map((v) => mZIMFriendApplicationInfo(v));
+};

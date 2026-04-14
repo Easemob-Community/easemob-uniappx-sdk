@@ -16,7 +16,9 @@ import {
   EMErrorListener,
   EMTokenWillExpireListener,
   EMTokenExpiredListener,
-  ConnectionListenerCallbacks
+  ConnectionListenerCallbacks,
+  Message,
+  MessageBody,
 } from '../interface.uts';
 
 // ==================== 事件处理器实现 ====================
@@ -57,6 +59,97 @@ class EMConnectionListenerImpl extends EMConnectionListener {
   }
 }
 
+import EMMessage from 'com.hyphenate.chat.EMMessage';
+import EMMessageBody from 'com.hyphenate.chat.EMMessageBody';
+import EMTextMessageBody from 'com.hyphenate.chat.EMTextMessageBody';
+import EMImageMessageBody from 'com.hyphenate.chat.EMImageMessageBody';
+import EMVoiceMessageBody from 'com.hyphenate.chat.EMVoiceMessageBody';
+import EMVideoMessageBody from 'com.hyphenate.chat.EMVideoMessageBody';
+import EMLocationMessageBody from 'com.hyphenate.chat.EMLocationMessageBody';
+import EMFileMessageBody from 'com.hyphenate.chat.EMFileMessageBody';
+import EMCmdMessageBody from 'com.hyphenate.chat.EMCmdMessageBody';
+import EMCustomMessageBody from 'com.hyphenate.chat.EMCustomMessageBody';
+import EMMessageListener from 'com.hyphenate.EMMessageListener';
+import MutableList from 'kotlin.collections.MutableList';
+import EMMessageChatType from 'com.hyphenate.chat.EMMessage.ChatType';
+import { MessageHelper, setMessageExtFromJson } from 'uts.sdk.modules.easemobUtsSdkBeta';
+
+
+type MessageListenerCallbacks = {
+  onMessageReceived?: ((messages: Message[]) => void) | null;
+  onCmdMessageReceived?: ((messages: Message[]) => void) | null;
+}
+
+function convertEMMessage(msg: EMMessage): Message {
+  let body: MessageBody = {
+    type: 'txt',
+    message: null,
+  };
+
+  const msgBody = msg.getBody();
+  if (msgBody instanceof EMTextMessageBody) {
+    body.type = 'txt';
+    body.message = msgBody.getMessage();
+  } else if (msgBody instanceof EMImageMessageBody) {
+    body.type = 'img';
+    body.message = msgBody.getRemoteUrl() ?? msgBody.getLocalUrl();
+  } else if (msgBody instanceof EMVoiceMessageBody) {
+    body.type = 'voice';
+    body.message = msgBody.getRemoteUrl() ?? msgBody.getLocalUrl();
+  } else if (msgBody instanceof EMVideoMessageBody) {
+    body.type = 'video';
+    body.message = msgBody.getRemoteUrl() ?? msgBody.getLocalUrl();
+  } else if (msgBody instanceof EMLocationMessageBody) {
+    body.type = 'location';
+    body.message = msgBody.getAddress();
+  } else if (msgBody instanceof EMFileMessageBody) {
+    body.type = 'file';
+    body.message = msgBody.getRemoteUrl() ?? msgBody.getLocalUrl();
+  } else if (msgBody instanceof EMCmdMessageBody) {
+    body.type = 'cmd';
+    body.message = msgBody.action();
+  } else if (msgBody instanceof EMCustomMessageBody) {
+    body.type = 'custom';
+    body.message = msgBody.event();
+  }
+
+  return {
+    msgId: msg.getMsgId(),
+    from: msg.getFrom(),
+    to: msg.getTo(),
+    conversationId: msg.conversationId(),
+    chatType: msg.getChatType().ordinal,
+    body: body,
+  };
+}
+
+class EMMessageListenerImpl extends EMMessageListener {
+  @UTSJS.keepAlive
+  eventMap: MessageListenerCallbacks = {};
+
+  override onMessageReceived(messages: MutableList<EMMessage>): void {
+    console.log('[Android] native onMessageReceived, count=' + messages.size);
+    const msgList: Message[] = [];
+    for (let i: Int = 0; i < messages.size; i++) {
+      const msg = messages.get(i);
+      if (msg.getBody() instanceof EMCmdMessageBody) {
+        continue;
+      }
+      msgList.push(convertEMMessage(msg));
+    }
+    this.eventMap.onMessageReceived?.(msgList);
+  }
+
+  override onCmdMessageReceived(messages: MutableList<EMMessage>): void {
+    console.log('[Android] native onCmdMessageReceived, count=' + messages.size);
+    const msgList: Message[] = [];
+    for (let i: Int = 0; i < messages.size; i++) {
+      msgList.push(convertEMMessage(messages.get(i)));
+    }
+    this.eventMap.onCmdMessageReceived?.(msgList);
+  }
+}
+
 // ==================== 回调工厂（核心：用普通成员属性持有闭包，彻底避免 Promise resolve/reject 类型转译问题）====================
 
 /**
@@ -94,6 +187,7 @@ function makeCallBack(
 export class EMClientImpl implements EasemobClient {
   private static _instance: EMClientImpl | null = null;
   private _listener: EMConnectionListenerImpl | null = null;
+  private _messageListener: EMMessageListenerImpl | null = null;
   private _isInitialized = false;
 
   @UTSJS.keepAlive
@@ -106,6 +200,10 @@ export class EMClientImpl implements EasemobClient {
   private _onTokenWillExpire: (() => void) | null = null;
   @UTSJS.keepAlive
   private _onTokenExpired: (() => void) | null = null;
+  @UTSJS.keepAlive
+  private _onMessageReceived: ((messages: Message[]) => void) | null = null;
+  @UTSJS.keepAlive
+  private _onCmdMessageReceived: ((messages: Message[]) => void) | null = null;
 
   private constructor() {}
 
@@ -114,6 +212,11 @@ export class EMClientImpl implements EasemobClient {
       this._instance = new EMClientImpl();
     }
     return this._instance!;
+  }
+
+  static getClient(): EasemobClient | null {
+    const instance = EMClientImpl.getInstance();
+    return instance._isInitialized ? instance : null;
   }
 
   static create(config: EMInitConfig): EasemobClient {
@@ -127,6 +230,8 @@ export class EMClientImpl implements EasemobClient {
       EMClient.getInstance().init(UTSAndroid.getAppContext()!, options);
       instance._listener = new EMConnectionListenerImpl();
       EMClient.getInstance().addConnectionListener(instance._listener!);
+      instance._messageListener = new EMMessageListenerImpl();
+      EMClient.getInstance().chatManager().addMessageListener(instance._messageListener!);
       instance._isInitialized = true;
       console.log('[Android] EMClient SDK initialized');
     } else {
@@ -185,7 +290,11 @@ export class EMClientImpl implements EasemobClient {
   }
 
   destroy(): void {
+    if (this._messageListener != null) {
+      EMClient.getInstance().chatManager().removeMessageListener(this._messageListener);
+    }
     this._listener = null;
+    this._messageListener = null;
     this._isInitialized = false;
     console.log('[Android] EMClient SDK destroyed');
   }
@@ -225,9 +334,55 @@ export class EMClientImpl implements EasemobClient {
     }
   }
 
+  onMessageReceived(listener: ((messages: Message[]) => void) | null): void {
+    this._onMessageReceived = listener;
+    if (this._messageListener != null) {
+      this._messageListener.eventMap.onMessageReceived = listener;
+    }
+  }
+
+  onCmdMessageReceived(listener: ((messages: Message[]) => void) | null): void {
+    this._onCmdMessageReceived = listener;
+    if (this._messageListener != null) {
+      this._messageListener.eventMap.onCmdMessageReceived = listener;
+    }
+  }
+
   // MARK: - 桩函数
 
-  onError(_listener: EMErrorListener | null): void {}
+  sendTextMessage(content: string, to: string, chatType: string, ext: UTSJSONObject | null): Promise<Message> {
+    return new Promise((resolve, reject) => {
+      try {
+        const message = EMMessage.createTextSendMessage(content, to);
+        if (chatType === 'group') {
+          message.setChatType(EMMessageChatType.GroupChat);
+        } else if (chatType === 'chatroom') {
+          message.setChatType(EMMessageChatType.ChatRoom);
+        } else {
+          message.setChatType(EMMessageChatType.Chat);
+        }
+        if (ext != null) {
+          const extJson = JSON.stringify(ext);
+          setMessageExtFromJson(message, extJson);
+        }
+        const callback = makeCallBack(
+          (): void => {
+            resolve(convertEMMessage(message));
+          },
+          (code: number, messageStr: string): void => {
+            reject(new Error(`Send text message failed: ${code} - ${messageStr}`));
+          }
+        );
+        MessageHelper.setMessageStatusCallback(message, callback);
+        EMClient.getInstance().chatManager().sendMessage(message);
+      } catch (error) {
+        console.error('[Android] sendTextMessage error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  onError(listener: EMErrorListener | null): void {}
   getVersion(): string { return 'unknown'; }
   isConnected(): boolean { return false; }
   isLoggedIn(): boolean { return false; }
@@ -236,6 +391,13 @@ export class EMClientImpl implements EasemobClient {
 
 // ==================== 导出 ====================
 
-export function create(config: EMInitConfig): EasemobClient {
-  return EMClientImpl.create(config);
+export function create(config: UTSJSONObject): EasemobClient {
+  return EMClientImpl.create({
+    appKey: config['appKey'] as string,
+    autoLogin: (config['autoLogin'] as boolean) ?? false,
+  });
+}
+
+export function getClient(): EasemobClient | null {
+  return EMClientImpl.getClient();
 }

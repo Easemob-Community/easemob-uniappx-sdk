@@ -102,3 +102,81 @@ func emBridgeSetOnTokenWillExpire(callback: (() -> Void)?) {
 func emBridgeSetOnTokenExpired(callback: (() -> Void)?) {
     _emDelegate?.onTokenExpiredCb = callback
 }
+
+// MARK: - 消息代理桥接
+
+class EMMessageDelegateNative: NSObject, EMChatManagerDelegate {
+    var onMessageReceivedCb: ((String) -> Void)?
+
+    @objc public func messagesDidReceive(_ aMessages: [EMChatMessage]) {
+        print("[iOS] native messagesDidReceive, count: \(aMessages.count)")
+        let dictList = aMessages.map { msg -> [String: Any] in
+            var bodyDict: [String: Any] = ["type": "txt", "message": NSNull()]
+            if let textBody = msg.body as? EMTextMessageBody {
+                bodyDict["type"] = "txt"
+                bodyDict["message"] = textBody.text
+            } else if let imageBody = msg.body as? EMImageMessageBody {
+                bodyDict["type"] = "img"
+                bodyDict["message"] = imageBody.remotePath ?? imageBody.localPath ?? NSNull()
+            } else if let voiceBody = msg.body as? EMVoiceMessageBody {
+                bodyDict["type"] = "voice"
+                bodyDict["message"] = voiceBody.remotePath ?? voiceBody.localPath ?? NSNull()
+            } else if let videoBody = msg.body as? EMVideoMessageBody {
+                bodyDict["type"] = "video"
+                bodyDict["message"] = videoBody.remotePath ?? videoBody.localPath ?? NSNull()
+            } else if let locBody = msg.body as? EMLocationMessageBody {
+                bodyDict["type"] = "location"
+                bodyDict["message"] = locBody.address ?? NSNull()
+            } else if let fileBody = msg.body as? EMFileMessageBody {
+                bodyDict["type"] = "file"
+                bodyDict["message"] = fileBody.remotePath ?? fileBody.localPath ?? NSNull()
+            } else if let cmdBody = msg.body as? EMCmdMessageBody {
+                bodyDict["type"] = "cmd"
+                bodyDict["message"] = cmdBody.action
+            } else if let customBody = msg.body as? EMCustomMessageBody {
+                bodyDict["type"] = "custom"
+                bodyDict["message"] = customBody.event
+            }
+
+            return [
+                "msgId": msg.messageId ?? "",
+                "from": msg.from ?? "",
+                "to": msg.to ?? "",
+                "conversationId": msg.conversationId ?? "",
+                "chatType": msg.chatType.rawValue,
+                "body": bodyDict
+            ]
+        }
+
+        do {
+            let data = try JSONSerialization.data(withJSONObject: dictList, options: [])
+            if let jsonString = String(data: data, encoding: .utf8) {
+                DispatchQueue.main.async {
+                    self.onMessageReceivedCb?(jsonString)
+                }
+            }
+        } catch {
+            print("[iOS] JSON serialization error: \(error)")
+        }
+    }
+}
+
+private var _emMessageDelegate: EMMessageDelegateNative?
+
+func emBridgeSetupMessageDelegate() {
+    let d = EMMessageDelegateNative()
+    _emMessageDelegate = d
+    EMClient.shared().chatManager?.add(d, delegateQueue: nil)
+    print("[iOS] EMMessageDelegateNative registered")
+}
+
+func emBridgeTeardownMessageDelegate() {
+    if let d = _emMessageDelegate {
+        EMClient.shared().chatManager?.remove(d)
+        _emMessageDelegate = nil
+    }
+}
+
+func emBridgeSetOnMessageReceived(callback: ((String) -> Void)?) {
+    _emMessageDelegate?.onMessageReceivedCb = callback
+}
