@@ -1,0 +1,292 @@
+/**
+ * iOS 平台 - 消息监听
+ */
+
+import {
+  EMClient,
+  EMChatManagerDelegate,
+  EMChatMessage,
+  EMMessageBodyType,
+  EMTextMessageBody,
+  EMImageMessageBody,
+  EMVoiceMessageBody,
+  EMVideoMessageBody,
+  EMFileMessageBody,
+  EMCmdMessageBody,
+  EMCustomMessageBody,
+  EMLocationMessageBody
+} from 'HyphenateChat';
+
+// 消息体数据结构（与 Android 一致）
+export type MessageBody = {
+  type: string;
+  message: string | null;
+  remoteUrl: string | null;
+  localUrl: string | null;
+  thumbnailRemoteUrl: string | null;
+  thumbnailLocalUrl: string | null;
+  width: number | null;
+  height: number | null;
+  fileSize: number | null;
+  length: number | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  fileName: string | null;
+  action: string | null;
+  customEvent: string | null;
+  customParams: UTSJSONObject | null;
+}
+
+// 消息数据结构（与 Android 一致）
+export type Message = {
+  msgId: string;
+  from: string;
+  to: string;
+  conversationId: string;
+  chatType: number;
+  direction: number;
+  status: number;
+  isRead: boolean;
+  isAcked: boolean;
+  isDelivered: boolean;
+  localTime: number;
+  serverTime: number;
+  body: MessageBody;
+  ext: UTSJSONObject;
+}
+
+// 回调类型定义
+export type MessageListenerCallbacks = {
+  onMessageReceived: ((messages: Message[]) => void) | null;
+  onCmdMessageReceived: ((messages: Message[]) => void) | null;
+  onMessageRead: ((messages: Message[]) => void) | null;
+  onMessageDelivered: ((messages: Message[]) => void) | null;
+  onMessageRecalled: ((messages: Message[]) => void) | null;
+}
+
+/** 将 EMChatMessage 转为 UTS Message */
+function convertEMMessage(msg: EMChatMessage): Message {
+  let body: MessageBody = {
+    type: 'txt',
+    message: null,
+    remoteUrl: null,
+    localUrl: null,
+    thumbnailRemoteUrl: null,
+    thumbnailLocalUrl: null,
+    width: null,
+    height: null,
+    fileSize: null,
+    length: null,
+    address: null,
+    latitude: null,
+    longitude: null,
+    fileName: null,
+    action: null,
+    customEvent: null,
+    customParams: null
+  };
+
+  const msgBody = msg.body;
+  if (msgBody.type == EMMessageBodyType.text) {
+    body.type = 'txt';
+    body.message = (msgBody as EMTextMessageBody).text;
+  } else if (msgBody.type == EMMessageBodyType.image) {
+    const imageBody = msgBody as EMImageMessageBody;
+    body.type = 'img';
+    body.remoteUrl = imageBody.remotePath;
+    body.localUrl = imageBody.localPath;
+    body.thumbnailRemoteUrl = imageBody.thumbnailRemotePath;
+    body.thumbnailLocalUrl = imageBody.thumbnailLocalPath;
+  } else if (msgBody.type == EMMessageBodyType.voice) {
+    const voiceBody = msgBody as EMVoiceMessageBody;
+    body.type = 'voice';
+    body.remoteUrl = voiceBody.remotePath;
+    body.localUrl = voiceBody.localPath;
+    body.length = voiceBody.duration as number;
+  } else if (msgBody.type == EMMessageBodyType.video) {
+    const videoBody = msgBody as EMVideoMessageBody;
+    body.type = 'video';
+    body.remoteUrl = videoBody.remotePath;
+    body.localUrl = videoBody.localPath;
+    body.thumbnailRemoteUrl = videoBody.thumbnailRemotePath;
+    body.thumbnailLocalUrl = videoBody.thumbnailLocalPath;
+    body.length = videoBody.duration as number;
+  } else if (msgBody.type == EMMessageBodyType.location) {
+    const locBody = msgBody as EMLocationMessageBody;
+    body.type = 'location';
+    body.address = locBody.address;
+    body.latitude = locBody.latitude as number;
+    body.longitude = locBody.longitude as number;
+  } else if (msgBody.type == EMMessageBodyType.file) {
+    const fileBody = msgBody as EMFileMessageBody;
+    body.type = 'file';
+    body.remoteUrl = fileBody.remotePath;
+    body.localUrl = fileBody.localPath;
+    body.fileName = fileBody.displayName;
+  } else if (msgBody.type == EMMessageBodyType.cmd) {
+    const cmdBody = msgBody as EMCmdMessageBody;
+    body.type = 'cmd';
+    body.action = cmdBody.action;
+  } else if (msgBody.type == EMMessageBodyType.custom) {
+    const customBody = msgBody as EMCustomMessageBody;
+    body.type = 'custom';
+    body.customEvent = customBody.event;
+  }
+
+  // 解析 ext
+  let ext = new UTSJSONObject();
+  try {
+    const extDict = msg.ext;
+    if (extDict != null) {
+      const extJson = JSON.stringify(extDict) ?? '';
+      if (extJson.length > 2) {
+        ext = JSON.parse(extJson) as UTSJSONObject;
+      }
+    }
+  } catch (_e) {
+    // ext 解析失败时忽略
+  }
+
+  return {
+    msgId: msg.messageId ?? '',
+    from: msg.from ?? '',
+    to: msg.to ?? '',
+    conversationId: msg.conversationId ?? '',
+    chatType: msg.chatType.rawValue as number,
+    direction: msg.direction.rawValue as number,
+    status: msg.status.rawValue as number,
+    isRead: msg.isRead,
+    isAcked: msg.isReadAcked,
+    isDelivered: msg.isDeliverAcked,
+    localTime: msg.localTime as number,
+    serverTime: msg.timestamp as number,
+    body: body,
+    ext: ext
+  };
+}
+
+/** 全局回调注册表 */
+const callbackMap: Map<string, MessageListenerCallbacks> = new Map();
+
+/** 是否开启 uni.$emit 广播 */
+let autoEmitEnabled = false;
+
+/** delegate 是否已注册 */
+let delegateRegistered = false;
+
+/** 实现 EMChatManagerDelegate，分发消息事件 */
+class EMMessageDelegate implements EMChatManagerDelegate {
+  messagesDidReceive(aMessages: EMChatMessage[]): void {
+    console.log('[iOS][EMMessage] messagesDidReceive, count:', aMessages.length);
+    const msgList: Message[] = aMessages.map((m: EMChatMessage): Message => convertEMMessage(m));
+    callbackMap.forEach((cbs: MessageListenerCallbacks, _id: string): void => {
+      cbs.onMessageReceived?.(msgList);
+    });
+    if (autoEmitEnabled) {
+      uni.$emit('em_message_received', { messagesJson: JSON.stringify(msgList) ?? '[]' });
+    }
+  }
+
+  cmdMessagesDidReceive(aCmdMessages: EMChatMessage[]): void {
+    console.log('[iOS][EMMessage] cmdMessagesDidReceive, count:', aCmdMessages.length);
+    const msgList: Message[] = aCmdMessages.map((m: EMChatMessage): Message => convertEMMessage(m));
+    callbackMap.forEach((cbs: MessageListenerCallbacks, _id: string): void => {
+      cbs.onCmdMessageReceived?.(msgList);
+    });
+    if (autoEmitEnabled) {
+      uni.$emit('em_cmd_message_received', { messagesJson: JSON.stringify(msgList) ?? '[]' });
+    }
+  }
+
+  messagesDidRead(aMessages: EMChatMessage[]): void {
+    const msgList: Message[] = aMessages.map((m: EMChatMessage): Message => convertEMMessage(m));
+    callbackMap.forEach((cbs: MessageListenerCallbacks, _id: string): void => {
+      cbs.onMessageRead?.(msgList);
+    });
+    if (autoEmitEnabled) {
+      uni.$emit('em_message_read', { messagesJson: JSON.stringify(msgList) ?? '[]' });
+    }
+  }
+
+  messagesDidDeliver(aMessages: EMChatMessage[]): void {
+    const msgList: Message[] = aMessages.map((m: EMChatMessage): Message => convertEMMessage(m));
+    callbackMap.forEach((cbs: MessageListenerCallbacks, _id: string): void => {
+      cbs.onMessageDelivered?.(msgList);
+    });
+    if (autoEmitEnabled) {
+      uni.$emit('em_message_delivered', { messagesJson: JSON.stringify(msgList) ?? '[]' });
+    }
+  }
+
+  messagesInfoDidRecall(aMessages: EMChatMessage[]): void {
+    const msgList: Message[] = aMessages.map((m: EMChatMessage): Message => convertEMMessage(m));
+    callbackMap.forEach((cbs: MessageListenerCallbacks, _id: string): void => {
+      cbs.onMessageRecalled?.(msgList);
+    });
+    if (autoEmitEnabled) {
+      uni.$emit('em_message_recalled', { messagesJson: JSON.stringify(msgList) ?? '[]' });
+    }
+  }
+}
+
+const messageDelegate: EMMessageDelegate = new EMMessageDelegate();
+
+function ensureDelegateRegistered(): void {
+  if (!delegateRegistered) {
+    EMClient.shared().chatManager?.add(messageDelegate, delegateQueue = null);
+    delegateRegistered = true;
+    console.log('[iOS] EMMessageDelegate registered');
+  }
+}
+
+function tryUnregisterDelegate(): void {
+  if (delegateRegistered && callbackMap.size == 0 && !autoEmitEnabled) {
+    EMClient.shared().chatManager?.remove(messageDelegate);
+    delegateRegistered = false;
+    console.log('[iOS] EMMessageDelegate unregistered');
+  }
+}
+
+/** 添加消息监听 */
+export function addMessageListenerImpl(listenerId: string, callbacks: MessageListenerCallbacks): void {
+  ensureDelegateRegistered();
+  callbackMap.set(listenerId, callbacks);
+  console.log('[iOS] addMessageListener registered:', listenerId);
+}
+
+/** 移除消息监听 */
+export function removeMessageListenerImpl(listenerId: string): void {
+  callbackMap.delete(listenerId);
+  tryUnregisterDelegate();
+  console.log('[iOS] removeMessageListener:', listenerId);
+}
+
+/** 移除所有消息监听 */
+export function removeAllMessageListeners(): void {
+  callbackMap.clear();
+  tryUnregisterDelegate();
+  console.log('[iOS] removeAllMessageListeners');
+}
+
+// ==================== 方案 B： uni.$emit 广播 ====================
+// 开启后 SDK 消息事件自动广播，在任意 .uvue 中用 uni.$on 监听：
+//   em_message_received     参数: { messages: Message[] }
+//   em_cmd_message_received  参数: { messages: Message[] }
+//   em_message_read          参数: { messages: Message[] }
+//   em_message_delivered     参数: { messages: Message[] }
+//   em_message_recalled      参数: { messages: Message[] }
+
+export function enableMessageEmit(): void {
+  if (!autoEmitEnabled) {
+    autoEmitEnabled = true;
+    ensureDelegateRegistered();
+    console.log('[iOS] message uni.$emit enabled');
+  }
+}
+
+export function disableMessageEmit(): void {
+  autoEmitEnabled = false;
+  tryUnregisterDelegate();
+  console.log('[iOS] message uni.$emit disabled');
+}

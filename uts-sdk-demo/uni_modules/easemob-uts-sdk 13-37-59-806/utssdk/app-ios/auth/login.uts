@@ -1,0 +1,111 @@
+/**
+ * iOS 平台 - 登录/登出
+ * 通过 EMAuthBridge.swift 原生混编层调用 HyphenateChat SDK
+ *
+ * 回调机制：
+ * - Swift 侧执行登录后将结果写入 EMAuthBridge 静态字典
+ * - UTS 侧用 setInterval 轮询，获取结果后触发回调
+ * - 所有回调参数均为普通 UTS 函数，不从 UTSJSONObject 提取，避免 iOS 运行时崩溃
+ */
+
+/** 轮询间隔（ms） */
+const POLL_INTERVAL = 50;
+/** 最大等待时间（ms） */
+const POLL_TIMEOUT  = 15000;
+
+/**
+ * 轮询 EMAuthBridge 静态结果属性，获取到结果后触发回调
+ */
+function pollResult(
+  operationId: string,
+  onSuccess: (() => void) | null,
+  onError: ((code: number, message: string) => void) | null
+): void {
+  let elapsed = 0;
+  let timer: number = 0;
+  timer = setInterval((): void => {
+    elapsed += POLL_INTERVAL;
+
+    const status = EMAuthBridge.getResultStatus(operationId = operationId);
+
+    if (status == 'success') {
+      clearInterval(timer);
+      EMAuthBridge.clearResult(operationId = operationId);
+      if (onSuccess != null) {
+        onSuccess!();
+      }
+    } else if (status == 'error') {
+      clearInterval(timer);
+      const code = EMAuthBridge.getResultCode(operationId = operationId);
+      const msg  = EMAuthBridge.getResultMessage(operationId = operationId);
+      EMAuthBridge.clearResult(operationId = operationId);
+      if (onError != null) {
+        onError!(code as number, msg);
+      }
+    } else if (elapsed >= POLL_TIMEOUT) {
+      clearInterval(timer);
+      EMAuthBridge.clearResult(operationId = operationId);
+      if (onError != null) {
+        onError!(408, 'Operation timeout');
+      }
+    }
+  }, POLL_INTERVAL);
+}
+
+/** 生成唯一操作 ID */
+function genOperationId(): string {
+  return Date.now().toString() + Math.random().toString(36).substring(2, 9);
+}
+
+/** 使用用户名和密码登录 */
+export function loginEMClient(
+  userId: string,
+  password: string,
+  onSuccess: (() => void) | null,
+  onError: ((code: number, message: string) => void) | null
+): void {
+  console.log('[iOS] loginEMClient:', userId);
+  const oid = genOperationId();
+  EMAuthBridge.loginWithPassword(userId = userId, password = password, callbackId = oid);
+  pollResult(oid, onSuccess, onError);
+}
+
+/** 使用 Token 登录 */
+export function loginWithToken(
+  username: string,
+  token: string,
+  onSuccess: (() => void) | null,
+  onError: ((code: number, message: string) => void) | null
+): void {
+  console.log('[iOS] loginWithToken:', username);
+  const oid = genOperationId();
+  EMAuthBridge.loginWithToken(userId = username, token = token, callbackId = oid);
+  pollResult(oid, onSuccess, onError);
+}
+
+/** 登出 */
+export function logoutEMClient(
+  unbindToken: boolean,
+  onSuccess: (() => void) | null,
+  onError: ((code: number, message: string) => void) | null
+): void {
+  console.log('[iOS] logoutEMClient');
+  const oid = genOperationId();
+  EMAuthBridge.logout(unbindToken = unbindToken, callbackId = oid);
+  pollResult(oid, onSuccess, onError);
+}
+
+/** 获取当前登录用户 */
+export function getCurrentUser(): string {
+  return EMAuthBridge.getCurrentUser();
+}
+
+/** 是否已连接 */
+export function isConnected(): boolean {
+  return EMAuthBridge.isConnected();
+}
+
+/** 是否已登录 */
+export function isLoggedIn(): boolean {
+  return EMAuthBridge.isLoggedIn();
+}

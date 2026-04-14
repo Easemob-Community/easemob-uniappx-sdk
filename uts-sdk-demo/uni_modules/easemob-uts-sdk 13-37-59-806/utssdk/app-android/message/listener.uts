@@ -1,0 +1,445 @@
+/**
+ * 消息监听
+ */
+
+import EMClient from 'com.hyphenate.chat.EMClient';
+import EMMessageListener from 'com.hyphenate.EMMessageListener';
+import EMMessage from 'com.hyphenate.chat.EMMessage';
+import EMTextMessageBody from 'com.hyphenate.chat.EMTextMessageBody';
+import EMImageMessageBody from 'com.hyphenate.chat.EMImageMessageBody';
+import EMVoiceMessageBody from 'com.hyphenate.chat.EMVoiceMessageBody';
+import EMVideoMessageBody from 'com.hyphenate.chat.EMVideoMessageBody';
+import EMLocationMessageBody from 'com.hyphenate.chat.EMLocationMessageBody';
+import EMFileMessageBody from 'com.hyphenate.chat.EMFileMessageBody';
+import EMCmdMessageBody from 'com.hyphenate.chat.EMCmdMessageBody';
+import EMCustomMessageBody from 'com.hyphenate.chat.EMCustomMessageBody';
+import EMGroupReadAck from 'com.hyphenate.chat.EMGroupReadAck';
+import EMRecallMessageInfo from 'com.hyphenate.chat.EMRecallMessageInfo';
+import EMMessageReactionChange from 'com.hyphenate.chat.EMMessageReactionChange';
+import EMMessagePinInfo from 'com.hyphenate.chat.EMMessagePinInfo';
+
+// 导入Kotlin辅助类
+import { MessageHelper, getMessageExtAsJson, getCustomMessageEvent, getCustomMessageParamsAsJson } from 'uts.sdk.modules.easemobUtsSdk';
+
+// 消息体类型
+export type MessageType = 'txt' | 'img' | 'video' | 'location' | 'voice' | 'file' | 'cmd' | 'custom';
+
+// 消息体类型常量值
+export const MessageTypeValues = {
+	TXT: 'txt',
+	IMAGE: 'img',
+	VIDEO: 'video',
+	LOCATION: 'location',
+	VOICE: 'voice',
+	FILE: 'file',
+	CMD: 'cmd',
+	CUSTOM: 'custom'
+}
+
+// 消息体数据结构
+export type MessageBody = {
+	type : string;
+	message : string | null;
+	remoteUrl : string | null;
+	localUrl : string | null;
+	thumbnailRemoteUrl : string | null;
+	thumbnailLocalUrl : string | null;
+	width : number | null;
+	height : number | null;
+	fileSize : number | null;
+	length : number | null;
+	address : string | null;
+	latitude : number | null;
+	longitude : number | null;
+	fileName : string | null;
+	action : string | null;
+	customEvent : string | null;
+	customParams : UTSJSONObject | null;
+}
+
+// 消息数据结构
+export type Message = {
+	msgId : string;
+	from : string;
+	to : string;
+	conversationId : string;
+	chatType : number;
+	direction : number;
+	status : number;
+	isRead : boolean;
+	isAcked : boolean;
+	isDelivered : boolean;
+	localTime : number;
+	serverTime : number;
+	body : MessageBody;
+	ext : UTSJSONObject;
+}
+
+// 群组已读回执数据结构
+export type GroupReadAck = {
+	msgId : string;
+	ackId : string;
+	from : string;
+	content : string;
+	count : number;
+	timestamp : number;
+}
+
+// 撤回消息信息数据结构
+export type RecallMessageInfo = {
+	recallMessage : Message | null;
+	recallBy : string;
+	recallExt : string;
+}
+
+// Reaction 变更数据结构
+export type MessageReactionChange = {
+	conversationId : string;
+	messageId : string;
+	from : string;
+	reaction : string;
+	count : number;
+	isAdded : boolean;
+	userList : string[];
+}
+
+// 置顶信息数据结构
+export type MessagePinInfo = {
+	operatorId : string;
+	pinTime : number;
+}
+
+// 回调类型定义
+export type MessageListenerCallbacks = {
+	onMessageReceived ?: (messages : Message[]) => void;
+	onStreamMessageReceived ?: (messages : Message[]) => void;
+	onCmdMessageReceived ?: (messages : Message[]) => void;
+	onMessageRead ?: (messages : Message[]) => void;
+	onGroupMessageRead ?: (groupReadAcks : GroupReadAck[]) => void;
+	onReadAckForGroupMessageUpdated ?: () => void;
+	onMessageDelivered ?: (messages : Message[]) => void;
+	onMessageRecalled ?: (messages : Message[]) => void;
+	onMessageRecalledWithExt ?: (recallMessageInfo : RecallMessageInfo[]) => void;
+	onMessageChanged ?: (message : Message, change : any) => void;
+	onReactionChanged ?: (messageReactionChangeList : MessageReactionChange[]) => void;
+	onMessageContentChanged ?: (messageModified : Message, operatorId : string, operationTime : Long) => void;
+	onMessagePinChanged ?: (messageId : string, conversationId : string, pinOperation : number, pinInfo : MessagePinInfo) => void;
+}
+
+/**
+ * 从 EMMessage 获取扩展属性
+ */
+function getMessageExtFromEMMessage(msg : EMMessage) : UTSJSONObject {
+	try {
+		const extJson = getMessageExtAsJson(msg);
+		if (extJson != null && extJson.length > 2) {
+			return JSON.parse(extJson) as UTSJSONObject;
+		}
+	} catch (e) {
+		console.log('[EMMessage] 获取扩展属性失败:', e);
+	}
+	return new UTSJSONObject();
+}
+
+/**
+ * 转换 EMMessage 为 UTS Message
+ */
+function convertEMMessage(msg : EMMessage) : Message {
+	const body = msg.getBody();
+	let messageBody : MessageBody = {
+		type: 'txt',
+		message: null,
+		remoteUrl: null,
+		localUrl: null,
+		thumbnailRemoteUrl: null,
+		thumbnailLocalUrl: null,
+		width: null,
+		height: null,
+		fileSize: null,
+		length: null,
+		address: null,
+		latitude: null,
+		longitude: null,
+		fileName: null,
+		action: null,
+		customEvent: null,
+		customParams: null
+	};
+
+	if (body instanceof EMTextMessageBody) {
+		messageBody.type = 'txt';
+		messageBody.message = body.getMessage();
+	} else if (body instanceof EMImageMessageBody) {
+		messageBody.type = 'img';
+		messageBody.remoteUrl = body.getRemoteUrl() ?? '';
+		messageBody.localUrl = body.getLocalUrl() ?? '';
+		messageBody.thumbnailRemoteUrl = body.getThumbnailUrl() ?? '';
+		messageBody.thumbnailLocalUrl = body.thumbnailLocalPath() ?? '';
+		messageBody.width = body.getWidth();
+		messageBody.height = body.getHeight();
+		messageBody.fileSize = body.getFileSize();
+	} else if (body instanceof EMVoiceMessageBody) {
+		messageBody.type = 'voice';
+		messageBody.remoteUrl = body.getRemoteUrl() ?? '';
+		messageBody.localUrl = body.getLocalUrl() ?? '';
+		messageBody.length = body.getLength();
+		messageBody.fileSize = body.getFileSize();
+	} else if (body instanceof EMVideoMessageBody) {
+		messageBody.type = 'video';
+		messageBody.remoteUrl = body.getRemoteUrl() ?? '';
+		messageBody.localUrl = body.getLocalUrl() ?? '';
+		messageBody.thumbnailRemoteUrl = body.getThumbnailUrl() ?? '';
+		messageBody.thumbnailLocalUrl = body.getLocalThumb() ?? '';
+		messageBody.length = body.getDuration();
+		messageBody.fileSize = body.getVideoFileLength();
+	} else if (body instanceof EMLocationMessageBody) {
+		messageBody.type = 'location';
+		messageBody.address = body.getAddress() ?? '';
+		messageBody.latitude = body.getLatitude();
+		messageBody.longitude = body.getLongitude();
+	} else if (body instanceof EMFileMessageBody) {
+		messageBody.type = 'file';
+		messageBody.remoteUrl = body.getRemoteUrl() ?? '';
+		messageBody.localUrl = body.getLocalUrl() ?? '';
+		messageBody.fileName = body.getFileName() ?? '';
+		messageBody.fileSize = 0;
+	} else if (body instanceof EMCmdMessageBody) {
+		messageBody.type = 'cmd';
+		messageBody.action = body.action() ?? '';
+	} else if (body instanceof EMCustomMessageBody) {
+		messageBody.type = 'custom';
+		messageBody.customEvent = getCustomMessageEvent(body);
+		const paramsJson = getCustomMessageParamsAsJson(body);
+		if (paramsJson.length > 2) {
+			messageBody.customParams = JSON.parse(paramsJson) as UTSJSONObject;
+		}
+	}
+
+	return {
+		msgId: msg.getMsgId() ?? '',
+		from: msg.getFrom() ?? '',
+		to: msg.getTo() ?? '',
+		conversationId: msg.conversationId() ?? '',
+		chatType: msg.getChatType().ordinal,
+		direction: msg.direct().ordinal,
+		status: msg.status().ordinal,
+		isRead: !msg.isUnread(),
+		isAcked: msg.isAcked(),
+		isDelivered: msg.isDelivered(),
+		localTime: msg.localTime(),
+		serverTime: msg.getMsgTime(),
+		body: messageBody,
+		ext: getMessageExtFromEMMessage(msg)
+	};
+}
+
+/**
+ * 转换 EMGroupReadAck 为 UTS GroupReadAck
+ */
+function convertGroupReadAck(ack : EMGroupReadAck) : GroupReadAck {
+	return {
+		msgId: ack.getMsgId() ?? '',
+		ackId: ack.getAckId() ?? '',
+		from: ack.getFrom() ?? '',
+		content: ack.getContent() ?? '',
+		count: ack.getCount(),
+		timestamp: ack.getTimestamp()
+	};
+}
+
+/**
+ * 转换 EMRecallMessageInfo 为 UTS RecallMessageInfo
+ */
+function convertRecallMessageInfo(info : EMRecallMessageInfo) : RecallMessageInfo {
+	const recallMsg = info.getRecallMessage();
+	return {
+		recallMessage: recallMsg != null ? convertEMMessage(recallMsg) : null,
+		recallBy: info.getRecallBy() ?? '',
+		recallExt: info.getExt() ?? ''
+	};
+}
+
+/**
+ * 转换 EMMessageReactionChange 为 UTS MessageReactionChange
+ */
+function convertMessageReactionChange(change : EMMessageReactionChange) : MessageReactionChange {
+	const reactionList = change.getMessageReactionList();
+	const reaction = reactionList.size > 0 ? reactionList.get(0) : null;
+	return {
+		conversationId: change.getConversionID() ?? '',
+		messageId: change.getMessageId() ?? '',
+		from: '',
+		reaction: reaction?.getReaction() ?? '',
+		count: reaction?.getUserCount() ?? 0,
+		isAdded: reaction?.isAddedBySelf() ?? false,
+		userList: []
+	};
+}
+
+/**
+ * 转换 EMMessagePinInfo 为 UTS MessagePinInfo
+ */
+function convertMessagePinInfo(info : EMMessagePinInfo) : MessagePinInfo {
+	return {
+		operatorId: info.operatorId() ?? '',
+		pinTime: info.pinTime()
+	};
+}
+
+// 内部监听器类
+class InnerMessageListener extends EMMessageListener {
+	private callbacks : MessageListenerCallbacks;
+
+	constructor(callbacks : MessageListenerCallbacks) {
+		super();
+		this.callbacks = callbacks;
+	}
+
+	override onMessageReceived(messages : MutableList<EMMessage>) : void {
+		if (this.callbacks.onMessageReceived != null) {
+			const msgList : Message[] = [];
+			for (let i : Int = 0; i < messages.size; i++) {
+				msgList.push(convertEMMessage(messages.get(i)));
+			}
+			this.callbacks.onMessageReceived(msgList);
+		}
+	}
+
+	override onStreamMessageReceived(messages : MutableList<EMMessage>) : void {
+		if (this.callbacks.onStreamMessageReceived != null) {
+			const msgList : Message[] = [];
+			for (let i : Int = 0; i < messages.size; i++) {
+				msgList.push(convertEMMessage(messages.get(i)));
+			}
+			this.callbacks.onStreamMessageReceived(msgList);
+		}
+	}
+
+	override onCmdMessageReceived(messages : MutableList<EMMessage>) : void {
+		if (this.callbacks.onCmdMessageReceived != null) {
+			const msgList : Message[] = [];
+			for (let i : Int = 0; i < messages.size; i++) {
+				msgList.push(convertEMMessage(messages.get(i)));
+			}
+			this.callbacks.onCmdMessageReceived(msgList);
+		}
+	}
+
+	override onMessageRead(messages : MutableList<EMMessage>) : void {
+		if (this.callbacks.onMessageRead != null) {
+			const msgList : Message[] = [];
+			for (let i : Int = 0; i < messages.size; i++) {
+				msgList.push(convertEMMessage(messages.get(i)));
+			}
+			this.callbacks.onMessageRead(msgList);
+		}
+	}
+
+	override onGroupMessageRead(groupReadAcks : MutableList<EMGroupReadAck>) : void {
+		if (this.callbacks.onGroupMessageRead != null) {
+			const ackList : GroupReadAck[] = [];
+			for (let i : Int = 0; i < groupReadAcks.size; i++) {
+				ackList.push(convertGroupReadAck(groupReadAcks.get(i)));
+			}
+			this.callbacks.onGroupMessageRead(ackList);
+		}
+	}
+
+	override onReadAckForGroupMessageUpdated() : void {
+		this.callbacks.onReadAckForGroupMessageUpdated?.();
+	}
+
+	override onMessageDelivered(messages : MutableList<EMMessage>) : void {
+		if (this.callbacks.onMessageDelivered != null) {
+			const msgList : Message[] = [];
+			for (let i : Int = 0; i < messages.size; i++) {
+				msgList.push(convertEMMessage(messages.get(i)));
+			}
+			this.callbacks.onMessageDelivered(msgList);
+		}
+	}
+
+	override onMessageRecalled(messages : MutableList<EMMessage>) : void {
+		if (this.callbacks.onMessageRecalled != null) {
+			const msgList : Message[] = [];
+			for (let i : Int = 0; i < messages.size; i++) {
+				msgList.push(convertEMMessage(messages.get(i)));
+			}
+			this.callbacks.onMessageRecalled(msgList);
+		}
+	}
+
+	override onMessageRecalledWithExt(recallMessageInfo : MutableList<EMRecallMessageInfo>) : void {
+		if (this.callbacks.onMessageRecalledWithExt != null) {
+			const infoList : RecallMessageInfo[] = [];
+			for (let i : Int = 0; i < recallMessageInfo.size; i++) {
+				infoList.push(convertRecallMessageInfo(recallMessageInfo.get(i)));
+			}
+			this.callbacks.onMessageRecalledWithExt(infoList);
+		}
+	}
+
+	override onMessageChanged(message : EMMessage, change : any) : void {
+		if (this.callbacks.onMessageChanged != null) {
+			this.callbacks.onMessageChanged(convertEMMessage(message), change);
+		}
+	}
+
+	override onReactionChanged(messageReactionChangeList : MutableList<EMMessageReactionChange>) : void {
+		if (this.callbacks.onReactionChanged != null) {
+			const changeList : MessageReactionChange[] = [];
+			for (let i : Int = 0; i < messageReactionChangeList.size; i++) {
+				changeList.push(convertMessageReactionChange(messageReactionChangeList.get(i)));
+			}
+			this.callbacks.onReactionChanged(changeList);
+		}
+	}
+
+	override onMessageContentChanged(messageModified : EMMessage, operatorId : string, operationTime : Long) : void {
+		if (this.callbacks.onMessageContentChanged != null) {
+			this.callbacks.onMessageContentChanged(convertEMMessage(messageModified), operatorId, operationTime);
+		}
+	}
+
+	override onMessagePinChanged(messageId : string, conversationId : string, pinOperation : EMMessagePinInfo.PinOperation, pinInfo : EMMessagePinInfo) : void {
+		if (this.callbacks.onMessagePinChanged != null) {
+			this.callbacks.onMessagePinChanged(messageId, conversationId, pinOperation.ordinal, convertMessagePinInfo(pinInfo));
+		}
+	}
+}
+
+// 存储监听器映射
+const listenerMap = new Map<string, EMMessageListener>();
+
+/**
+ * 添加消息监听（内部实现）
+ * @param listenerId 监听器唯一标识
+ * @param callbacks 监听器回调对象
+ */
+export function addMessageListenerImpl(listenerId : string, callbacks : MessageListenerCallbacks) : void {
+	const androidListener = new InnerMessageListener(callbacks);
+	listenerMap.set(listenerId, androidListener);
+	EMClient.getInstance().chatManager().addMessageListener(androidListener);
+}
+
+/**
+ * 移除消息监听（内部实现）
+ * @param listenerId 监听器唯一标识
+ */
+export function removeMessageListenerImpl(listenerId : string) : void {
+	const androidListener = listenerMap.get(listenerId);
+	if (androidListener != null) {
+		EMClient.getInstance().chatManager().removeMessageListener(androidListener);
+		listenerMap.delete(listenerId);
+	}
+}
+
+/**
+ * 移除所有消息监听器
+ */
+export function removeAllMessageListeners() : void {
+	listenerMap.forEach((listener, id) => {
+		EMClient.getInstance().chatManager().removeMessageListener(listener);
+	});
+	listenerMap.clear();
+}

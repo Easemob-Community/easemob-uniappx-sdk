@@ -1,0 +1,14 @@
+/**
+ * 核心模块 - SDK初始化
+ */
+
+import EMOptions from "com.hyphenate.chat.EMOptions";
+import EMClient from "com.hyphenate.chat.EMClient";
+
+export function initEMClient(appkey: string): void {
+	const options = new EMOptions();
+	options.setAppKey(appkey);
+	options.setAutoLogin(false);
+	console.log(options.getAppKey(), 'getappkey')
+	EMClient.getInstance().init(UTSAndroid.getAppContext(), options)
+}

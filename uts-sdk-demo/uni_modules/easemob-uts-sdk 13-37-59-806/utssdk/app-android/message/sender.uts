@@ -1,0 +1,392 @@
+/**
+ * 消息发送
+ */
+
+import EMClient from 'com.hyphenate.chat.EMClient';
+import EMMessage from 'com.hyphenate.chat.EMMessage';
+import EMCallBack from 'com.hyphenate.EMCallBack';
+import EMCmdMessageBody from 'com.hyphenate.chat.EMCmdMessageBody';
+import EMMessageChatType from 'com.hyphenate.chat.EMMessage.ChatType';
+import Uri from 'android.net.Uri';
+import { Message } from './listener.uts';
+
+// 导入Kotlin辅助类
+import { MessageHelper, setMessageExtFromJson, getMessageExtAsJson, createCustomMessageBody } from 'uts.sdk.modules.easemobUtsSdk';
+
+// 消息发送回调映射表
+const messageCallbacks: Map<string, UTSJSONObject> = new Map();
+
+/**
+ * 生成唯一回调ID
+ */
+function generateCallbackId(): string {
+	return Date.now().toString() + Math.random().toString(36).substring(2, 11);
+}
+
+/**
+ * 消息信息接口
+ */
+export interface MessageInfo {
+	msgId: string;
+	from: string;
+	to: string;
+	type: string;
+	chatType: string;
+	timestamp: number;
+}
+
+/**
+ * 消息发送回调实现类
+ */
+class MessageSendCallBack extends EMCallBack {
+	private callbackId: string;
+	private message: EMMessage | null = null;
+
+	constructor(callbackId: string, message: EMMessage | null = null) {
+		super();
+		this.callbackId = callbackId;
+		this.message = message;
+	}
+
+	override onError(code: Int, message: string): void {
+		const callback = messageCallbacks.get(this.callbackId);
+		if (callback != null) {
+			const onError = callback["onError"];
+			if (onError != null) {
+				(onError as (code: number, message: string) => void)(code, message);
+			}
+			messageCallbacks.delete(this.callbackId);
+		}
+		console.log('[EMMessage] 消息发送失败, code:', code, 'message:', message);
+	}
+
+	override onProgress(progress: Int, status: string): void {
+		const callback = messageCallbacks.get(this.callbackId);
+		if (callback != null) {
+			const onProgress = callback["onProgress"];
+			if (onProgress != null) {
+				(onProgress as (progress: number, status: string) => void)(progress, status);
+			}
+		}
+	}
+
+	override onSuccess(): void {
+		const callback = messageCallbacks.get(this.callbackId);
+		if (callback != null) {
+			const onSuccess = callback["onSuccess"];
+			const msg = this.message;
+			if (onSuccess != null && msg != null) {
+				const messageInfo = new UTSJSONObject();
+				messageInfo['msgId'] = msg.getMsgId();
+				messageInfo['from'] = msg.getFrom();
+				messageInfo['to'] = msg.getTo();
+				messageInfo['type'] = msg.getType().name;
+				const chatType = msg.getChatType();
+				if (chatType == EMMessageChatType.GroupChat) {
+					messageInfo['chatType'] = 'group';
+				} else if (chatType == EMMessageChatType.ChatRoom) {
+					messageInfo['chatType'] = 'chatroom';
+				} else {
+					messageInfo['chatType'] = 'single';
+				}
+				messageInfo['timestamp'] = msg.getMsgTime();
+				messageInfo['ext'] = getMessageExt(msg);
+				(onSuccess as (messageInfo: UTSJSONObject) => void)(messageInfo);
+			}
+			messageCallbacks.delete(this.callbackId);
+		}
+		const msg = this.message;
+		console.log('[EMMessage] 消息发送成功, ID:', msg != null ? msg.getMsgId() : 'unknown');
+	}
+}
+
+/**
+ * 设置消息回调
+ */
+function setMessageCallback(message: EMMessage, callbackId: string): void {
+	const callback = new MessageSendCallBack(callbackId, message);
+	MessageHelper.setMessageStatusCallback(message, callback);
+}
+
+/**
+ * 设置消息的聊天类型
+ */
+function setEMMessageChatType(message: EMMessage, chatType: string): void {
+	if (chatType === 'group') {
+		message.setChatType(EMMessageChatType.GroupChat);
+	} else if (chatType === 'chatroom') {
+		message.setChatType(EMMessageChatType.ChatRoom);
+	} else {
+		message.setChatType(EMMessageChatType.Chat);
+	}
+}
+
+/**
+ * 设置消息扩展属性
+ */
+function setMessageExt(message: EMMessage, ext: UTSJSONObject | null): void {
+	if (ext == null) {
+		return;
+	}
+	const extJson = JSON.stringify(ext);
+	setMessageExtFromJson(message, extJson);
+}
+
+/**
+ * 获取消息扩展属性
+ */
+function getMessageExt(message: EMMessage): UTSJSONObject {
+	try {
+		const extJson = getMessageExtAsJson(message);
+		if (extJson != null && extJson.length > 2) {
+			return JSON.parse(extJson) as UTSJSONObject;
+		}
+	} catch (e) {
+		console.log('[EMMessage] 获取扩展属性失败:', e);
+	}
+	return new UTSJSONObject();
+}
+
+/**
+ * 发送文本消息
+ */
+export function sendTextMessageImpl(content: string, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createTxtSendMessage(content, to);
+	setEMMessageChatType(message, chatType);
+	setMessageExt(message, ext);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送图片消息（使用文件路径）
+ */
+export function sendImageMessageImpl(filePath: string, sendOriginalImage: boolean, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createImageSendMessage(filePath, sendOriginalImage, to);
+	setEMMessageChatType(message, chatType);
+	setMessageExt(message, ext);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送图片消息（使用Uri）
+ */
+export function sendImageMessageWithUriImpl(imageUri: Uri, sendOriginalImage: boolean, to: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createImageSendMessage(imageUri, sendOriginalImage, to);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送GIF图片消息
+ */
+export function sendGifImageMessageImpl(gifFilePath: string, to: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createGifImageMessage(gifFilePath, to);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送语音消息（使用文件路径）
+ */
+export function sendVoiceMessageImpl(filePath: string, timeLength: Int, to: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createVoiceSendMessage(filePath, timeLength, to);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送语音消息（使用Uri）
+ */
+export function sendVoiceMessageWithUriImpl(fileUri: Uri, timeLength: Int, to: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createVoiceSendMessage(fileUri, timeLength, to);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送视频消息（使用文件路径）
+ */
+export function sendVideoMessageImpl(videoFilePath: string, imageThumbPath: string, timeLength: Int, to: string, chatType: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createVideoSendMessage(videoFilePath, imageThumbPath, timeLength, to);
+	setEMMessageChatType(message, chatType);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送视频消息（使用Uri）
+ */
+export function sendVideoMessageWithUriImpl(videoUri: Uri, imageThumbPath: string, timeLength: Int, to: string, chatType: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createVideoSendMessage(videoUri, imageThumbPath, timeLength, to);
+	setEMMessageChatType(message, chatType);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送视频消息（视频和缩略图都使用Uri）
+ */
+export function sendVideoMessageWithUrisImpl(videoUri: Uri, thumbUri: Uri, timeLength: Int, to: string, chatType: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createVideoSendMessage(videoUri, thumbUri, timeLength, to);
+	setEMMessageChatType(message, chatType);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送位置消息
+ */
+export function sendLocationMessageImpl(latitude: Double, longitude: Double, locationAddress: string, buildingName: string, to: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createLocationSendMessage(latitude, longitude, locationAddress, buildingName, to);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送位置消息（不含建筑物名称）
+ */
+export function sendLocationMessageSimpleImpl(latitude: Double, longitude: Double, locationAddress: string, to: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createLocationSendMessage(latitude, longitude, locationAddress, to);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送文件消息（使用文件路径）
+ */
+export function sendFileMessageImpl(filePath: string, to: string, chatType: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createFileSendMessage(filePath, to);
+	setEMMessageChatType(message, chatType);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送文件消息（使用Uri）
+ */
+export function sendFileMessageWithUriImpl(fileUri: Uri, to: string, chatType: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createFileSendMessage(fileUri, to);
+	setEMMessageChatType(message, chatType);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送透传（命令）消息
+ */
+export function sendCmdMessageImpl(action: string, to: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createSendMessage(EMMessage.Type.CMD);
+	message.setTo(to);
+	const body = new EMCmdMessageBody(action);
+	message.addBody(body);
+	setMessageExt(message, ext);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送自定义消息
+ */
+export function sendCustomMessageImpl(event: string, params: UTSJSONObject, to: string, chatType: string, callback: UTSJSONObject, ext: UTSJSONObject | null = null): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const message = EMMessage.createSendMessage(EMMessage.Type.CUSTOM);
+	message.setTo(to);
+
+	const paramsJson = JSON.stringify(params);
+	const customBody = createCustomMessageBody(event, paramsJson);
+
+	message.addBody(customBody);
+	setEMMessageChatType(message, chatType);
+	setMessageExt(message, ext);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 发送合并转发消息
+ */
+export function sendCombinedMessageImpl(title: string, summary: string, compatibleText: string, messageIdList: string[], to: string, callback: UTSJSONObject): void {
+	const callbackId = generateCallbackId();
+	messageCallbacks.set(callbackId, callback);
+
+	const msgIdList = new java.util.ArrayList<string>();
+	for (let i = 0; i < messageIdList.length; i++) {
+		msgIdList.add(messageIdList[i]);
+	}
+
+	const message = EMMessage.createCombinedSendMessage(title, summary, compatibleText, msgIdList, to);
+	setMessageCallback(message, callbackId);
+	EMClient.getInstance().chatManager().sendMessage(message);
+}
+
+/**
+ * 下载消息附件
+ */
+export function downloadAttachmentImpl(message: Message, callback: UTSJSONObject): void {
+	const emMessage = EMClient.getInstance().chatManager().getMessage(message.msgId);
+	if (emMessage != null) {
+		const callbackId = generateCallbackId();
+		messageCallbacks.set(callbackId, callback);
+		setMessageCallback(emMessage, callbackId);
+		EMClient.getInstance().chatManager().downloadAttachment(emMessage);
+	}
+}
+
+/**
+ * 下载消息缩略图
+ */
+export function downloadThumbnailImpl(message: Message, callback: UTSJSONObject): void {
+	const emMessage = EMClient.getInstance().chatManager().getMessage(message.msgId);
+	if (emMessage != null) {
+		const callbackId = generateCallbackId();
+		messageCallbacks.set(callbackId, callback);
+		setMessageCallback(emMessage, callbackId);
+		EMClient.getInstance().chatManager().downloadThumbnail(emMessage);
+	}
+}

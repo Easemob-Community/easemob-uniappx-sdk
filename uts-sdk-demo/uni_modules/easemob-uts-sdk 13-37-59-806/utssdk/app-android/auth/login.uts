@@ -1,0 +1,168 @@
+/**
+ * 认证模块 - 登录/登出
+ */
+
+import EMClient from "com.hyphenate.chat.EMClient";
+import EMCallBack from 'com.hyphenate.EMCallBack';
+
+// 登录回调映射表
+const loginCallbacks: Map<string, UTSJSONObject> = new Map();
+
+/**
+ * 使用用户名和密码登录
+ */
+export function loginEMClient(
+  userId: string, 
+  password: string, 
+  callback: UTSJSONObject
+): void {
+  const callbackId = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+  loginCallbacks.set(callbackId, callback);
+  
+  EMClient.getInstance().login(userId, password, new LoginCallBack(callbackId));
+}
+
+/**
+ * 使用 Token 登录
+ */
+export function loginWithToken(
+  username: string, 
+  token: string, 
+  callback: UTSJSONObject
+): void {
+  const callbackId = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+  loginCallbacks.set(callbackId, callback);
+  
+  EMClient.getInstance().loginWithToken(username, token, new LoginCallBack(callbackId));
+}
+
+/**
+ * 使用 Agora Token 登录
+ */
+export function loginWithAgoraToken(
+  username: string, 
+  agoraToken: string, 
+  callback: UTSJSONObject
+): void {
+  const callbackId = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+  loginCallbacks.set(callbackId, callback);
+  
+  EMClient.getInstance().loginWithAgoraToken(username, agoraToken, new LoginCallBack(callbackId));
+}
+
+/**
+ * 同步登出
+ */
+export function logoutSync(unbindToken: boolean): number {
+  return EMClient.getInstance().logout(unbindToken);
+}
+
+/**
+ * 异步登出
+ */
+export function logoutEMClient(unbindToken: boolean, callback: UTSJSONObject): void {
+  EMClient.getInstance().logout(unbindToken, new LogoutCallBack(callback));
+}
+
+/**
+ * 获取当前登录用户
+ */
+export function queryCurrentUser(): string {
+  const user = EMClient.getInstance().getCurrentUser();
+  return user != null ? user : "";
+}
+
+/**
+ * 是否之前登录过
+ */
+export function queryIsLoggedInBefore(): boolean {
+  return EMClient.getInstance().isLoggedInBefore();
+}
+
+/**
+ * 是否已连接
+ */
+export function queryIsConnected(): boolean {
+  return EMClient.getInstance().isConnected();
+}
+
+/**
+ * 是否已登录
+ */
+export function queryIsLoggedIn(): boolean {
+  return EMClient.getInstance().isLoggedIn();
+}
+
+/**
+ * 登录回调实现类
+ */
+class LoginCallBack extends EMCallBack {
+  private callbackId: string;
+  
+  constructor(callbackId: string) {
+    super();
+    this.callbackId = callbackId;
+  }
+
+  override onError(code: Int, message: string): void {
+    const callback = loginCallbacks.get(this.callbackId);
+    if (callback != null) {
+      const onError = callback["onError"];
+      if (onError != null) {
+        (onError as (code: number, message: string) => void)(code, message);
+      }
+      loginCallbacks.delete(this.callbackId);
+    }
+    console.log('[EMLogin] 登录失败, code:', code, 'message:', message);
+  }
+
+  override onProgress(code: Int, message: string): void {
+    const callback = loginCallbacks.get(this.callbackId);
+    if (callback != null) {
+      const onProgress = callback["onProgress"];
+      if (onProgress != null) {
+        (onProgress as (code: number, message: string) => void)(code, message);
+      }
+    }
+  }
+
+  override onSuccess(): void {
+    const callback = loginCallbacks.get(this.callbackId);
+    if (callback != null) {
+      const onSuccess = callback["onSuccess"];
+      if (onSuccess != null) {
+        (onSuccess as () => void)();
+      }
+      loginCallbacks.delete(this.callbackId);
+    }
+    console.log('[EMLogin] 登录成功');
+  }
+}
+
+/**
+ * 登出回调实现类
+ */
+class LogoutCallBack extends EMCallBack {
+  private callback: UTSJSONObject;
+  
+  constructor(callback: UTSJSONObject) {
+    super();
+    this.callback = callback;
+  }
+
+  override onError(code: Int, message: string): void {
+    const onError = this.callback["onError"];
+    if (onError != null) {
+      (onError as (code: number, message: string) => void)(code, message);
+    }
+    console.log('[EMLogout] 登出失败, code:', code, 'message:', message);
+  }
+
+  override onSuccess(): void {
+    const onSuccess = this.callback["onSuccess"];
+    if (onSuccess != null) {
+      (onSuccess as () => void)();
+    }
+    console.log('[EMLogout] 登出成功');
+  }
+}

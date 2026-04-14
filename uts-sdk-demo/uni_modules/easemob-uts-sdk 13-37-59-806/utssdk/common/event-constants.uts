@@ -1,0 +1,116 @@
+/**
+ * 环信 SDK 事件常量定义
+ * 
+ * 用于 uni.$on/uni.$emit 的事件名称常量
+ * 用户可通过导入这些常量来监听 SDK 事件
+ */
+
+// ==================== 独立常量导出（推荐用户直接使用）====================
+
+/** 已连接到服务器 */
+export const EM_CONNECTION_CONNECTED = 'em:connection:connected'
+
+/** 连接断开 */
+export const EM_CONNECTION_DISCONNECTED = 'em:connection:disconnected'
+
+/** 被登出 */
+export const EM_CONNECTION_LOGOUT = 'em:connection:logout'
+
+/** Token 即将过期 */
+export const EM_CONNECTION_TOKEN_WILL_EXPIRE = 'em:connection:token_will_expire'
+
+/** Token 已过期 */
+export const EM_CONNECTION_TOKEN_EXPIRED = 'em:connection:token_expired'
+
+/** 开始同步离线消息 */
+export const EM_CONNECTION_OFFLINE_SYNC_START = 'em:connection:offline_sync_start'
+
+/** 离线消息同步完成 */
+export const EM_CONNECTION_OFFLINE_SYNC_FINISH = 'em:connection:offline_sync_finish'
+
+/** 收到消息 */
+export const EM_MESSAGE_RECEIVED = 'em:message:received'
+
+/** 收到 CMD 消息 */
+export const EM_MESSAGE_CMD_RECEIVED = 'em:message:cmd_received'
+
+/** 收到流式消息（用于大型文件传输） */
+export const EM_MESSAGE_STREAM_RECEIVED = 'em:message:stream_received'
+
+/** 消息已读 */
+export const EM_MESSAGE_READ = 'em:message:read'
+
+/** 群组消息已读回执 */
+export const EM_MESSAGE_GROUP_READ = 'em:message:group_read'
+
+/** 群组已读回执更新 */
+export const EM_MESSAGE_GROUP_READ_ACK_UPDATED = 'em:message:group_read_ack_updated'
+
+/** 消息已送达 */
+export const EM_MESSAGE_DELIVERED = 'em:message:delivered'
+
+/** 消息被撤回 */
+export const EM_MESSAGE_RECALLED = 'em:message:recalled'
+
+/** 消息内容已修改 */
+export const EM_MESSAGE_CONTENT_CHANGED = 'em:message:content_changed'
+
+/** 消息表情回应变更 */
+export const EM_MESSAGE_REACTION_CHANGED = 'em:message:reaction_changed'
+
+/** 消息置顶状态变更 */
+export const EM_MESSAGE_PIN_CHANGED = 'em:message:pin_changed'
+
+// ==================== 对象形式导出（SDK内部使用，兼容旧代码）====================
+
+/** 连接事件枚举对象类型 */
+export type EMConnectionEventType = {
+  CONNECTED: string
+  DISCONNECTED: string
+  LOGOUT: string
+  TOKEN_WILL_EXPIRE: string
+  TOKEN_EXPIRED: string
+  OFFLINE_SYNC_START: string
+  OFFLINE_SYNC_FINISH: string
+}
+
+/** 连接事件枚举对象（SDK内部使用） */
+export const EMConnectionEvent: EMConnectionEventType = {
+  CONNECTED: EM_CONNECTION_CONNECTED,
+  DISCONNECTED: EM_CONNECTION_DISCONNECTED,
+  LOGOUT: EM_CONNECTION_LOGOUT,
+  TOKEN_WILL_EXPIRE: EM_CONNECTION_TOKEN_WILL_EXPIRE,
+  TOKEN_EXPIRED: EM_CONNECTION_TOKEN_EXPIRED,
+  OFFLINE_SYNC_START: EM_CONNECTION_OFFLINE_SYNC_START,
+  OFFLINE_SYNC_FINISH: EM_CONNECTION_OFFLINE_SYNC_FINISH
+}
+
+/** 消息事件枚举对象类型 */
+export type EMMessageEventType = {
+  RECEIVED: string
+  CMD_RECEIVED: string
+  STREAM_RECEIVED: string
+  READ: string
+  GROUP_READ: string
+  GROUP_READ_ACK_UPDATED: string
+  DELIVERED: string
+  RECALLED: string
+  CONTENT_CHANGED: string
+  REACTION_CHANGED: string
+  PIN_CHANGED: string
+}
+
+/** 消息事件枚举对象（SDK内部使用） */
+export const EMMessageEvent: EMMessageEventType = {
+  RECEIVED: EM_MESSAGE_RECEIVED,
+  CMD_RECEIVED: EM_MESSAGE_CMD_RECEIVED,
+  STREAM_RECEIVED: EM_MESSAGE_STREAM_RECEIVED,
+  READ: EM_MESSAGE_READ,
+  GROUP_READ: EM_MESSAGE_GROUP_READ,
+  GROUP_READ_ACK_UPDATED: EM_MESSAGE_GROUP_READ_ACK_UPDATED,
+  DELIVERED: EM_MESSAGE_DELIVERED,
+  RECALLED: EM_MESSAGE_RECALLED,
+  CONTENT_CHANGED: EM_MESSAGE_CONTENT_CHANGED,
+  REACTION_CHANGED: EM_MESSAGE_REACTION_CHANGED,
+  PIN_CHANGED: EM_MESSAGE_PIN_CHANGED
+}

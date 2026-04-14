@@ -1,0 +1,7 @@
+/**
+ * Harmony 平台实现入口（占位）
+ */
+
+export const EMClient = {
+  // TODO: Harmony 实现
+};

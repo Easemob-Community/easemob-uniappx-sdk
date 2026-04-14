@@ -1,0 +1,91 @@
+/**
+ * 连接状态监听
+ */
+
+import EMClient from 'com.hyphenate.chat.EMClient';
+import EMConnectionListener from 'com.hyphenate.EMConnectionListener';
+
+// 回调类型定义
+export type ConnectionListenerCallbacks = {
+  onConnected?: () => void;
+  onDisconnected?: (errorCode: number) => void;
+  onLogout?: (errorCode: number) => void;
+  onTokenWillExpire?: () => void;
+  onTokenExpired?: () => void;
+  onOfflineMessageSyncStart?: () => void;
+  onOfflineMessageSyncFinish?: () => void;
+}
+
+// 内部监听器类
+class InnerConnectionListener extends EMConnectionListener {
+  private callbacks: ConnectionListenerCallbacks;
+
+  constructor(callbacks: ConnectionListenerCallbacks) {
+    super();
+    this.callbacks = callbacks;
+  }
+
+  override onConnected(): void {
+    this.callbacks.onConnected?.();
+  }
+
+  override onDisconnected(errorCode: Int): void {
+    this.callbacks.onDisconnected?.(errorCode);
+  }
+
+  override onLogout(errorCode: Int): void {
+    this.callbacks.onLogout?.(errorCode);
+  }
+
+  override onTokenWillExpire(): void {
+    this.callbacks.onTokenWillExpire?.();
+  }
+
+  override onTokenExpired(): void {
+    this.callbacks.onTokenExpired?.();
+  }
+
+  override onOfflineMessageSyncStart(): void {
+    this.callbacks.onOfflineMessageSyncStart?.();
+  }
+
+  override onOfflineMessageSyncFinish(): void {
+    this.callbacks.onOfflineMessageSyncFinish?.();
+  }
+}
+
+// 存储监听器映射
+const listenerMap = new Map<string, EMConnectionListener>();
+
+/**
+ * 添加连接状态监听（内部实现）
+ * @param listenerId 监听器唯一标识（用于移除）
+ * @param listener 监听器回调对象
+ */
+export function addConnectionListenerImpl(listenerId: string, listener: ConnectionListenerCallbacks): void {
+  const androidListener = new InnerConnectionListener(listener);
+  listenerMap.set(listenerId, androidListener);
+  EMClient.getInstance().addConnectionListener(androidListener);
+}
+
+/**
+ * 移除连接状态监听（内部实现）
+ * @param listenerId 监听器唯一标识
+ */
+export function removeConnectionListenerImpl(listenerId: string): void {
+  const androidListener = listenerMap.get(listenerId);
+  if (androidListener != null) {
+    EMClient.getInstance().removeConnectionListener(androidListener);
+    listenerMap.delete(listenerId);
+  }
+}
+
+/**
+ * 移除所有监听器
+ */
+export function removeAllConnectionListeners(): void {
+  listenerMap.forEach((listener, id) => {
+    EMClient.getInstance().removeConnectionListener(listener);
+  });
+  listenerMap.clear();
+}

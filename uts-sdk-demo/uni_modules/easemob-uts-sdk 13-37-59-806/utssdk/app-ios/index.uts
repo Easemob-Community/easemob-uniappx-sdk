@@ -1,0 +1,433 @@
+/**
+ * iOS 平台实现入口
+ * 只有 initSDK 是真实实现，其余均为 stub
+ */
+
+import { initEMClient } from './core/init.uts';
+
+import {
+  loginEMClient,
+  loginWithToken as loginWithTokenImpl,
+  logoutEMClient,
+  getCurrentUser,
+  isConnected,
+  isLoggedIn
+} from './auth/login.uts';
+
+import {
+  addMessageListenerImpl as addMsgListenerImpl,
+  removeMessageListenerImpl as removeMsgListenerImpl,
+  removeAllMessageListeners,
+  enableMessageEmit,
+  disableMessageEmit,
+  MessageListenerCallbacks,
+  Message,
+  MessageBody
+} from './message/listener.uts';
+
+import {
+  addConnectionListenerImpl as addConnListenerImpl,
+  removeConnectionListenerImpl as removeConnListenerImpl,
+  removeAllConnectionListeners,
+  enableConnectionEmit,
+  disableConnectionEmit,
+  ConnectionListenerCallbacks
+} from './connection/listener.uts';
+
+
+import {
+  sendTextMessageImpl,
+  sendImageMessageImpl,
+  sendVideoMessageImpl,
+  sendFileMessageImpl,
+  sendCmdMessageImpl,
+  sendCustomMessageImpl,
+  openFilePickerImpl,
+  FilePickResultData
+} from './message/sender.uts';
+
+import {
+  handleFilePickerResultImpl
+} from './file/picker.uts';
+
+// 导出类型
+export { Message, MessageBody, FilePickResultData };
+
+// ==================== 初始化（真实实现） ====================
+
+export function initSDK(config: UTSJSONObject): Promise<void> {
+  initEMClient(config["appKey"] as string);
+  return new Promise<void>((resolve, _reject) => {
+    resolve();
+  });
+}
+
+// ==================== 连接监听 ====================
+
+/**
+ * addConnectionListener 统一入口（和 Android 俧差同名）
+ */
+export function addConnectionListener(
+  onConnected: (() => void) | null,
+  onDisconnected: ((errorCode: number) => void) | null,
+  onLogout: ((errorCode: number) => void) | null,
+  onTokenWillExpire: (() => void) | null,
+  onTokenExpired: (() => void) | null,
+  onOfflineMessageSyncStart: (() => void) | null,
+  onOfflineMessageSyncFinish: (() => void) | null
+): () => void {
+  return addConnectionListenerIOS(
+    onConnected, onDisconnected, onLogout,
+    onTokenWillExpire, onTokenExpired,
+    onOfflineMessageSyncStart, onOfflineMessageSyncFinish
+  );
+}
+
+/**
+ * 方案 A：独立函数参数注册回调（iOS 上最稳定）
+ * 适合在 UTS 插件内部注册，每个回调应单独传入而非包裹在对象字面量里
+ */
+export function addConnectionListenerIOS(
+  onConnected: (() => void) | null,
+  onDisconnected: ((errorCode: number) => void) | null,
+  onLogout: ((errorCode: number) => void) | null,
+  onTokenWillExpire: (() => void) | null,
+  onTokenExpired: (() => void) | null,
+  onOfflineMessageSyncStart: (() => void) | null,
+  onOfflineMessageSyncFinish: (() => void) | null
+): () => void {
+  const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+  const cbs: ConnectionListenerCallbacks = {
+    onConnected: onConnected,
+    onDisconnected: onDisconnected,
+    onLogout: onLogout,
+    onTokenWillExpire: onTokenWillExpire,
+    onTokenExpired: onTokenExpired,
+    onOfflineMessageSyncStart: onOfflineMessageSyncStart,
+    onOfflineMessageSyncFinish: onOfflineMessageSyncFinish
+  };
+  addConnListenerImpl(id, cbs);
+  return (): void => { removeConnListenerImpl(id); };
+}
+
+/**
+ * 方案 B：开启 uni.$emit 事件广播
+ * 开启后 SDK 连接事件自动广播，在任意 .uvue 中直接 uni.$on 监听：
+ * em_connected / em_disconnected / em_logout /
+ * em_token_will_expire / em_token_expired /
+ * em_offline_sync_start / em_offline_sync_finish
+ */
+export function startConnectionEmit(): void {
+  enableConnectionEmit();
+}
+
+export function stopConnectionEmit(): void {
+  disableConnectionEmit();
+}
+
+export function removeConnectionListener(listenerId: string): void {
+  removeConnListenerImpl(listenerId);
+}
+
+export { removeAllConnectionListeners };
+
+// ==================== 登录/登出（真实实现） ====================
+
+export function loginSDK(
+  userId: string,
+  password: string,
+  onSuccess: (() => void) | null,
+  onError: ((code: number, message: string) => void) | null
+): void {
+  loginEMClient(userId, password, onSuccess, onError);
+}
+
+export function loginSDKWithToken(
+  username: string,
+  token: string,
+  onSuccess: (() => void) | null,
+  onError: ((code: number, message: string) => void) | null
+): void {
+  loginWithTokenImpl(username, token, onSuccess, onError);
+}
+
+export function logoutSDK(
+  unbindToken: boolean,
+  onSuccess: (() => void) | null = null,
+  onError: ((code: number, message: string) => void) | null = null
+): void {
+  logoutEMClient(unbindToken, onSuccess, onError);
+}
+
+export { getCurrentUser, isConnected, isLoggedIn };
+
+// ==================== 消息监听 ====================
+
+export function addMessageListener(
+  onMessageReceived: ((messages: Message[]) => void) | null,
+  onStreamMessageReceived: ((messages: Message[]) => void) | null,
+  onCmdMessageReceived: ((messages: Message[]) => void) | null,
+  onMessageRead: ((messages: Message[]) => void) | null,
+  onGroupMessageRead: ((groupReadAcks: UTSJSONObject[]) => void) | null,
+  onReadAckForGroupMessageUpdated: (() => void) | null,
+  onMessageDelivered: ((messages: Message[]) => void) | null,
+  onMessageRecalled: ((messages: Message[]) => void) | null,
+  onMessageRecalledWithExt: ((recallMessageInfo: UTSJSONObject[]) => void) | null,
+  onMessageChanged: ((message: Message, change: any) => void) | null,
+  onReactionChanged: ((messageReactionChangeList: UTSJSONObject[]) => void) | null,
+  onMessageContentChanged: ((messageModified: Message, operatorId: string, operationTime: number) => void) | null,
+  onMessagePinChanged: ((messageId: string, conversationId: string, pinOperation: number, pinInfo: UTSJSONObject) => void) | null
+): () => void {
+  const id = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+  const callbacks: MessageListenerCallbacks = {
+    onMessageReceived: onMessageReceived,
+    onCmdMessageReceived: onCmdMessageReceived,
+    onMessageRead: onMessageRead,
+    onMessageDelivered: onMessageDelivered,
+    onMessageRecalled: onMessageRecalled
+  };
+  addMsgListenerImpl(id, callbacks);
+  return (): void => {
+    removeMsgListenerImpl(id);
+  };
+}
+
+/**
+ * 方案 B：开启消息 uni.$emit 广播
+ * 开启后可在任意 .uvue 中 uni.$on 监听：
+ * em_message_received / em_cmd_message_received /
+ * em_message_read / em_message_delivered / em_message_recalled
+ */
+export function startMessageEmit(): void {
+  enableMessageEmit();
+}
+
+export function stopMessageEmit(): void {
+  disableMessageEmit();
+}
+
+export { removeAllMessageListeners };
+
+// ==================== 消息发送 ====================
+
+export function sendTextMessage(
+  content: string,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null,
+  ext: UTSJSONObject | null = null
+): void {
+  // 在函数体内重组 callback，避免调用方传入含闭包的 UTSJSONObject 字面量崩溃
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
+  sendTextMessageImpl(content, to, chatType, callback, ext);
+}
+
+@UTSJS.keepAlive
+export function sendImageMessage(
+  filePath: string,
+  sendOriginalImage: boolean,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null,
+  ext: UTSJSONObject | null = null
+): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
+  callback['onProgress'] = onProgress;
+  sendImageMessageImpl(filePath, sendOriginalImage, to, chatType, callback, ext);
+}
+
+@UTSJS.keepAlive
+export function sendVideoMessage(
+  videoFilePath: string,
+  imageThumbPath: string,
+  timeLength: number,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null
+): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
+  callback['onProgress'] = onProgress;
+  sendVideoMessageImpl(videoFilePath, imageThumbPath, timeLength, to, chatType, callback);
+}
+
+@UTSJS.keepAlive
+export function sendFileMessage(
+  filePath: string,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null
+): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
+  callback['onProgress'] = onProgress;
+  sendFileMessageImpl(filePath, to, chatType, callback);
+}
+
+export function sendCmdMessage(
+  action: string,
+  to: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null,
+  ext: UTSJSONObject | null = null
+): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
+  sendCmdMessageImpl(action, to, callback, ext);
+}
+
+export function sendCustomMessage(
+  event: string,
+  params: UTSJSONObject,
+  to: string,
+  chatType: string,
+  onSuccess: ((messageInfo: UTSJSONObject) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onProgress: ((progress: number, status: string) => void) | null = null,
+  ext: UTSJSONObject | null = null
+): void {
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
+  sendCustomMessageImpl(event, params, to, chatType, callback, ext);
+}
+
+@UTSJS.keepAlive
+export function openFilePicker(
+  onSuccess: ((result: FilePickResultData) => void) | null,
+  onError: ((code: number, message: string) => void) | null,
+  onCancel: (() => void) | null
+): void {
+  // 在函数体内重组 callback，避免调用方传入含闭包的 UTSJSONObject 字面量崩溃
+  const callback = new UTSJSONObject();
+  callback['onSuccess'] = onSuccess;
+  callback['onError'] = onError;
+  callback['onCancel'] = onCancel;
+  openFilePickerImpl(callback);
+}
+
+export function handleFilePickerResult(): boolean {
+  return handleFilePickerResultImpl();
+}
+
+// ==================== 事件总线集成 ====================
+
+import {
+  EMConnectionEvent,
+  EMMessageEvent
+} from '../common/event-constants.uts';
+
+/** 事件总线是否已启用 */
+let eventBusEnabled = false;
+
+/** 连接监听器 ID */
+let connectionListenerId: string | null = null;
+
+/** 消息监听器 ID */
+let messageListenerId: string | null = null;
+
+/**
+ * 启用事件总线
+ * 开启后，SDK 所有事件将自动分发到 EMEventBus
+ */
+export function enableEventBus(): void {
+  if (eventBusEnabled) {
+    console.log('[iOS] EventBus already enabled');
+    return;
+  }
+
+  // 注册连接监听器
+  const connectionCallbacks: ConnectionListenerCallbacks = {
+    onConnected: () => {
+      uni.$emit(EMConnectionEvent.CONNECTED, null);
+    },
+    onDisconnected: (errorCode: number) => {
+      uni.$emit(EMConnectionEvent.DISCONNECTED, errorCode);
+    },
+    onLogout: (errorCode: number) => {
+      uni.$emit(EMConnectionEvent.LOGOUT, errorCode);
+    },
+    onTokenWillExpire: () => {
+      uni.$emit(EMConnectionEvent.TOKEN_WILL_EXPIRE, null);
+    },
+    onTokenExpired: () => {
+      uni.$emit(EMConnectionEvent.TOKEN_EXPIRED, null);
+    },
+    onOfflineMessageSyncStart: () => {
+      uni.$emit(EMConnectionEvent.OFFLINE_SYNC_START, null);
+    },
+    onOfflineMessageSyncFinish: () => {
+      uni.$emit(EMConnectionEvent.OFFLINE_SYNC_FINISH, null);
+    }
+  };
+
+  const connId = Date.now().toString() + Math.random().toString(36).substring(2, 11);
+  connectionListenerId = connId;
+  addConnListenerImpl(connId, connectionCallbacks);
+
+  // 注册消息监听器（数据经 JSON 序列化传递，避免 UTS 自定义类型无法穿透 uni.$emit）
+  const messageCallbacks: MessageListenerCallbacks = {
+    onMessageReceived: (messages: Message[]) => {
+      uni.$emit(EMMessageEvent.RECEIVED, JSON.stringify(messages));
+    },
+    onCmdMessageReceived: (messages: Message[]) => {
+      uni.$emit(EMMessageEvent.CMD_RECEIVED, JSON.stringify(messages));
+    },
+    onMessageRead: (messages: Message[]) => {
+      uni.$emit(EMMessageEvent.READ, JSON.stringify(messages));
+    },
+    onMessageDelivered: (messages: Message[]) => {
+      uni.$emit(EMMessageEvent.DELIVERED, JSON.stringify(messages));
+    },
+    onMessageRecalled: (messages: Message[]) => {
+      uni.$emit(EMMessageEvent.RECALLED, JSON.stringify(messages));
+    }
+  };
+
+  const msgId = Date.now().toString() + Math.random().toString(36).substring(2, 11) + '_msg';
+  messageListenerId = msgId;
+  addMsgListenerImpl(msgId, messageCallbacks);
+
+  eventBusEnabled = true;
+  console.log('[iOS] EventBus enabled');
+}
+
+/**
+ * 禁用事件总线
+ */
+export function disableEventBus(): void {
+  if (!eventBusEnabled) {
+    return;
+  }
+
+  const connIdToRemove = connectionListenerId;
+  if (connIdToRemove != null) {
+    removeConnListenerImpl(connIdToRemove);
+    connectionListenerId = null;
+  }
+
+  const msgIdToRemove = messageListenerId;
+  if (msgIdToRemove != null) {
+    removeMsgListenerImpl(msgIdToRemove);
+    messageListenerId = null;
+  }
+
+  eventBusEnabled = false;
+  console.log('[iOS] EventBus disabled');
+}
