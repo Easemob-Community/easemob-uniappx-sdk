@@ -606,3 +606,258 @@ onMessageReceived: (messages: Message[]) => {
 - `app-android/index.uts`：导入源类型、局部变量捕获 nullable、JSON.stringify + setTimeout
 - `app-ios/index.uts`：导入 ConnectionListenerCallbacks、局部变量捕获 nullable、JSON.stringify
 - `App.uvue`：消息事件 `JSON.parse(data as string)` 接收
+
+---
+
+## Android 会话列表拉取实现规范
+
+### 背景
+
+Android 平台实现 `fetchConversationsFromServer` 时，需要把 Kotlin 侧的 `EMCursorResult<EMConversation>` 转换为 UTS 侧可用的 `EMCursorResult<EMConversation>`。由于涉及**数组传递**、**嵌套复杂对象**（`lastMessage` 为 `Message` 类型）以及**UVue 页面渲染**，踩坑点较多，已形成标准规范。
+
+### 接口定义
+
+```uts
+// interface.uts
+export type MessageBody = {
+  type: string;
+  message: string | null;
+}
+
+export type Message = {
+  msgId: string;
+  from: string;
+  to: string;
+  conversationId: string;
+  chatType: number;
+  body: MessageBody;
+}
+
+export type EMConversation = {
+  conversationId: string;
+  type: number;
+  unreadMsgCount: number;
+  lastMessage?: Message | null;
+}
+
+export type EMCursorResult<T> = {
+  data: T[];
+  cursor: string;
+}
+
+abstract fetchConversationsFromServer(limit: number, cursor: string): Promise<EMCursorResult<EMConversation>>;
+```
+
+### Kotlin 辅助类（MessageHelper.kt）
+
+#### 1. 回调签名：数组类型必须用 `UTSArray<UTSJSONObject>`
+
+```kotlin
+import io.dcloud.uts.UTSArray
+import io.dcloud.uts.UTSJSONObject
+
+fun fetchConversationsFromServer(
+    limit: Int,
+    cursor: String,
+    onSuccess: (conversations: UTSArray<UTSJSONObject>, nextCursor: String) -> Unit,
+    onError: (code: Int, message: String) -> Unit
+) {
+    EMClient.getInstance().chatManager().asyncFetchConversationsFromServer(
+        limit,
+        cursor,
+        object : EMValueCallBack<EMCursorResult<EMConversation>> {
+            override fun onSuccess(result: EMCursorResult<EMConversation>) {
+                val conversations = result.data ?: emptyList()
+                val conversationList = conversations.map { conv ->
+                    // 构建 lastMessage 嵌套对象
+                    val lastMessageJson = conv.getLastMessage()?.let { lastMsg ->
+                        val body = lastMsg.getBody()
+                        val bodyObj = UTSJSONObject()
+                        when (body) {
+                            is com.hyphenate.chat.EMTextMessageBody -> {
+                                bodyObj["type"] = "txt"
+                                bodyObj["message"] = body.getMessage()
+                            }
+                            is com.hyphenate.chat.EMImageMessageBody -> {
+                                bodyObj["type"] = "img"
+                                bodyObj["message"] = body.getRemoteUrl() ?: body.getLocalUrl()
+                            }
+                            is com.hyphenate.chat.EMVoiceMessageBody -> {
+                                bodyObj["type"] = "voice"
+                                bodyObj["message"] = body.getRemoteUrl() ?: body.getLocalUrl()
+                            }
+                            is com.hyphenate.chat.EMVideoMessageBody -> {
+                                bodyObj["type"] = "video"
+                                bodyObj["message"] = body.getRemoteUrl() ?: body.getLocalUrl()
+                            }
+                            is com.hyphenate.chat.EMLocationMessageBody -> {
+                                bodyObj["type"] = "location"
+                                bodyObj["message"] = body.getAddress()
+                            }
+                            is com.hyphenate.chat.EMFileMessageBody -> {
+                                bodyObj["type"] = "file"
+                                bodyObj["message"] = body.getRemoteUrl() ?: body.getLocalUrl()
+                            }
+                            is com.hyphenate.chat.EMCmdMessageBody -> {
+                                bodyObj["type"] = "cmd"
+                                bodyObj["message"] = body.action()
+                            }
+                            is com.hyphenate.chat.EMCustomMessageBody -> {
+                                bodyObj["type"] = "custom"
+                                bodyObj["message"] = body.event()
+                            }
+                            else -> {
+                                bodyObj["type"] = "unknown"
+                                bodyObj["message"] = ""
+                            }
+                        }
+                        val msgObj = UTSJSONObject()
+                        msgObj["msgId"] = lastMsg.getMsgId()
+                        msgObj["from"] = lastMsg.getFrom()
+                        msgObj["to"] = lastMsg.getTo()
+                        msgObj["conversationId"] = lastMsg.conversationId()
+                        msgObj["chatType"] = lastMsg.getChatType().ordinal
+                        msgObj["body"] = bodyObj
+                        msgObj
+                    }
+                    val obj = UTSJSONObject()
+                    obj["conversationId"] = conv.conversationId()
+                    obj["type"] = conv.getType().ordinal
+                    obj["unreadMsgCount"] = conv.getUnreadMsgCount()
+                    obj["lastMessage"] = lastMessageJson
+                    obj
+                }
+                // 关键：List 必须转为 UTSArray
+                val conversationArray = UTSArray<UTSJSONObject>()
+                conversationArray.addAll(conversationList)
+                onSuccess(conversationArray, result.cursor ?: "")
+            }
+
+            override fun onError(error: Int, errorMsg: String) {
+                onError(error, errorMsg)
+            }
+        }
+    )
+}
+```
+
+#### 核心要点
+
+| 要点 | 说明 |
+|------|------|
+| 数组签名 | Kotlin 侧用 `UTSArray<UTSJSONObject>`，不能用 `List<UTSJSONObject>` |
+| 数组转换 | 用 `UTSArray<UTSJSONObject>()` + `addAll(conversationList)` 把 `List` 转成 `UTSArray` |
+| 嵌套对象 | 每一层都用 `UTSJSONObject`，不要用 `org.json.JSONObject`，否则 UTS 侧访问会丢失类型 |
+| 消息类型 | `type` 字段用字符串标识：`txt/img/voice/video/location/file/cmd/custom/unknown` |
+
+### UTS Android 实现（app-android/index.uts）
+
+```uts
+fetchConversationsFromServer(limit: number, cursor: string): Promise<EMCursorResult<EMConversation>> {
+  return new Promise((resolve, reject) => {
+    try {
+      fetchConversationsFromServer(
+        limit as Int,  // 注意：Int 大写
+        cursor as string,
+        (conversations: UTSJSONObject[], nextCursor: string) => {
+          const conversationList: EMConversation[] = [];
+          const list = conversations;
+          for (let i = 0; i < list.length; i++) {
+            const conv = list[i];
+            const conversation: EMConversation = {
+              conversationId: conv['conversationId'] as string,
+              type: conv['type'] as number,
+              unreadMsgCount: conv['unreadMsgCount'] as number,
+            };
+            const lastMessage = conv['lastMessage'] as UTSJSONObject | null;
+            if (lastMessage != null) {
+              const body = lastMessage['body'] as UTSJSONObject | null;
+              conversation.lastMessage = {
+                msgId: lastMessage['msgId'] as string,
+                from: lastMessage['from'] as string,
+                to: lastMessage['to'] as string,
+                conversationId: lastMessage['conversationId'] as string,
+                chatType: lastMessage['chatType'] as number,
+                body: {
+                  type: body != null ? body['type'] as string : '',
+                  message: body != null ? body['message'] as string | null : null,
+                },
+              };
+            }
+            conversationList.push(conversation);
+          }
+          const result: EMCursorResult<EMConversation> = {
+            data: conversationList,
+            cursor: nextCursor,
+          };
+          resolve(result);
+        },
+        (code: number, message: string) => {
+          reject(new Error(`Fetch conversations failed: ${code} - ${message}`));
+        }
+      );
+    } catch (error) {
+      console.error('[Android] fetchConversationsFromServer error:', error);
+      reject(error);
+    }
+  });
+}
+```
+
+#### 核心要点
+
+| 要点 | 说明 |
+|------|------|
+| 整数转换 | `limit as Int`（大写 I），`as int` 会报“找不到名称” |
+| 回调参数 | 声明为 `UTSJSONObject[]`，不要用 `any`，否则 `['key']` 会被解析为 `String.get` |
+| 禁止强转 | **绝对禁止** `lastMessage as any` 或 `JSON.parse(... ) as Message`，运行时会 `ClassCastException` |
+| 对象重构 | 必须逐字段从 `UTSJSONObject` 读取，用对象字面量重新构造 `Message` |
+
+### UVue 页面（conversation.uvue）
+
+#### 1. 函数定义顺序
+
+UTS 编译到 Kotlin 时不支持函数提升，**被调用的函数必须在调用者之前定义**。
+
+```uts
+// ✅ 正确
+async function fetchConversations(limit: number, cursorValue: string): Promise<void> {
+  // ...
+}
+async function handleFetch(): Promise<void> {
+  await fetchConversations(limit, '');
+}
+
+// ❌ 错误：handleFetch 在前会报“找不到名称 fetchConversations”
+```
+
+#### 2. 条件表达式必须使用 boolean
+
+```uts
+// ❌ 编译错误
+const limit = parseInt(limitStr.value) || 10;
+
+// ✅ 正确
+const parsedLimit = parseInt(limitStr.value);
+const limit = Number.isNaN(parsedLimit) ? 10 : parsedLimit;
+```
+
+#### 3. 模板安全调用
+
+```vue
+<text class="last-msg-body">
+  [{{ formatMsgType(item.lastMessage?.body?.type ?? '') }}]
+  {{ item.lastMessage?.body?.message ?? '[无内容]' }}
+</text>
+```
+
+### 完整踩坑记录
+
+| 现象 | 根因 | 修复 |
+|------|------|------|
+| `参数类型不匹配：实际类型为 'Number'，预期类型为 'Int'` | UTS 侧写了 `limit as number` | 改为 `limit as Int` |
+| `Unresolved reference: fun String.get(index: Number)` | `(conv as any)['key']` 被解析为 String.get | 声明为 `UTSJSONObject`，直接用 `conv['key']` |
+| `ClassCastException: java.util.ArrayList cannot be cast to UTSArray` | Kotlin 回调返回 `List<UTSJSONObject>` | Kotlin 侧改为 `UTSArray` + `addAll` |
+| `ClassCastException: UTSJSONObject cannot be cast to Message` | `lastMessage as any` 或 `as Message` 强转 | 逐字段读取，对象字面量重构 |
+| `找不到名称“fetchConversations”` | `<script setup>` 中函数未先定义 | 调整函数定义顺序 |
+| `Conditional statements must use boolean types` | `||` 用于非 boolean 类型 | 用三元表达式 + 显式布尔判断 |

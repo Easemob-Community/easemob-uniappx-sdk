@@ -17,6 +17,12 @@
 			"style": {
 				"navigationBarTitleText": "发送消息"
 			}
+		},
+		{
+			"path": "pages/conversation/conversation",
+			"style": {
+				"navigationBarTitleText": "会话列表"
+			}
 		}
 	],
 	"globalStyle": {

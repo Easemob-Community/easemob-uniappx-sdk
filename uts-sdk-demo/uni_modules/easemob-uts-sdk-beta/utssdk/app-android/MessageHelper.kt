@@ -2,10 +2,16 @@ package uts.sdk.modules.easemobUtsSdkBeta
 
 import com.hyphenate.chat.EMMessage
 import com.hyphenate.chat.EMCustomMessageBody
+import com.hyphenate.chat.EMConversation
+import com.hyphenate.chat.EMClient
 import com.hyphenate.EMCallBack
+import com.hyphenate.EMValueCallBack
+import com.hyphenate.chat.EMCursorResult
 import android.util.Log
 import org.json.JSONObject
 import org.json.JSONArray
+import io.dcloud.uts.UTSJSONObject
+import io.dcloud.uts.UTSArray
 
 /**
  * 消息发送辅助类
@@ -159,4 +165,94 @@ fun getCustomMessageEvent(body: EMCustomMessageBody): String {
 fun getCustomMessageParamsAsJson(body: EMCustomMessageBody): String {
     val params = body.getParams()
     return convertCustomParamsToJson(params)
+}
+
+/**
+ * 从服务器分页获取会话列表
+ * @param limit 每页返回的会话数
+ * @param cursor 游标位置
+ * @param onSuccess 成功回调
+ * @param onError 失败回调
+ */
+fun fetchConversationsFromServer(
+    limit: Int,
+    cursor: String,
+    onSuccess: (conversations: UTSArray<UTSJSONObject>, nextCursor: String) -> Unit,
+    onError: (code: Int, message: String) -> Unit
+) {
+    EMClient.getInstance().chatManager().asyncFetchConversationsFromServer(
+        limit,
+        cursor,
+        object : EMValueCallBack<EMCursorResult<EMConversation>> {
+            override fun onSuccess(result: EMCursorResult<EMConversation>) {
+                val conversations = result.data ?: emptyList()
+                val conversationList = conversations.map { conv ->
+                    val lastMsg = conv.getLastMessage()
+                    val lastMessageJson = if (lastMsg != null) {
+                        val body = lastMsg.getBody()
+                        val bodyObj = UTSJSONObject()
+                        when (body) {
+                            is com.hyphenate.chat.EMTextMessageBody -> {
+                                bodyObj["type"] = "txt"
+                                bodyObj["message"] = body.getMessage()
+                            }
+                            is com.hyphenate.chat.EMImageMessageBody -> {
+                                bodyObj["type"] = "img"
+                                bodyObj["message"] = body.getRemoteUrl() ?: body.getLocalUrl()
+                            }
+                            is com.hyphenate.chat.EMVoiceMessageBody -> {
+                                bodyObj["type"] = "voice"
+                                bodyObj["message"] = body.getRemoteUrl() ?: body.getLocalUrl()
+                            }
+                            is com.hyphenate.chat.EMVideoMessageBody -> {
+                                bodyObj["type"] = "video"
+                                bodyObj["message"] = body.getRemoteUrl() ?: body.getLocalUrl()
+                            }
+                            is com.hyphenate.chat.EMLocationMessageBody -> {
+                                bodyObj["type"] = "location"
+                                bodyObj["message"] = body.getAddress()
+                            }
+                            is com.hyphenate.chat.EMFileMessageBody -> {
+                                bodyObj["type"] = "file"
+                                bodyObj["message"] = body.getRemoteUrl() ?: body.getLocalUrl()
+                            }
+                            is com.hyphenate.chat.EMCmdMessageBody -> {
+                                bodyObj["type"] = "cmd"
+                                bodyObj["message"] = body.action()
+                            }
+                            is com.hyphenate.chat.EMCustomMessageBody -> {
+                                bodyObj["type"] = "custom"
+                                bodyObj["message"] = body.event()
+                            }
+                            else -> {
+                                bodyObj["type"] = "unknown"
+                                bodyObj["message"] = ""
+                            }
+                        }
+                        val msgObj = UTSJSONObject()
+                        msgObj["msgId"] = lastMsg.getMsgId()
+                        msgObj["from"] = lastMsg.getFrom()
+                        msgObj["to"] = lastMsg.getTo()
+                        msgObj["conversationId"] = lastMsg.conversationId()
+                        msgObj["chatType"] = lastMsg.getChatType().ordinal
+                        msgObj["body"] = bodyObj
+                        msgObj
+                    } else null
+                    val obj = UTSJSONObject()
+                    obj["conversationId"] = conv.conversationId()
+                    obj["type"] = conv.getType().ordinal
+                    obj["unreadMsgCount"] = conv.getUnreadMsgCount()
+                    obj["lastMessage"] = lastMessageJson
+                    obj
+                }
+                val conversationArray = UTSArray<UTSJSONObject>()
+                conversationArray.addAll(conversationList)
+                onSuccess(conversationArray, result.cursor ?: "")
+            }
+
+            override fun onError(error: Int, errorMsg: String) {
+                onError(error, errorMsg)
+            }
+        }
+    )
 }

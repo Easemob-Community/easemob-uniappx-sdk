@@ -72,6 +72,20 @@ export type Message = {
   body: MessageBody;
 }
 
+// ==================== 会话类型 ====================
+
+export type EMConversation = {
+  conversationId: string;
+  type: number;
+  unreadMsgCount: number;
+  lastMessage?: Message | null;
+}
+
+export type EMCursorResult<T> = {
+  data: T[];
+  cursor: string;
+}
+
 // ==================== SDK 主接口 ====================
 
 /**
@@ -117,6 +131,9 @@ export abstract class EasemobClient {
 
   /** 销毁 SDK 实例 */
   abstract destroy(): void;
+
+  /** 从服务器分页获取会话列表 */
+  abstract fetchConversationsFromServer(limit: number, cursor: string): Promise<EMCursorResult<EMConversation>>;
 
   // MARK: - 核心方法（桩函数）
 

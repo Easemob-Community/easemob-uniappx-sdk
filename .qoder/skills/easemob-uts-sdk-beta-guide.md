@@ -736,7 +736,140 @@ export function onError(_listener: EMErrorListener | null): void {}
 
 ---
 
-## 十、常见编译错误速查
+## 十、Android 复杂对象回调与数组传递规范（会话列表实战总结）
+
+### 10.1 Kotlin → UTS 传递数组：必须用 `UTSArray`，不能用 `List`
+
+当 Kotlin 辅助类通过回调把集合传给 UTS 时，**签名必须写成 `UTSArray<T>`**，并在回调前把 `List` 显式转为 `UTSArray`。
+
+```kotlin
+// ✅ 正确：签名用 UTSArray
+import io.dcloud.uts.UTSArray
+import io.dcloud.uts.UTSJSONObject
+
+fun fetchConversationsFromServer(
+    limit: Int,
+    cursor: String,
+    onSuccess: (conversations: UTSArray<UTSJSONObject>, nextCursor: String) -> Unit,
+    onError: (code: Int, message: String) -> Unit
+) {
+    // ... 构建 conversationList: List<UTSJSONObject>
+    val conversationArray = UTSArray<UTSJSONObject>()
+    conversationArray.addAll(conversationList)
+    onSuccess(conversationArray, result.cursor ?: "")
+}
+
+// ❌ 错误：签名为 List<UTSJSONObject>，UTS 侧接收时运行时 ClassCastException
+// java.util.ArrayList cannot be cast to io.dcloud.uts.UTSArray
+```
+
+### 10.2 UTS 回调参数声明：用 `UTSJSONObject[]`，遍历元素直接使用
+
+```uts
+fetchConversationsFromServer(
+  limit as Int,   // 必须是 Int（大写），不是 int
+  cursor as string,
+  (conversations: UTSJSONObject[], nextCursor: string) => {
+    const list = conversations;
+    for (let i = 0; i < list.length; i++) {
+      const conv = list[i];                 // 不需要 as any
+      const conversationId = conv['conversationId'] as string;
+      // ...
+    }
+  },
+  // ...
+);
+```
+
+**注意**：
+- 如果写成 `conversations: any`，再 `as any[]`，然后 `(conv as any)['key']`，Android 平台会把 `['key']` 解析为 Kotlin `String.get(index: Number)`，导致 `receiver type mismatch`。
+- 如果写成 `UTSJSONObject[]` 但编译时报 `Function2<UTSArray<UTSJSONObject>, String, Unit>` 与 `Function2<List<UTSJSONObject>, String, Unit>` 不匹配，说明 Kotlin 侧签名没改对。
+
+### 10.3 禁止直接把 `UTSJSONObject` 强转为自定义 `type`
+
+以下写法在运行时会报 `ClassCastException`：
+
+```uts
+// ❌ 致命错误：UTSJSONObject 无法强转为 Message（Kotlin class）
+conversation.lastMessage = lastMessage as any;
+// 或
+conversation.lastMessage = JSON.parse(lastMessage as string) as Message;
+```
+
+**唯一正确做法**：在 UTS 侧逐字段读取 `UTSJSONObject`，用**对象字面量**重新构造目标类型：
+
+```uts
+const lastMessage = conv['lastMessage'] as UTSJSONObject | null;
+if (lastMessage != null) {
+  const body = lastMessage['body'] as UTSJSONObject | null;
+  conversation.lastMessage = {
+    msgId: lastMessage['msgId'] as string,
+    from: lastMessage['from'] as string,
+    to: lastMessage['to'] as string,
+    conversationId: lastMessage['conversationId'] as string,
+    chatType: lastMessage['chatType'] as number,
+    body: {
+      type: body != null ? body['type'] as string : '',
+      message: body != null ? body['message'] as string | null : null,
+    },
+  };
+}
+```
+
+这样 UTS 编译器会生成按 `Message` 结构构造对象的 Kotlin 代码，没有任何强制类型转换。
+
+### 10.4 Kotlin 构建嵌套 UTSJSONObject
+
+如果回调里需要传递复杂嵌套对象，**每一层都用 `UTSJSONObject`**，不要用 `org.json.JSONObject`：
+
+```kotlin
+val bodyObj = UTSJSONObject()
+bodyObj["type"] = "txt"
+bodyObj["message"] = body.getMessage()
+
+val msgObj = UTSJSONObject()
+msgObj["msgId"] = lastMsg.getMsgId()
+msgObj["body"] = bodyObj
+```
+
+这样 UTS 侧接收到的 `lastMessage['body']` 仍然是 `UTSJSONObject`，可以继续用下标访问。
+
+### 10.5 UVue 页面条件表达式规范
+
+UTS 中 `||` 和 `&&` 运算符要求两边必须是 **boolean 类型**。
+
+```uts
+// ❌ 编译错误：Conditional statements must use boolean types
+const limit = parseInt(limitStr.value) || 10;
+const label = type || '未知';
+
+// ✅ 正确写法
+const parsedLimit = parseInt(limitStr.value);
+const limit = Number.isNaN(parsedLimit) ? 10 : parsedLimit;
+
+const label = type.length > 0 ? type : '未知';
+```
+
+### 10.6 UVue `<script setup>` 函数提升限制
+
+UTS 编译到 Kotlin 时，`<script setup>` 中不存在函数提升。如果函数 A 在函数 B 里被调用，**必须确保 A 的代码在 B 之前出现**。
+
+```uts
+// ✅ 正确：先定义 fetchConversations，再定义 handleFetch
+async function fetchConversations(limit: number, cursorValue: string): Promise<void> {
+  // ...
+}
+async function handleFetch(): Promise<void> {
+  await fetchConversations(limit, '');
+}
+
+// ❌ 编译错误：找不到名称“fetchConversations”
+// 如果把 handleFetch 放在 fetchConversations 前面
+```
+
+---
+
+## 十一、常见编译错误速查
 
 | 错误信息 | 根因 | 解决方法 |
 |---------|------|---------|
@@ -750,6 +883,10 @@ export function onError(_listener: EMErrorListener | null): void {}
 | `'_initSDK' is inaccessible due to 'private' protection level` | 外部函数调用了类的 `private` 实例方法 | 将初始化逻辑移到 `static create()` 内 |
 | `expected member name or initializer call after type name` | UTS 不支持 `export { Class as Alias }` | 类定义时直接 `export class` |
 | `value of optional type 'String?' must be unwrapped` | Swift 转译后类型属性变成可选 | 使用 `config.appKey!` 非空断言 |
+| `ClassCastException: java.util.ArrayList cannot be cast to io.dcloud.uts.UTSArray` | Kotlin 回调返回了 `List<T>`，UTS 期望 `UTSArray<T>` | Kotlin 侧用 `UTSArray()` + `addAll` 转换 |
+| `ClassCastException: io.dcloud.uts.UTSJSONObject cannot be cast to Message` | 直接把 UTSJSONObject `as` 转成自定义 type | 逐字段读取并重新构造对象字面量 |
+| `Conditional statements must use boolean types` | 对非 boolean 使用了 `||` / `&&` | 用三元表达式 + 显式布尔判断 |
+| `receiver type mismatch: fun String.get(index: Number)` | `(any as any)['key']` 被解析为 String.get | 声明为 `UTSJSONObject`，直接用 `obj['key']` |
 
 ---
 

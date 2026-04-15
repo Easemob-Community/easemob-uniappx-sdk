@@ -22,6 +22,8 @@ import {
   SendTextMessageConfig,
   SendCmdMessageConfig,
   SendCustomMessageConfig,
+  EMConversation,
+  EMCursorResult,
 } from '../interface.uts';
 
 // ==================== 事件处理器实现 ====================
@@ -75,7 +77,7 @@ import EMCustomMessageBody from 'com.hyphenate.chat.EMCustomMessageBody';
 import EMMessageListener from 'com.hyphenate.EMMessageListener';
 import MutableList from 'kotlin.collections.MutableList';
 import EMMessageChatType from 'com.hyphenate.chat.EMMessage.ChatType';
-import { MessageHelper, setMessageExtFromJson, createCustomMessageBody } from 'uts.sdk.modules.easemobUtsSdkBeta';
+import { MessageHelper, setMessageExtFromJson, createCustomMessageBody, fetchConversationsFromServer } from 'uts.sdk.modules.easemobUtsSdkBeta';
 
 
 type MessageListenerCallbacks = {
@@ -488,6 +490,56 @@ export class EMClientImpl implements EasemobClient {
         EMClient.getInstance().chatManager().sendMessage(message);
       } catch (error) {
         console.error('[Android] sendCustomMessage error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  fetchConversationsFromServer(limit: number, cursor: string): Promise<EMCursorResult<EMConversation>> {
+    return new Promise((resolve, reject) => {
+      try {
+        fetchConversationsFromServer(
+          limit as Int,
+          cursor as string,
+          (conversations: UTSJSONObject[], nextCursor: string) => {
+            const conversationList: EMConversation[] = [];
+            const list = conversations;
+            for (let i = 0; i < list.length; i++) {
+              const conv = list[i];
+              const conversation: EMConversation = {
+                conversationId: conv['conversationId'] as string,
+                type: conv['type'] as number,
+                unreadMsgCount: conv['unreadMsgCount'] as number,
+              };
+              const lastMessage = conv['lastMessage'] as UTSJSONObject | null;
+              if (lastMessage != null) {
+                const body = lastMessage['body'] as UTSJSONObject | null;
+                conversation.lastMessage = {
+                  msgId: lastMessage['msgId'] as string,
+                  from: lastMessage['from'] as string,
+                  to: lastMessage['to'] as string,
+                  conversationId: lastMessage['conversationId'] as string,
+                  chatType: lastMessage['chatType'] as number,
+                  body: {
+                    type: body != null ? body['type'] as string : '',
+                    message: body != null ? body['message'] as string | null : null,
+                  },
+                };
+              }
+              conversationList.push(conversation);
+            }
+            const result: EMCursorResult<EMConversation> = {
+              data: conversationList,
+              cursor: nextCursor,
+            };
+            resolve(result);
+          },
+          (code: number, message: string) => {
+            reject(new Error(`Fetch conversations failed: ${code} - ${message}`));
+          }
+        );
+      } catch (error) {
+        console.error('[Android] fetchConversationsFromServer error:', error);
         reject(error);
       }
     });
