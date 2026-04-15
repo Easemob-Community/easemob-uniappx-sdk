@@ -834,6 +834,26 @@ msgObj["body"] = bodyObj
 
 这样 UTS 侧接收到的 `lastMessage['body']` 仍然是 `UTSJSONObject`，可以继续用下标访问。
 
+### 10.4a 本地会话获取：复用同一套 UTSJSONObject 转换逻辑
+
+当 Kotlin 侧需要暴露多个返回 `List<EMConversation>` 的 API（如 `getAllConversationsBySort`、`getAllConversations`）时，应将 `EMConversation → UTSJSONObject` 的映射逻辑提取为独立函数，避免重复：
+
+```kotlin
+private fun conversationToUTSJSONObject(conv: EMConversation): UTSJSONObject {
+    // ... 复用 lastMessage 转换逻辑 ...
+}
+
+fun getAllConversationsBySort(): UTSArray<UTSJSONObject> {
+    val conversations = EMClient.getInstance().chatManager().getAllConversationsBySort()
+    val conversationList = conversations.map { conversationToUTSJSONObject(it) }
+    val conversationArray = UTSArray<UTSJSONObject>()
+    conversationArray.addAll(conversationList)
+    return conversationArray
+}
+```
+
+UTS 侧同样复用 `parseConversationList` 私有方法，将 `UTSJSONObject[]` 统一转为 `EMConversation[]`。
+
 ### 10.5 UVue 页面条件表达式规范
 
 UTS 中 `||` 和 `&&` 运算符要求两边必须是 **boolean 类型**。

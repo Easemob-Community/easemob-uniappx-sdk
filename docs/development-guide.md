@@ -646,6 +646,10 @@ export type EMCursorResult<T> = {
 }
 
 abstract fetchConversationsFromServer(limit: number, cursor: string): Promise<EMCursorResult<EMConversation>>;
+
+abstract getAllConversationsBySort(): Promise<EMConversation[]>;
+
+abstract getAllConversations(): Promise<EMConversation[]>;
 ```
 
 ### Kotlin 辅助类（MessageHelper.kt）
@@ -812,6 +816,38 @@ fetchConversationsFromServer(limit: number, cursor: string): Promise<EMCursorRes
 | 回调参数 | 声明为 `UTSJSONObject[]`，不要用 `any`，否则 `['key']` 会被解析为 `String.get` |
 | 禁止强转 | **绝对禁止** `lastMessage as any` 或 `JSON.parse(... ) as Message`，运行时会 `ClassCastException` |
 | 对象重构 | 必须逐字段从 `UTSJSONObject` 读取，用对象字面量重新构造 `Message` |
+
+#### 本地会话获取（getAllConversationsBySort / getAllConversations）
+
+除了从服务端拉取，Android SDK 还支持直接从本地内存/数据库获取会话：
+
+```uts
+getAllConversationsBySort(): Promise<EMConversation[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const conversations = getAllConversationsBySort();
+      resolve(this.parseConversationList(conversations));
+    } catch (error) {
+      console.error('[Android] getAllConversationsBySort error:', error);
+      reject(error);
+    }
+  });
+}
+
+getAllConversations(): Promise<EMConversation[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const conversations = getAllConversations();
+      resolve(this.parseConversationList(conversations));
+    } catch (error) {
+      console.error('[Android] getAllConversations error:', error);
+      reject(error);
+    }
+  });
+}
+```
+
+Kotlin 侧直接调用 `EMChatManager.getAllConversationsBySort()` / `getAllConversations()`，同样通过 `conversationToUTSJSONObject()` 转换，返回 `UTSArray<UTSJSONObject>`。`getAllConversationsBySort` 按活跃时间倒序返回，置顶会话在前；`getAllConversations` 将 `Map<String, EMConversation>` 的值转为数组返回。
 
 ### UVue 页面（conversation.uvue）
 

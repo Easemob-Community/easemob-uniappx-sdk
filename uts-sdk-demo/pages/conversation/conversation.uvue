@@ -14,6 +14,10 @@
 					<input class="param-input" v-model="cursor" placeholder="游标，首次为空" />
 				</view>
 				<button class="btn" type="primary" @click="handleFetch" :disabled="isLoading">从服务端获取</button>
+				<view class="btn-row">
+					<button class="btn btn-local" type="default" @click="handleGetAllConversationsBySort" :disabled="isLoading">从本地获取（排序）</button>
+					<button class="btn btn-local" type="default" @click="handleGetAllConversations" :disabled="isLoading">从本地获取（Map）</button>
+				</view>
 			</view>
 
 			<view class="section">
@@ -114,6 +118,48 @@
 		const limit = Number.isNaN(parsedLimit) ? 10 : parsedLimit
 		await fetchConversations(limit, nextCursor.value)
 	}
+
+	async function handleGetAllConversationsBySort(): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			const result = await easemob.getAllConversationsBySort()
+			conversations.value = result
+			nextCursor.value = ''
+			cursor.value = ''
+			uni.showToast({ title: '本地排序获取成功: ' + result.length + ' 条', icon: 'success' })
+		} catch (error) {
+			console.error('[conversation] 获取本地排序会话失败:', error)
+			uni.showToast({ title: '获取失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
+
+	async function handleGetAllConversations(): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			const result = await easemob.getAllConversations()
+			conversations.value = result
+			nextCursor.value = ''
+			cursor.value = ''
+			uni.showToast({ title: '本地 Map 获取成功: ' + result.length + ' 条', icon: 'success' })
+		} catch (error) {
+			console.error('[conversation] 获取本地 Map 会话失败:', error)
+			uni.showToast({ title: '获取失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
 </script>
 
 <style>
@@ -178,6 +224,19 @@
 
 	.btn-more {
 		background-color: #f0f0f0;
+	}
+
+	.btn-row {
+		flex-direction: row;
+		justify-content: space-between;
+		margin-top: 5px;
+	}
+
+	.btn-local {
+		flex: 1;
+		margin-left: 5px;
+		margin-right: 5px;
+		font-size: 13px;
 	}
 
 	.empty {

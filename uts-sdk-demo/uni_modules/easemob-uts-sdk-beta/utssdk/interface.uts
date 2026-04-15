@@ -135,6 +135,12 @@ export abstract class EasemobClient {
   /** 从服务器分页获取会话列表 */
   abstract fetchConversationsFromServer(limit: number, cursor: string): Promise<EMCursorResult<EMConversation>>;
 
+  /** 从本地获取所有会话（按活跃时间倒序，置顶在前） */
+  abstract getAllConversationsBySort(): Promise<EMConversation[]>;
+
+  /** 从本地获取所有会话（Map 结构转数组） */
+  abstract getAllConversations(): Promise<EMConversation[]>;
+
   // MARK: - 核心方法（桩函数）
 
   /** 获取 SDK 版本号（iOS 已实现） */

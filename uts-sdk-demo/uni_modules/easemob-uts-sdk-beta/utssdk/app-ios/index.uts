@@ -19,6 +19,8 @@ import {
   SendTextMessageConfig,
   SendCmdMessageConfig,
   SendCustomMessageConfig,
+  EMConversation,
+  EMCursorResult,
 } from '../interface.uts';
 
 // em_bridge.swift 中的独立函数由 UTS 编译器自动识别，无需 declare
@@ -209,6 +211,24 @@ export class EMClientImpl implements EasemobClient {
   sendCustomMessage(_config: SendCustomMessageConfig): Promise<Message> {
     return new Promise((resolve, reject) => {
       reject(new Error('sendCustomMessage is not implemented on iOS yet'));
+    });
+  }
+
+  fetchConversationsFromServer(_limit: number, _cursor: string): Promise<EMCursorResult<EMConversation>> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('fetchConversationsFromServer is not implemented on iOS yet'));
+    });
+  }
+
+  getAllConversationsBySort(): Promise<EMConversation[]> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('getAllConversationsBySort is not implemented on iOS yet'));
+    });
+  }
+
+  getAllConversations(): Promise<EMConversation[]> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('getAllConversations is not implemented on iOS yet'));
     });
   }
 }
