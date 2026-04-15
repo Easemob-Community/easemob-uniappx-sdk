@@ -19,13 +19,33 @@ export {
   SendCustomMessageConfig,
 } from './interface.uts';
 
-// ==================== 平台相关导出 ====================
+// ==================== 平台相关实现 ====================
 
 // #ifdef APP-IOS
-export { create, getClient } from './app-ios/index.uts';
+import { create as _createIOS, getClient as _getClientIOS } from './app-ios/index.uts';
 // #endif
 
 // #ifdef APP-ANDROID
-export { create, getClient } from './app-android/index.uts';
+import { create as _createAndroid, getClient as _getClientAndroid } from './app-android/index.uts';
 // #endif
+
+import type { EMInitConfig as _EMInitConfig, EasemobClient as _EasemobClient } from './interface.uts';
+
+export function create(config: _EMInitConfig): _EasemobClient {
+  // #ifdef APP-IOS
+  return _createIOS(config);
+  // #endif
+  // #ifdef APP-ANDROID
+  return _createAndroid(config);
+  // #endif
+}
+
+export function getClient(): _EasemobClient | null {
+  // #ifdef APP-IOS
+  return _getClientIOS();
+  // #endif
+  // #ifdef APP-ANDROID
+  return _getClientAndroid();
+  // #endif
+}
 

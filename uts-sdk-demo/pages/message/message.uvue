@@ -54,7 +54,14 @@
 
 <script setup lang="uts">
 	import { ref } from 'vue'
-	import { getClient, type EasemobClient, type Message, type SendTextMessageConfig, type SendCmdMessageConfig, type SendCustomMessageConfig } from '@/uni_modules/easemob-uts-sdk-beta'
+	import {
+		getClient,
+		type EasemobClient,
+		type Message,
+		type SendTextMessageConfig,
+		type SendCmdMessageConfig,
+		type SendCustomMessageConfig,
+	} from '@/uni_modules/easemob-uts-sdk-beta'
 
 	const targetUserId = ref('')
 	const chatType = ref<'single' | 'group' | 'chatroom'>('single')
@@ -104,12 +111,13 @@
 				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
 				return
 			}
-			const message = await easemob.sendTextMessage({
+			const textConfig: SendTextMessageConfig = {
 				content,
 				to,
 				chatType: chatType.value,
 				ext,
-			} as SendTextMessageConfig)
+			}
+			const message = await easemob.sendTextMessage(textConfig)
 			console.log('[message] 发送成功, msgId:', message.msgId, message)
 			uni.showToast({ title: '发送成功', icon: 'success' })
 			messageContent.value = ''
@@ -147,12 +155,13 @@
 				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
 				return
 			}
-			const message = await easemob.sendCmdMessage({
+			const cmdConfig: SendCmdMessageConfig = {
 				action,
 				to,
 				chatType: chatType.value,
 				ext,
-			} as SendCmdMessageConfig)
+			}
+			const message = await easemob.sendCmdMessage(cmdConfig)
 			console.log('[message] CMD 发送成功, msgId:', message.msgId, message)
 			uni.showToast({ title: 'CMD 发送成功', icon: 'success' })
 		} catch (error) {
@@ -199,13 +208,14 @@
 				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
 				return
 			}
-			const message = await easemob.sendCustomMessage({
+			const customConfig: SendCustomMessageConfig = {
 				event,
 				params: params ?? new UTSJSONObject(),
 				to,
 				chatType: chatType.value,
 				ext,
-			} as SendCustomMessageConfig)
+			}
+			const message = await easemob.sendCustomMessage(customConfig)
 			console.log('[message] 自定义消息发送成功, msgId:', message.msgId, message)
 			uni.showToast({ title: '自定义消息发送成功', icon: 'success' })
 		} catch (error) {
