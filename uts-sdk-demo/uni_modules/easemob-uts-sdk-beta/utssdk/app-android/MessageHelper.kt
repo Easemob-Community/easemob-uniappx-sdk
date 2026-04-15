@@ -261,7 +261,7 @@ private fun conversationToUTSJSONObject(conv: com.hyphenate.chat.EMConversation)
     return obj
 }
 
-fun getAllConversationsBySort(): UTSArray<UTSJSONObject> {
+fun getAllConversationsBySortInternal(): UTSArray<UTSJSONObject> {
     val conversations = EMClient.getInstance().chatManager().getAllConversationsBySort()
     val conversationList = conversations.map { conv ->
         conversationToUTSJSONObject(conv)
@@ -271,7 +271,7 @@ fun getAllConversationsBySort(): UTSArray<UTSJSONObject> {
     return conversationArray
 }
 
-fun getAllConversations(): UTSArray<UTSJSONObject> {
+fun getAllConversationsInternal(): UTSArray<UTSJSONObject> {
     val conversations = EMClient.getInstance().chatManager().getAllConversations()
     val conversationList = conversations.values.map { conv ->
         conversationToUTSJSONObject(conv)

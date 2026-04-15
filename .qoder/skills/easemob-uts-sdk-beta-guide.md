@@ -854,6 +854,29 @@ fun getAllConversationsBySort(): UTSArray<UTSJSONObject> {
 
 UTS 侧同样复用 `parseConversationList` 私有方法，将 `UTSJSONObject[]` 统一转为 `EMConversation[]`。
 
+### 10.4b Kotlin 顶层函数命名冲突：避免与 UTS 类方法同名
+
+当 Kotlin 辅助类中的**顶层函数**与 UTS 类中的**方法名**完全相同时，如果参数签名也相同（尤其是无参函数），UTS 编译器会把调用解析为**递归调用自身**，而不是调用 Kotlin 侧的顶层函数。
+
+```uts
+// ❌ 错误：类方法 getAllConversationsBySort 内部调用了同名函数
+getAllConversationsBySort(): Promise<EMConversation[]> {
+  const conversations = getAllConversationsBySort(); // 编译器认为是递归调用自身
+  // 实际得到的是 UTSPromise<UTSArray<EMConversation>>，而不是 UTSArray<UTSJSONObject>
+}
+```
+
+```uts
+// ✅ 正确：给 Kotlin 顶层函数加一个不同的名字，如 Internal 后缀
+getAllConversationsBySort(): Promise<EMConversation[]> {
+  const conversations = getAllConversationsBySortInternal();
+  resolve(this.parseConversationList(conversations));
+}
+```
+
+**为什么 `fetchConversationsFromServer` 没有这个问题？**
+因为它在 UTS 类方法中只有 2 个参数，而 Kotlin 侧调用时有 4 个参数（含回调），参数数量不同，编译器能区分。而无参函数没有这种差异，一定会冲突。
+
 ### 10.5 UVue 页面条件表达式规范
 
 UTS 中 `||` 和 `&&` 运算符要求两边必须是 **boolean 类型**。

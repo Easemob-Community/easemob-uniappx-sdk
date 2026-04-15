@@ -825,7 +825,8 @@ fetchConversationsFromServer(limit: number, cursor: string): Promise<EMCursorRes
 getAllConversationsBySort(): Promise<EMConversation[]> {
   return new Promise((resolve, reject) => {
     try {
-      const conversations = getAllConversationsBySort();
+      // 注意：必须调用与类方法不同名的 Kotlin 顶层函数，否则会被编译器解析为递归调用自身
+      const conversations = getAllConversationsBySortInternal();
       resolve(this.parseConversationList(conversations));
     } catch (error) {
       console.error('[Android] getAllConversationsBySort error:', error);
@@ -837,7 +838,8 @@ getAllConversationsBySort(): Promise<EMConversation[]> {
 getAllConversations(): Promise<EMConversation[]> {
   return new Promise((resolve, reject) => {
     try {
-      const conversations = getAllConversations();
+      // 注意：必须调用与类方法不同名的 Kotlin 顶层函数
+      const conversations = getAllConversationsInternal();
       resolve(this.parseConversationList(conversations));
     } catch (error) {
       console.error('[Android] getAllConversations error:', error);
@@ -896,4 +898,5 @@ const limit = Number.isNaN(parsedLimit) ? 10 : parsedLimit;
 | `ClassCastException: java.util.ArrayList cannot be cast to UTSArray` | Kotlin 回调返回 `List<UTSJSONObject>` | Kotlin 侧改为 `UTSArray` + `addAll` |
 | `ClassCastException: UTSJSONObject cannot be cast to Message` | `lastMessage as any` 或 `as Message` 强转 | 逐字段读取，对象字面量重构 |
 | `找不到名称“fetchConversations”` | `<script setup>` 中函数未先定义 | 调整函数定义顺序 |
+| `参数类型不匹配：实际类型为 'UTSPromise<...>'，预期类型为 'UTSArray<UTSJSONObject>'` | UTS 类方法与 Kotlin 顶层函数同名，无参调用被解析为递归自身 | 给 Kotlin 顶层函数改名（如加 `Internal` 后缀） |
 | `Conditional statements must use boolean types` | `||` 用于非 boolean 类型 | 用三元表达式 + 显式布尔判断 |

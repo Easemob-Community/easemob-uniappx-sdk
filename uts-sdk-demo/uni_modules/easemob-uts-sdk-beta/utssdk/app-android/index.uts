@@ -77,7 +77,7 @@ import EMCustomMessageBody from 'com.hyphenate.chat.EMCustomMessageBody';
 import EMMessageListener from 'com.hyphenate.EMMessageListener';
 import MutableList from 'kotlin.collections.MutableList';
 import EMMessageChatType from 'com.hyphenate.chat.EMMessage.ChatType';
-import { MessageHelper, setMessageExtFromJson, createCustomMessageBody, fetchConversationsFromServer, getAllConversationsBySort, getAllConversations } from 'uts.sdk.modules.easemobUtsSdkBeta';
+import { MessageHelper, setMessageExtFromJson, createCustomMessageBody, fetchConversationsFromServer, getAllConversationsBySortInternal, getAllConversationsInternal } from 'uts.sdk.modules.easemobUtsSdkBeta';
 
 
 type MessageListenerCallbacks = {
@@ -551,7 +551,7 @@ export class EMClientImpl implements EasemobClient {
   getAllConversationsBySort(): Promise<EMConversation[]> {
     return new Promise((resolve, reject) => {
       try {
-        const conversations = getAllConversationsBySort();
+        const conversations = getAllConversationsBySortInternal();
         resolve(this.parseConversationList(conversations));
       } catch (error) {
         console.error('[Android] getAllConversationsBySort error:', error);
@@ -563,7 +563,7 @@ export class EMClientImpl implements EasemobClient {
   getAllConversations(): Promise<EMConversation[]> {
     return new Promise((resolve, reject) => {
       try {
-        const conversations = getAllConversations();
+        const conversations = getAllConversationsInternal();
         resolve(this.parseConversationList(conversations));
       } catch (error) {
         console.error('[Android] getAllConversations error:', error);
