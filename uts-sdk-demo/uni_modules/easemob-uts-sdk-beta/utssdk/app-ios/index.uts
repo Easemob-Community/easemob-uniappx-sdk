@@ -241,6 +241,30 @@ export class EMClientImpl implements EasemobClient {
     })
   }
 
+  fetchHistoryMessages(_convId: string, _convType: number, _pageSize: number, _startMsgId: string): Promise<EMCursorResult<Message>> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('fetchHistoryMessages is not implemented on iOS yet'))
+    })
+  }
+
+  searchLocalMessagesByKeywords(_convId: string, _keywords: string, _timestamp: number, _maxCount: number, _from: string, _direction: number): Promise<Message[]> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('searchLocalMessagesByKeywords is not implemented on iOS yet'))
+    })
+  }
+
+  searchLocalMessagesByTimeRange(_convId: string, _startTimestamp: number, _endTimestamp: number, _maxCount: number, _from: string, _direction: number): Promise<Message[]> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('searchLocalMessagesByTimeRange is not implemented on iOS yet'))
+    })
+  }
+
+  loadLocalMessages(_convId: string, _startMsgId: string, _pageSize: number): Promise<Message[]> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('loadLocalMessages is not implemented on iOS yet'))
+    })
+  }
+
   // MARK: - 状态查询
 
   getVersion(): string {

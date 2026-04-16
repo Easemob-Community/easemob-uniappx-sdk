@@ -326,3 +326,141 @@ fun deleteConversationFromServerInternal(
 fun deleteConversationInternal(convId: String, withMessage: Boolean): Boolean {
     return EMClient.getInstance().chatManager().deleteConversation(convId, withMessage)
 }
+
+private fun emMessageToUTSJSONObject(msg: EMMessage): UTSJSONObject {
+    val bodyObj = UTSJSONObject()
+    when (val body = msg.body) {
+        is com.hyphenate.chat.EMTextMessageBody -> {
+            bodyObj["type"] = "txt"
+            bodyObj["message"] = body.message
+        }
+        is com.hyphenate.chat.EMImageMessageBody -> {
+            bodyObj["type"] = "img"
+            bodyObj["message"] = body.remoteUrl ?: body.localUrl
+        }
+        is com.hyphenate.chat.EMVoiceMessageBody -> {
+            bodyObj["type"] = "voice"
+            bodyObj["message"] = body.remoteUrl ?: body.localUrl
+        }
+        is com.hyphenate.chat.EMVideoMessageBody -> {
+            bodyObj["type"] = "video"
+            bodyObj["message"] = body.remoteUrl ?: body.localUrl
+        }
+        is com.hyphenate.chat.EMLocationMessageBody -> {
+            bodyObj["type"] = "location"
+            bodyObj["message"] = body.address
+        }
+        is com.hyphenate.chat.EMFileMessageBody -> {
+            bodyObj["type"] = "file"
+            bodyObj["message"] = body.remoteUrl ?: body.localUrl
+        }
+        is com.hyphenate.chat.EMCmdMessageBody -> {
+            bodyObj["type"] = "cmd"
+            bodyObj["message"] = body.action()
+        }
+        is com.hyphenate.chat.EMCustomMessageBody -> {
+            bodyObj["type"] = "custom"
+            bodyObj["message"] = body.event()
+        }
+        else -> {
+            bodyObj["type"] = "unknown"
+            bodyObj["message"] = ""
+        }
+    }
+    val msgObj = UTSJSONObject()
+    msgObj["msgId"] = msg.msgId
+    msgObj["from"] = msg.from
+    msgObj["to"] = msg.to
+    msgObj["conversationId"] = msg.conversationId()
+    msgObj["chatType"] = msg.chatType.ordinal
+    msgObj["body"] = bodyObj
+    return msgObj
+}
+
+fun fetchHistoryMessagesInternal(
+    convId: String,
+    convType: Int,
+    pageSize: Int,
+    startMsgId: String,
+    onSuccess: (messages: UTSArray<UTSJSONObject>, cursor: String) -> Unit,
+    onError: (code: Int, message: String) -> Unit
+) {
+    try {
+        val type = com.hyphenate.chat.EMConversation.EMConversationType.values()[convType]
+        EMClient.getInstance().chatManager().asyncFetchHistoryMessages(
+            convId,
+            type,
+            pageSize,
+            startMsgId,
+            null,
+            object : EMValueCallBack<EMCursorResult<EMMessage>> {
+                override fun onSuccess(result: EMCursorResult<EMMessage>) {
+                    val msgList = result.data?.map { emMessageToUTSJSONObject(it) } ?: emptyList()
+                    val msgArray = UTSArray<UTSJSONObject>()
+                    msgArray.addAll(msgList)
+                    onSuccess(msgArray, result.cursor ?: "")
+                }
+                override fun onError(error: Int, errorMsg: String) {
+                    onError(error, errorMsg)
+                }
+            }
+        )
+    } catch (e: Exception) {
+        Log.e("MessageHelper", "fetchHistoryMessages failed", e)
+        onError(com.hyphenate.EMError.GENERAL_ERROR, e.message ?: "fetch history messages failed")
+    }
+}
+
+fun searchLocalMessagesByKeywordsInternal(
+    convId: String,
+    keywords: String,
+    timestamp: Int,
+    maxCount: Int,
+    from: String,
+    direction: Int
+): UTSArray<UTSJSONObject> {
+    val conversation = EMClient.getInstance().chatManager().getConversation(convId)
+    val directionEnum = com.hyphenate.chat.EMConversation.EMSearchDirection.values()[direction]
+    val messages = conversation?.searchMsgFromDB(keywords, timestamp.toLong(), maxCount, from, directionEnum) ?: emptyList()
+    val msgList = messages.map { emMessageToUTSJSONObject(it) }
+    val msgArray = UTSArray<UTSJSONObject>()
+    msgArray.addAll(msgList)
+    return msgArray
+}
+
+fun searchLocalMessagesByTimeRangeInternal(
+    convId: String,
+    startTimestamp: Int,
+    endTimestamp: Int,
+    maxCount: Int,
+    from: String,
+    direction: Int
+): UTSArray<UTSJSONObject> {
+    val conversation = EMClient.getInstance().chatManager().getConversation(convId)
+    val allMessages = conversation?.allMessages ?: emptyList<EMMessage>()
+    val start = startTimestamp.toLong()
+    val end = endTimestamp.toLong()
+    val filtered = allMessages.filter { msg ->
+        val time = msg.msgTime
+        time in start..end && (from.isEmpty() || msg.from == from)
+    }.let { list ->
+        if (maxCount > 0) list.take(maxCount) else list
+    }
+    val msgList = filtered.map { emMessageToUTSJSONObject(it) }
+    val msgArray = UTSArray<UTSJSONObject>()
+    msgArray.addAll(msgList)
+    return msgArray
+}
+
+fun loadLocalMessagesInternal(convId: String, startMsgId: String, pageSize: Int): UTSArray<UTSJSONObject> {
+    val conversation = EMClient.getInstance().chatManager().getConversation(convId)
+    val messages = if (startMsgId.isEmpty()) {
+        conversation?.allMessages ?: emptyList<EMMessage>()
+    } else {
+        conversation?.loadMoreMsgFromDB(startMsgId, pageSize) ?: emptyList<EMMessage>()
+    }
+    val msgList = messages.map { emMessageToUTSJSONObject(it) }
+    val msgArray = UTSArray<UTSJSONObject>()
+    msgArray.addAll(msgList)
+    return msgArray
+}

@@ -23,6 +23,12 @@
 			"style": {
 				"navigationBarTitleText": "会话列表"
 			}
+		},
+		{
+			"path": "pages/message-operation/message-operation",
+			"style": {
+				"navigationBarTitleText": "消息操作"
+			}
 		}
 	],
 	"globalStyle": {

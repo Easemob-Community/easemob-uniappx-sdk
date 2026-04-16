@@ -22,6 +22,7 @@
 				<text class="section-title">页面跳转</text>
 				<button class="btn" type="primary" @click="goToMessage">发消息</button>
 				<button class="btn" type="primary" @click="goToConversation">会话列表</button>
+					<button class="btn" type="primary" @click="goToMessageOperation">消息操作</button>
 			</view>
 
 			<view class="section">
@@ -162,6 +163,12 @@
 	function goToConversation(): void {
 		uni.navigateTo({
 			url: '/pages/conversation/conversation'
+		})
+	}
+
+	function goToMessageOperation(): void {
+		uni.navigateTo({
+			url: '/pages/message-operation/message-operation'
 		})
 	}
 </script>

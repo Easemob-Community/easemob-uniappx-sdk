@@ -78,7 +78,7 @@ import EMMessageListener from 'com.hyphenate.EMMessageListener';
 import EMConversationListener from 'com.hyphenate.EMConversationListener';
 import MutableList from 'kotlin.collections.MutableList';
 import EMMessageChatType from 'com.hyphenate.chat.EMMessage.ChatType';
-import { MessageHelper, setMessageExtFromJson, createCustomMessageBody, fetchConversationsFromServer, getAllConversationsBySortInternal, getAllConversationsInternal, sendConversationReadAckInternal, deleteConversationFromServerInternal, deleteConversationInternal } from 'uts.sdk.modules.easemobUtsSdkBeta';
+import { MessageHelper, setMessageExtFromJson, createCustomMessageBody, fetchConversationsFromServer, getAllConversationsBySortInternal, getAllConversationsInternal, sendConversationReadAckInternal, deleteConversationFromServerInternal, deleteConversationInternal, fetchHistoryMessagesInternal, searchLocalMessagesByKeywordsInternal, searchLocalMessagesByTimeRangeInternal, loadLocalMessagesInternal } from 'uts.sdk.modules.easemobUtsSdkBeta';
 
 
 type MessageListenerCallbacks = {
@@ -480,6 +480,68 @@ export class EMClientImpl implements EasemobClient {
     });
   }
 
+  fetchHistoryMessages(convId: string, convType: number, pageSize: number, startMsgId: string): Promise<EMCursorResult<Message>> {
+    return new Promise((resolve, reject) => {
+      try {
+        fetchHistoryMessagesInternal(
+          convId,
+          convType as Int,
+          pageSize as Int,
+          startMsgId,
+          (messages: UTSJSONObject[], cursor: string) => {
+            const result: EMCursorResult<Message> = {
+              data: this.parseMessageList(messages),
+              cursor: cursor,
+            };
+            resolve(result);
+          },
+          (code: number, message: string) => {
+            reject(new Error(`fetchHistoryMessages failed: ${code} - ${message}`));
+          }
+        );
+      } catch (error) {
+        console.error('[Android] fetchHistoryMessages error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  searchLocalMessagesByKeywords(convId: string, keywords: string, timestamp: number, maxCount: number, from: string, direction: number): Promise<Message[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        const messages = searchLocalMessagesByKeywordsInternal(convId, keywords, timestamp as Int, maxCount as Int, from, direction as Int);
+        resolve(this.parseMessageList(messages));
+      } catch (error) {
+        console.error('[Android] searchLocalMessagesByKeywords error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  searchLocalMessagesByTimeRange(convId: string, startTimestamp: number, endTimestamp: number, maxCount: number, from: string, direction: number): Promise<Message[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        const messages = searchLocalMessagesByTimeRangeInternal(convId, startTimestamp as Int, endTimestamp as Int, maxCount as Int, from, direction as Int);
+        resolve(this.parseMessageList(messages));
+      } catch (error) {
+        console.error('[Android] searchLocalMessagesByTimeRange error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  loadLocalMessages(convId: string, startMsgId: string, pageSize: number): Promise<Message[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        const messages = loadLocalMessagesInternal(convId, startMsgId, pageSize as Int);
+        resolve(this.parseMessageList(messages));
+      } catch (error) {
+        console.error('[Android] loadLocalMessages error:', error);
+        reject(error);
+      }
+    });
+  }
+
   // MARK: - 桩函数
 
   sendTextMessage(config: SendTextMessageConfig): Promise<Message> {
@@ -649,6 +711,26 @@ export class EMClientImpl implements EasemobClient {
       conversationList.push(conversation);
     }
     return conversationList;
+  }
+
+  private parseMessageList(list: UTSJSONObject[]): Message[] {
+    const msgList: Message[] = [];
+    for (let i = 0; i < list.length; i++) {
+      const msg = list[i];
+      const body = msg['body'] as UTSJSONObject | null;
+      msgList.push({
+        msgId: msg['msgId'] as string,
+        from: msg['from'] as string,
+        to: msg['to'] as string,
+        conversationId: msg['conversationId'] as string,
+        chatType: msg['chatType'] as number,
+        body: {
+          type: body != null ? body['type'] as string : '',
+          message: body != null ? body['message'] as string | null : null,
+        },
+      });
+    }
+    return msgList;
   }
 
   fetchConversationsFromServer(limit: number, cursor: string): Promise<EMCursorResult<EMConversation>> {

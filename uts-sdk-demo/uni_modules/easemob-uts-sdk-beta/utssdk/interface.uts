@@ -165,6 +165,18 @@ export abstract class EasemobClient {
   /** 删除本地会话 */
   abstract deleteConversation(convId: string, withMessage: boolean): Promise<void>;
 
+  /** 从服务器获取指定会话的历史消息 */
+  abstract fetchHistoryMessages(convId: string, convType: number, pageSize: number, startMsgId: string): Promise<EMCursorResult<Message>>;
+
+  /** 根据关键字搜索本地会话中的消息 */
+  abstract searchLocalMessagesByKeywords(convId: string, keywords: string, timestamp: number, maxCount: number, from: string, direction: number): Promise<Message[]>;
+
+  /** 根据时间范围搜索本地会话中的消息 */
+  abstract searchLocalMessagesByTimeRange(convId: string, startTimestamp: number, endTimestamp: number, maxCount: number, from: string, direction: number): Promise<Message[]>;
+
+  /** 从本地读取指定会话的消息 */
+  abstract loadLocalMessages(convId: string, startMsgId: string, pageSize: number): Promise<Message[]>;
+
   // MARK: - 核心方法（桩函数）
 
   /** 获取 SDK 版本号（iOS 已实现） */
