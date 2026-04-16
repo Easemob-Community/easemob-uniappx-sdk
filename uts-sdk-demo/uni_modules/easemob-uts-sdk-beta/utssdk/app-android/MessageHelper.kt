@@ -280,3 +280,49 @@ fun getAllConversationsInternal(): UTSArray<UTSJSONObject> {
     conversationArray.addAll(conversationList)
     return conversationArray
 }
+
+fun sendConversationReadAckInternal(
+    conversationId: String,
+    onSuccess: () -> Unit,
+    onError: (code: Int, message: String) -> Unit
+) {
+    try {
+        EMClient.getInstance().chatManager().ackConversationRead(conversationId)
+        onSuccess()
+    } catch (e: Exception) {
+        Log.e("MessageHelper", "sendConversationReadAck failed", e)
+        onError(com.hyphenate.EMError.GENERAL_ERROR, e.message ?: "send conversation read ack failed")
+    }
+}
+
+fun deleteConversationFromServerInternal(
+    convId: String,
+    convType: Int,
+    isDeleteServerMessages: Boolean,
+    onSuccess: () -> Unit,
+    onError: (code: Int, message: String) -> Unit
+) {
+    try {
+        val type = com.hyphenate.chat.EMConversation.EMConversationType.values()[convType]
+        EMClient.getInstance().chatManager().deleteConversationFromServer(
+            convId,
+            type,
+            isDeleteServerMessages,
+            object : EMCallBack {
+                override fun onSuccess() {
+                    onSuccess()
+                }
+                override fun onError(error: Int, errorMsg: String) {
+                    onError(error, errorMsg)
+                }
+            }
+        )
+    } catch (e: Exception) {
+        Log.e("MessageHelper", "deleteConversationFromServer failed", e)
+        onError(com.hyphenate.EMError.GENERAL_ERROR, e.message ?: "delete conversation from server failed")
+    }
+}
+
+fun deleteConversationInternal(convId: String, withMessage: Boolean): Boolean {
+    return EMClient.getInstance().chatManager().deleteConversation(convId, withMessage)
+}

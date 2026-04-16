@@ -75,14 +75,19 @@ import EMFileMessageBody from 'com.hyphenate.chat.EMFileMessageBody';
 import EMCmdMessageBody from 'com.hyphenate.chat.EMCmdMessageBody';
 import EMCustomMessageBody from 'com.hyphenate.chat.EMCustomMessageBody';
 import EMMessageListener from 'com.hyphenate.EMMessageListener';
+import EMConversationListener from 'com.hyphenate.EMConversationListener';
 import MutableList from 'kotlin.collections.MutableList';
 import EMMessageChatType from 'com.hyphenate.chat.EMMessage.ChatType';
-import { MessageHelper, setMessageExtFromJson, createCustomMessageBody, fetchConversationsFromServer, getAllConversationsBySortInternal, getAllConversationsInternal } from 'uts.sdk.modules.easemobUtsSdkBeta';
+import { MessageHelper, setMessageExtFromJson, createCustomMessageBody, fetchConversationsFromServer, getAllConversationsBySortInternal, getAllConversationsInternal, sendConversationReadAckInternal, deleteConversationFromServerInternal, deleteConversationInternal } from 'uts.sdk.modules.easemobUtsSdkBeta';
 
 
 type MessageListenerCallbacks = {
   onMessageReceived?: ((messages: Message[]) => void) | null;
   onCmdMessageReceived?: ((messages: Message[]) => void) | null;
+}
+
+type ConversationListenerCallbacks = {
+  onConversationRead?: ((from: string, to?: string) => void) | null;
 }
 
 function convertEMMessage(msg: EMMessage): Message {
@@ -161,6 +166,20 @@ class EMMessageListenerImpl extends EMMessageListener {
  * 通用 EMCallBack 实现：通过成员属性持有 onSuccess/onError 闭包
  * 不直接持有 Promise 的 resolve/reject，避免 UTS→Kotlin 的 Function0/Function1 类型不匹配
  */
+class EMConversationListenerImpl extends EMConversationListener {
+  @UTSJS.keepAlive
+  eventMap: ConversationListenerCallbacks = {};
+
+  override onConversationUpdate(): void {
+    // 暂不需要处理
+  }
+
+  override onConversationRead(from: string, to: string): void {
+    console.log('[Android] native onConversationRead fired, from=' + from + ', to=' + to);
+    this.eventMap.onConversationRead?.(from, to);
+  }
+}
+
 class EMCallBackImpl extends EMCallBack {
   @UTSJS.keepAlive
   onSuccessHandler: (() => void) | null = null;
@@ -193,6 +212,7 @@ export class EMClientImpl implements EasemobClient {
   private static _instance: EMClientImpl | null = null;
   private _listener: EMConnectionListenerImpl | null = null;
   private _messageListener: EMMessageListenerImpl | null = null;
+  private _conversationListener: EMConversationListenerImpl | null = null;
   private _isInitialized = false;
 
   @UTSJS.keepAlive
@@ -209,6 +229,8 @@ export class EMClientImpl implements EasemobClient {
   private _onMessageReceived: ((messages: Message[]) => void) | null = null;
   @UTSJS.keepAlive
   private _onCmdMessageReceived: ((messages: Message[]) => void) | null = null;
+  @UTSJS.keepAlive
+  private _onConversationRead: ((from: string, to?: string) => void) | null = null;
 
   private constructor() {}
 
@@ -237,6 +259,8 @@ export class EMClientImpl implements EasemobClient {
       EMClient.getInstance().addConnectionListener(instance._listener!);
       instance._messageListener = new EMMessageListenerImpl();
       EMClient.getInstance().chatManager().addMessageListener(instance._messageListener!);
+      instance._conversationListener = new EMConversationListenerImpl();
+      EMClient.getInstance().chatManager().addConversationListener(instance._conversationListener!);
       instance._isInitialized = true;
       console.log('[Android] EMClient SDK initialized');
     } else {
@@ -298,8 +322,12 @@ export class EMClientImpl implements EasemobClient {
     if (this._messageListener != null) {
       EMClient.getInstance().chatManager().removeMessageListener(this._messageListener);
     }
+    if (this._conversationListener != null) {
+      EMClient.getInstance().chatManager().removeConversationListener(this._conversationListener);
+    }
     this._listener = null;
     this._messageListener = null;
+    this._conversationListener = null;
     this._isInitialized = false;
     console.log('[Android] EMClient SDK destroyed');
   }
@@ -351,6 +379,105 @@ export class EMClientImpl implements EasemobClient {
     if (this._messageListener != null) {
       this._messageListener.eventMap.onCmdMessageReceived = listener;
     }
+  }
+
+  onConversationRead(listener: ((from: string, to?: string) => void) | null): void {
+    this._onConversationRead = listener;
+    if (this._conversationListener != null) {
+      this._conversationListener.eventMap.onConversationRead = listener;
+    }
+  }
+
+  sendConversationReadAck(convId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        sendConversationReadAckInternal(
+          convId,
+          () => {
+            resolve();
+          },
+          (code: number, message: string) => {
+            reject(new Error(`sendConversationReadAck failed: ${code} - ${message}`));
+          }
+        );
+      } catch (error) {
+        console.error('[Android] sendConversationReadAck error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  markAllMessagesAsRead(convId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const conversation = EMClient.getInstance().chatManager().getConversation(convId);
+        if (conversation != null) {
+          conversation.markAllMessagesAsRead();
+          resolve();
+        } else {
+          reject(new Error(`Conversation not found: ${convId}`));
+        }
+      } catch (error) {
+        console.error('[Android] markAllMessagesAsRead error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  getUnreadMessageCount(): number {
+    return EMClient.getInstance().chatManager().getUnreadMessageCount();
+  }
+
+  getConversationUnreadMsgCount(convId: string): number {
+    const conversation = EMClient.getInstance().chatManager().getConversation(convId);
+    return conversation != null ? conversation.getUnreadMsgCount() : 0;
+  }
+
+  markAllConversationsAsRead(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        EMClient.getInstance().chatManager().markAllConversationsAsRead();
+        resolve();
+      } catch (error) {
+        console.error('[Android] markAllConversationsAsRead error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  deleteConversationFromServer(convId: string, convType: number, isDeleteServerMessages: boolean): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        deleteConversationFromServerInternal(
+          convId,
+          convType as Int,
+          isDeleteServerMessages,
+          () => { resolve(); },
+          (code: number, message: string) => {
+            reject(new Error(`deleteConversationFromServer failed: ${code} - ${message}`));
+          }
+        );
+      } catch (error) {
+        console.error('[Android] deleteConversationFromServer error:', error);
+        reject(error);
+      }
+    });
+  }
+
+  deleteConversation(convId: string, withMessage: boolean): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const success = deleteConversationInternal(convId, withMessage);
+        if (success) {
+          resolve();
+        } else {
+          reject(new Error(`deleteConversation failed for: ${convId}`));
+        }
+      } catch (error) {
+        console.error('[Android] deleteConversation error:', error);
+        reject(error);
+      }
+    });
   }
 
   // MARK: - 桩函数

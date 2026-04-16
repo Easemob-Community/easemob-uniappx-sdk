@@ -107,6 +107,7 @@ func emBridgeSetOnTokenExpired(callback: (() -> Void)?) {
 
 class EMMessageDelegateNative: NSObject, EMChatManagerDelegate {
     var onMessageReceivedCb: ((String) -> Void)?
+    var onConversationReadCb: ((String, String) -> Void)?
 
     @objc public func messagesDidReceive(_ aMessages: [EMChatMessage]) {
         print("[iOS] native messagesDidReceive, count: \(aMessages.count)")
@@ -159,6 +160,13 @@ class EMMessageDelegateNative: NSObject, EMChatManagerDelegate {
             print("[iOS] JSON serialization error: \(error)")
         }
     }
+
+    @objc public func onConversationRead(_ from: String, to: String) {
+        print("[iOS] native onConversationRead fired, from: \(from), to: \(to)")
+        DispatchQueue.main.async {
+            self.onConversationReadCb?(from, to)
+        }
+    }
 }
 
 private var _emMessageDelegate: EMMessageDelegateNative?
@@ -179,4 +187,26 @@ func emBridgeTeardownMessageDelegate() {
 
 func emBridgeSetOnMessageReceived(callback: ((String) -> Void)?) {
     _emMessageDelegate?.onMessageReceivedCb = callback
+}
+
+func emBridgeSetOnConversationRead(callback: ((String, String) -> Void)?) {
+    _emMessageDelegate?.onConversationReadCb = callback
+}
+
+func emBridgeDeleteConversationFromServer(convId: String, convType: Int, isDeleteServerMessages: Bool, onSuccess: @escaping () -> Void, onError: @escaping (Int, String) -> Void) {
+    guard let type = EMConversationType(rawValue: convType) else {
+        onError(EMErrorCode.INVALID_PARAMS.rawValue, "invalid conversation type")
+        return
+    }
+    EMClient.shared().chatManager?.removeConversationFromServer(convId, type: type, isDeleteMessages: isDeleteServerMessages, completion: { error in
+        if let error = error {
+            onError(Int(error.code.rawValue), error.errorDescription ?? "delete conversation from server failed")
+        } else {
+            onSuccess()
+        }
+    })
+}
+
+func emBridgeDeleteConversation(convId: String, withMessage: Bool) -> Bool {
+    return EMClient.shared().chatManager?.deleteConversation(convId, isDeleteMessages: withMessage) ?? false
 }

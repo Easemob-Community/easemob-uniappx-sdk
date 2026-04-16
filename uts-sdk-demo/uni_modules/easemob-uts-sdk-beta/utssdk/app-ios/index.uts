@@ -172,6 +172,75 @@ export class EMClientImpl implements EasemobClient {
     // 桩函数：待 iOS 桥接实现
   }
 
+  @UTSJS.keepAlive
+  onConversationRead(listener: ((from: string, to?: string) => void) | null): void {
+    emBridgeSetOnConversationRead(callback = (from: string, to: string) => {
+      listener?.(from, to)
+    })
+  }
+
+  sendConversationReadAck(convId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        EMClient.shared().chatManager?.ackConversationRead(convId)
+        resolve()
+      } catch (error) {
+        console.error('[iOS] sendConversationReadAck error:', error)
+        reject(error)
+      }
+    })
+  }
+
+  markAllMessagesAsRead(convId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const conversation = EMClient.shared().chatManager?.getConversation(convId)
+        if (conversation != null) {
+          conversation.markAllMessagesAsRead()
+          resolve()
+        } else {
+          reject(new Error(`Conversation not found: ${convId}`))
+        }
+      } catch (error) {
+        console.error('[iOS] markAllMessagesAsRead error:', error)
+        reject(error)
+      }
+    })
+  }
+
+  getUnreadMessageCount(): number {
+    return EMClient.shared().chatManager?.getUnreadMessageCount() ?? 0
+  }
+
+  getConversationUnreadMsgCount(convId: string): number {
+    const conversation = EMClient.shared().chatManager?.getConversation(convId)
+    return conversation?.getUnreadMsgCount() ?? 0
+  }
+
+  markAllConversationsAsRead(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        EMClient.shared().chatManager?.markAllConversationsAsRead()
+        resolve()
+      } catch (error) {
+        console.error('[iOS] markAllConversationsAsRead error:', error)
+        reject(error)
+      }
+    })
+  }
+
+  deleteConversationFromServer(_convId: string, _convType: number, _isDeleteServerMessages: boolean): Promise<void> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('deleteConversationFromServer is not implemented on iOS yet'))
+    })
+  }
+
+  deleteConversation(_convId: string, _withMessage: boolean): Promise<void> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('deleteConversation is not implemented on iOS yet'))
+    })
+  }
+
   // MARK: - 状态查询
 
   getVersion(): string {

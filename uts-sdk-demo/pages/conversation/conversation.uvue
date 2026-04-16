@@ -21,15 +21,66 @@
 			</view>
 
 			<view class="section">
+				<text class="section-title">发送会话已读回执 / 本地清零</text>
+				<view class="param-row">
+					<text class="param-label">convId:</text>
+					<input class="param-input" v-model="ackConvId" placeholder="输入或点击会话列表复制" />
+				</view>
+				<view class="btn-row">
+					<button class="btn btn-local" type="primary" @click="handleSendConversationReadAck" :disabled="isLoading || ackConvId.length === 0">发送已读回执</button>
+					<button class="btn btn-local" type="default" @click="handleMarkAllMessagesAsRead" :disabled="isLoading || ackConvId.length === 0">本地未读清零</button>
+				</view>
+			</view>
+
+			<view class="section">
+				<text class="section-title">删除会话测试</text>
+				<view class="param-row">
+					<text class="param-label">convId:</text>
+					<input class="param-input" v-model="ackConvId" placeholder="输入或点击会话列表复制" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">convType:</text>
+					<input class="param-input" v-model="convTypeStr" type="number" placeholder="0=单聊,1=群组,2=聊天室" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">删消息:</text>
+					<text class="param-value">{{ isDeleteMessage ? '是' : '否' }}</text>
+					<button class="btn-mini" size="mini" @click="toggleDeleteMessage">切换</button>
+				</view>
+				<view class="btn-row">
+					<button class="btn btn-local" type="warn" @click="handleDeleteConversationFromServer" :disabled="isLoading || ackConvId.length === 0">删除远端会话</button>
+					<button class="btn btn-local" type="warn" @click="handleDeleteConversation" :disabled="isLoading || ackConvId.length === 0">删除本地会话</button>
+				</view>
+			</view>
+
+			<view class="section">
+				<text class="section-title">未读数测试</text>
+				<view class="btn-row">
+					<button class="btn btn-local" type="default" @click="handleGetUnreadMessageCount" :disabled="isLoading">获取总未读数</button>
+					<button class="btn btn-local" type="default" @click="handleGetConversationUnreadMsgCount" :disabled="isLoading || ackConvId.length === 0">获取指定未读数</button>
+				</view>
+				<view class="btn-row">
+					<button class="btn btn-local" type="default" @click="handleMarkAllConversationsAsRead" :disabled="isLoading">全部会话清零</button>
+				</view>
+			</view>
+
+			<view class="section">
 				<text class="section-title">会话列表 ({{ conversations.length }})</text>
+				<view class="param-row">
+					<text class="param-label">总未读:</text>
+					<text class="param-value">{{ unreadMessageCount }}</text>
+				</view>
 				<view v-if="conversations.length === 0" class="empty">
 					<text class="empty-text">暂无会话，点击上方按钮获取</text>
 				</view>
 				<view v-else class="list">
-					<view v-for="(item, index) in conversations" :key="item.conversationId" class="list-item">
+					<view v-for="(item, index) in conversations" :key="item.conversationId" class="list-item" @click="handleCopyConvId(item.conversationId)">
 						<view class="item-header">
 							<text class="item-id">{{ item.conversationId }}</text>
-							<text class="item-badge" v-if="item.unreadMsgCount > 0">未读 {{ item.unreadMsgCount }}</text>
+							<view class="item-actions">
+								<text class="item-badge" v-if="item.unreadMsgCount > 0">未读 {{ item.unreadMsgCount }}</text>
+								<text class="clear-badge" v-if="item.unreadMsgCount > 0" @click.stop="handleMarkAllMessagesAsReadById(item.conversationId)">清零</text>
+							</view>
 						</view>
 						<view class="item-meta">
 							<text class="item-type">类型: {{ formatType(item.type) }}</text>
@@ -59,6 +110,10 @@
 	const nextCursor = ref('')
 	const isLoading = ref(false)
 	const conversations = ref<EMConversation[]>([])
+	const ackConvId = ref('')
+	const unreadMessageCount = ref(0)
+	const convTypeStr = ref('0')
+	const isDeleteMessage = ref(true)
 
 	function formatType(type: number): string {
 		if (type === 0) return '单聊'
@@ -81,6 +136,32 @@
 		}
 	}
 
+	function updateUnreadMessageCount(): void {
+		const easemob = getClient()
+		if (easemob != null) {
+			unreadMessageCount.value = easemob.getUnreadMessageCount()
+		}
+	}
+
+	function toggleDeleteMessage(): void {
+		isDeleteMessage.value = !isDeleteMessage.value
+	}
+
+	function handleGetUnreadMessageCount(): void {
+		updateUnreadMessageCount()
+		uni.showToast({ title: '总未读: ' + unreadMessageCount.value, icon: 'none' })
+	}
+
+	function handleGetConversationUnreadMsgCount(): void {
+		const easemob = getClient()
+		if (easemob == null) {
+			uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+			return
+		}
+		const count = easemob.getConversationUnreadMsgCount(ackConvId.value)
+		uni.showToast({ title: ackConvId.value + ' 未读: ' + count, icon: 'none' })
+	}
+
 	async function fetchConversations(limit: number, cursorValue: string): Promise<void> {
 		isLoading.value = true
 		try {
@@ -97,6 +178,7 @@
 			}
 			nextCursor.value = result.cursor
 			cursor.value = cursorValue
+			updateUnreadMessageCount()
 			uni.showToast({ title: '获取成功: ' + result.data.length + ' 条', icon: 'success' })
 		} catch (error) {
 			console.error('[conversation] 获取会话列表失败:', error)
@@ -131,6 +213,7 @@
 			conversations.value = result
 			nextCursor.value = ''
 			cursor.value = ''
+			updateUnreadMessageCount()
 			uni.showToast({ title: '本地排序获取成功: ' + result.length + ' 条', icon: 'success' })
 		} catch (error) {
 			console.error('[conversation] 获取本地排序会话失败:', error)
@@ -152,6 +235,7 @@
 			conversations.value = result
 			nextCursor.value = ''
 			cursor.value = ''
+			updateUnreadMessageCount()
 			uni.showToast({ title: '本地 Map 获取成功: ' + result.length + ' 条', icon: 'success' })
 		} catch (error) {
 			console.error('[conversation] 获取本地 Map 会话失败:', error)
@@ -160,6 +244,124 @@
 			isLoading.value = false
 		}
 	}
+
+	function handleCopyConvId(conversationId: string): void {
+		ackConvId.value = conversationId
+		uni.showToast({ title: '已复制: ' + conversationId, icon: 'none' })
+	}
+
+	async function handleSendConversationReadAck(): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			await easemob.sendConversationReadAck(ackConvId.value)
+			uni.showToast({ title: '发送会话已读回执成功', icon: 'success' })
+		} catch (error) {
+			console.error('[conversation] 发送会话已读回执失败:', error)
+			uni.showToast({ title: '发送失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
+
+	async function handleMarkAllMessagesAsRead(): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			await easemob.markAllMessagesAsRead(ackConvId.value)
+			updateUnreadMessageCount()
+			uni.showToast({ title: '本地未读清零成功', icon: 'success' })
+		} catch (error) {
+			console.error('[conversation] 本地未读清零失败:', error)
+			uni.showToast({ title: '清零失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
+
+	async function handleMarkAllMessagesAsReadById(conversationId: string): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			await easemob.markAllMessagesAsRead(conversationId)
+			updateUnreadMessageCount()
+			uni.showToast({ title: '本地未读清零成功', icon: 'success' })
+		} catch (error) {
+			console.error('[conversation] 本地未读清零失败:', error)
+			uni.showToast({ title: '清零失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
+
+	async function handleMarkAllConversationsAsRead(): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			await easemob.markAllConversationsAsRead()
+			updateUnreadMessageCount()
+			uni.showToast({ title: '全部会话已读清零成功', icon: 'success' })
+		} catch (error) {
+			console.error('[conversation] 全部会话已读清零失败:', error)
+			uni.showToast({ title: '清零失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
+
+	async function handleDeleteConversationFromServer(): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			const convType = parseInt(convTypeStr.value)
+			await easemob.deleteConversationFromServer(ackConvId.value, convType, isDeleteMessage.value)
+			uni.showToast({ title: '删除远端会话成功', icon: 'success' })
+		} catch (error) {
+			console.error('[conversation] 删除远端会话失败:', error)
+			uni.showToast({ title: '删除失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
+
+	async function handleDeleteConversation(): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			await easemob.deleteConversation(ackConvId.value, isDeleteMessage.value)
+			uni.showToast({ title: '删除本地会话成功', icon: 'success' })
+		} catch (error) {
+			console.error('[conversation] 删除本地会话失败:', error)
+			uni.showToast({ title: '删除失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
+
 </script>
 
 <style>
@@ -204,6 +406,23 @@
 		width: 60px;
 		font-size: 14px;
 		color: #666666;
+	}
+
+	.param-value {
+		flex: 1;
+		font-size: 14px;
+		color: #333333;
+		font-weight: bold;
+	}
+
+	.btn-mini {
+		margin-top: 0;
+		margin-left: 10px;
+		padding-left: 10px;
+		padding-right: 10px;
+		font-size: 12px;
+		height: 28px;
+		line-height: 28px;
 	}
 
 	.param-input {
@@ -283,6 +502,23 @@
 		padding-top: 2px;
 		padding-bottom: 2px;
 		border-radius: 10px;
+	}
+
+	.item-actions {
+		flex-direction: row;
+		align-items: center;
+	}
+
+	.clear-badge {
+		font-size: 12px;
+		color: #ffffff;
+		background-color: #007aff;
+		padding-left: 6px;
+		padding-right: 6px;
+		padding-top: 2px;
+		padding-bottom: 2px;
+		border-radius: 10px;
+		margin-left: 8px;
 	}
 
 	.item-meta {

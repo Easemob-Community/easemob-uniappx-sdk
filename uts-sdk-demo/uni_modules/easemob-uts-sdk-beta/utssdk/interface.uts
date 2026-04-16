@@ -110,6 +110,9 @@ export abstract class EasemobClient {
   /** 注册 CMD 消息接收监听 */
   abstract onCmdMessageReceived(listener: ((messages: Message[]) => void) | null): void;
 
+  /** 注册会话已读监听 */
+  abstract onConversationRead(listener: ((from: string, to?: string) => void) | null): void;
+
   // MARK: - 事件监听（桩函数）
 
   /** 注册错误监听（桩函数） */
@@ -140,6 +143,27 @@ export abstract class EasemobClient {
 
   /** 从本地获取所有会话（Map 结构转数组） */
   abstract getAllConversations(): Promise<EMConversation[]>;
+
+  /** 发送会话已读回执 */
+  abstract sendConversationReadAck(convId: string): Promise<void>;
+
+  /** 将指定会话的本地未读消息数清零 */
+  abstract markAllMessagesAsRead(convId: string): Promise<void>;
+
+  /** 获取所有会话的未读消息总数 */
+  abstract getUnreadMessageCount(): number;
+
+  /** 获取指定会话的未读消息数 */
+  abstract getConversationUnreadMsgCount(convId: string): number;
+
+  /** 清除所有会话的未读消息数 */
+  abstract markAllConversationsAsRead(): Promise<void>;
+
+  /** 从服务器删除会话 */
+  abstract deleteConversationFromServer(convId: string, convType: number, isDeleteServerMessages: boolean): Promise<void>;
+
+  /** 删除本地会话 */
+  abstract deleteConversation(convId: string, withMessage: boolean): Promise<void>;
 
   // MARK: - 核心方法（桩函数）
 
