@@ -1,0 +1,327 @@
+<template>
+	<scroll-view class="container" scroll-y="true">
+		<view class="content">
+			<text class="title">发送消息</text>
+
+			<view class="section">
+				<text class="section-title">目标用户 ID</text>
+				<input class="input" v-model="targetUserId" placeholder="输入用户 ID" />
+			</view>
+
+			<view class="section">
+				<text class="section-title">聊天类型</text>
+				<view class="radio-group">
+					<view class="radio-label" @click="chatType = 'single'">
+						<view class="radio-box" :class="{ 'radio-box-checked': chatType === 'single' }">
+							<view v-if="chatType === 'single'" class="radio-inner"></view>
+						</view>
+						<text class="radio-text">单聊</text>
+					</view>
+					<view class="radio-label" @click="chatType = 'group'">
+						<view class="radio-box" :class="{ 'radio-box-checked': chatType === 'group' }">
+							<view v-if="chatType === 'group'" class="radio-inner"></view>
+						</view>
+						<text class="radio-text">群组</text>
+					</view>
+				</view>
+			</view>
+
+			<view class="section">
+				<text class="section-title">消息内容</text>
+				<textarea class="textarea" v-model="messageContent" placeholder="输入文本消息" />
+				<text class="section-title">扩展属性 (ext JSON)</text>
+				<textarea class="textarea" v-model="extJsonStr" placeholder='{"key":"value"}' />
+				<button class="btn" type="primary" @click="handleSend" :disabled="isSending">发送文本消息</button>
+			</view>
+
+			<view class="section">
+				<text class="section-title">CMD 消息</text>
+				<text class="hint">action 将作为命令内容发送</text>
+				<input class="input" v-model="cmdAction" placeholder="输入 action，如 test_command" />
+				<button class="btn btn-cmd" @click="handleSendCmd" :disabled="isSending">发送 CMD 消息</button>
+			</view>
+
+			<view class="section">
+				<text class="section-title">自定义消息</text>
+				<text class="hint">event 为自定义事件名，params 为自定义参数 JSON</text>
+				<input class="input" v-model="customEvent" placeholder="输入 event，如 taobao_order" />
+				<textarea class="textarea" v-model="customParamsStr"
+					placeholder='{"orderId":"12345","shopName":"测试店铺"}' />
+				<button class="btn btn-custom" @click="handleSendCustom" :disabled="isSending">发送自定义消息</button>
+			</view>
+		</view>
+	</scroll-view>
+</template>
+
+<script setup lang="uts">
+	import { ref } from 'vue'
+	import {
+		sendTextMessage,
+		sendCmdMessage,
+		sendCustomMessage,
+		type EasemobClient,
+		type Message,
+		type SendTextMessageConfig,
+		type SendCmdMessageConfig,
+		type SendCustomMessageConfig,
+	} from '@/uni_modules/easemob-uts-sdk-beta'
+
+	const targetUserId = ref('')
+	const chatType = ref<'single' | 'group' | 'chatroom'>('single')
+	const messageContent = ref('')
+	const extJsonStr = ref('{"orderId":"12345","type":"urgent"}')
+	const isSending = ref(false)
+
+	const cmdAction = ref('test_command')
+	const customEvent = ref('taobao_order')
+	const customParamsStr = ref('{"orderId":"12345","shopName":"测试店铺","goodsName":"示例商品"}')
+
+	function parseExt() : UTSJSONObject | null {
+		const str = extJsonStr.value.trim()
+		if (str.length === 0) {
+			return null
+		}
+		try {
+			return JSON.parse(str) as UTSJSONObject
+		} catch (e) {
+			uni.showToast({ title: '扩展属性 JSON 格式错误', icon: 'none' })
+			return null
+		}
+	}
+
+	async function handleSend() : Promise<void> {
+		const content = messageContent.value.trim()
+		const to = targetUserId.value.trim()
+
+		if (content.length === 0) {
+			uni.showToast({ title: '请输入消息内容', icon: 'none' })
+			return
+		}
+		if (to.length === 0) {
+			uni.showToast({ title: '请输入目标用户 ID', icon: 'none' })
+			return
+		}
+
+		const ext = parseExt()
+		if (extJsonStr.value.trim().length > 0 && ext == null) {
+			return
+		}
+
+		isSending.value = true
+		try {
+			const textConfig : SendTextMessageConfig = {
+				content,
+				to,
+				chatType: chatType.value,
+				ext,
+			}
+			const message = await sendTextMessage(textConfig)
+			console.log('[message] 发送成功, msgId:', message.msgId, message)
+			uni.showToast({ title: '发送成功', icon: 'success' })
+			messageContent.value = ''
+			extJsonStr.value = ''
+		} catch (error) {
+			console.error('[message] 发送失败:', error)
+			uni.showToast({ title: '发送失败: ' + error, icon: 'none' })
+		} finally {
+			isSending.value = false
+		}
+	}
+
+	async function handleSendCmd() : Promise<void> {
+		const action = cmdAction.value.trim()
+		const to = targetUserId.value.trim()
+
+		if (action.length === 0) {
+			uni.showToast({ title: '请输入 CMD action', icon: 'none' })
+			return
+		}
+		if (to.length === 0) {
+			uni.showToast({ title: '请输入目标用户 ID', icon: 'none' })
+			return
+		}
+
+		const ext = parseExt()
+		if (extJsonStr.value.trim().length > 0 && ext == null) {
+			return
+		}
+
+		isSending.value = true
+		try {
+			const cmdConfig : SendCmdMessageConfig = {
+				action,
+				to,
+				chatType: chatType.value,
+				ext,
+			}
+			const message = await sendCmdMessage(cmdConfig)
+			console.log('[message] CMD 发送成功, msgId:', message.msgId, message)
+			uni.showToast({ title: 'CMD 发送成功', icon: 'success' })
+		} catch (error) {
+			console.error('[message] CMD 发送失败:', error)
+			uni.showToast({ title: 'CMD 发送失败: ' + error, icon: 'none' })
+		} finally {
+			isSending.value = false
+		}
+	}
+
+	async function handleSendCustom() : Promise<void> {
+		const event = customEvent.value.trim()
+		const to = targetUserId.value.trim()
+
+		if (event.length === 0) {
+			uni.showToast({ title: '请输入自定义 event', icon: 'none' })
+			return
+		}
+		if (to.length === 0) {
+			uni.showToast({ title: '请输入目标用户 ID', icon: 'none' })
+			return
+		}
+
+		let params : UTSJSONObject | null = null
+		const paramsStr = customParamsStr.value.trim()
+		if (paramsStr.length > 0) {
+			try {
+				params = JSON.parse(paramsStr) as UTSJSONObject
+			} catch (e) {
+				uni.showToast({ title: '自定义参数 JSON 格式错误', icon: 'none' })
+				return
+			}
+		}
+
+		const ext = parseExt()
+		if (extJsonStr.value.trim().length > 0 && ext == null) {
+			return
+		}
+
+		isSending.value = true
+		try {
+			const customConfig : SendCustomMessageConfig = {
+				event,
+				params: params ?? new UTSJSONObject(),
+				to,
+				chatType: chatType.value,
+				ext,
+			}
+			const message = await sendCustomMessage(customConfig)
+			console.log('[message] 自定义消息发送成功, msgId:', message.msgId, message)
+			uni.showToast({ title: '自定义消息发送成功', icon: 'success' })
+		} catch (error) {
+			console.error('[message] 自定义消息发送失败:', error)
+			uni.showToast({ title: '自定义消息发送失败: ' + error, icon: 'none' })
+		} finally {
+			isSending.value = false
+		}
+	}
+</script>
+
+<style>
+	.container {
+		flex: 1;
+		background-color: #f5f5f5;
+	}
+
+	.content {
+		padding: 15px;
+	}
+
+	.title {
+		font-size: 24px;
+		font-weight: bold;
+		text-align: center;
+		margin-bottom: 20px;
+		color: #333333;
+	}
+
+	.section {
+		background-color: #ffffff;
+		border-radius: 10px;
+		padding: 15px;
+		margin-bottom: 15px;
+	}
+
+	.section-title {
+		font-size: 16px;
+		font-weight: bold;
+		color: #333333;
+		margin-bottom: 10px;
+	}
+
+	.input {
+		height: 40px;
+		border-width: 1px;
+		border-color: #dddddd;
+		border-radius: 5px;
+		padding-left: 10px;
+		padding-right: 10px;
+		background-color: #f9f9f9;
+		font-size: 14px;
+	}
+
+	.radio-group {
+		flex-direction: row;
+		align-items: center;
+	}
+
+	.radio-label {
+		flex-direction: row;
+		align-items: center;
+		margin-right: 20px;
+	}
+
+	.radio-text {
+		font-size: 14px;
+		color: #333333;
+		margin-left: 5px;
+	}
+
+	.radio-box {
+		width: 18px;
+		height: 18px;
+		border-radius: 9px;
+		border-width: 1px;
+		border-color: #999999;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.radio-box-checked {
+		border-color: #007aff;
+	}
+
+	.radio-inner {
+		width: 10px;
+		height: 10px;
+		border-radius: 5px;
+		background-color: #007aff;
+	}
+
+	.textarea {
+		height: 100px;
+		border-width: 1px;
+		border-color: #dddddd;
+		border-radius: 5px;
+		padding: 10px;
+		background-color: #f9f9f9;
+		font-size: 14px;
+		margin-bottom: 10px;
+	}
+
+	.btn {
+		margin-top: 10px;
+	}
+
+	.btn-cmd {
+		background-color: #ff9500;
+	}
+
+	.btn-custom {
+		background-color: #5856d6;
+	}
+
+	.hint {
+		font-size: 12px;
+		color: #999999;
+		margin-bottom: 8px;
+	}
+</style>

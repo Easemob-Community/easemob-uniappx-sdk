@@ -4,334 +4,386 @@
  */
 
 import {
-  EMClient,
-  EMOptions,
-  EMError,
-  EMErrorCode,
+	EMClient,
+	EMOptions,
+	EMError,
+	EMTextMessageBody,
+	EMCmdMessageBody,
+	EMCustomMessageBody,
+	EMChatMessage,
+	EMChatType,
 } from 'HyphenateChat';
 import {
-  EasemobClient,
-  EMInitConfig,
-  EMErrorListener,
-  EMTokenWillExpireListener,
-  EMTokenExpiredListener,
-  Message,
-  SendTextMessageConfig,
-  SendCmdMessageConfig,
-  SendCustomMessageConfig,
-  EMConversation,
-  EMCursorResult,
+	EMInitConfig,
+	EMErrorListener,
+	EMTokenWillExpireListener,
+	EMTokenExpiredListener,
+	Message,
+	SendTextMessageConfig,
+	SendCmdMessageConfig,
+	SendCustomMessageConfig,
+	EMConversation,
+	EMCursorResult,
+	type EasemobClient,
 } from '../interface.uts';
 
-// em_bridge.swift 中的独立函数由 UTS 编译器自动识别，无需 declare
-
-// ==================== SDK 实现类 ====================
-
-export class EMClientImpl implements EasemobClient {
-  private static _instance: EMClientImpl | null = null;
-  private _client: EMClient | null = null;
-  private _isInitialized = false;
-
-  private constructor() {}
-
-  static getInstance(): EMClientImpl {
-    if (this._instance == null) {
-      this._instance = new EMClientImpl();
-    }
-    return this._instance!;
-  }
-
-  static getClient(): EasemobClient | null {
-    const instance = EMClientImpl.getInstance();
-    return instance._isInitialized ? instance : null;
-  }
-
-  static create(config: EMInitConfig): EasemobClient {
-    const instance = EMClientImpl.getInstance();
-    if (!instance._isInitialized) {
-      const appKey = config.appKey!;
-      const autoLogin = config.autoLogin ?? false;
-      const options = new EMOptions(appkey = appKey);
-      options.isAutoLogin = autoLogin;
-      EMClient.shared().initializeSDK(with = options);
-      emBridgeSetupDelegate();
-      emBridgeSetupMessageDelegate();
-      console.log('[iOS] EMMessageDelegateNative registered');
-
-      instance._client = EMClient.shared();
-      instance._isInitialized = true;
-      console.log('[iOS] EMClient SDK initialized');
-    } else {
-      console.log('[iOS] EMClient SDK already initialized');
-    }
-    return instance;
-  }
-
-  login(config: UTSJSONObject): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        const userId = config['userId'] as string;
-        const password = config['password'] as string;
-        const useToken = (config['useToken'] as boolean) ?? false;
-
-        const completion = (username: string, error: EMError | null): void => {
-          if (error != null) {
-            const code = error!.code.rawValue as number;
-            const msg = error!.errorDescription ?? 'Login failed';
-            console.error('[iOS] Login failed:', code, msg);
-            reject(new Error(`Login failed: ${code} - ${msg}`));
-          } else {
-            console.log('[iOS] Login success:', username);
-            resolve();
-          }
-        };
-
-        if (useToken) {
-          EMClient.shared().login(withUsername = userId, token = password, completion = completion);
-        } else {
-          EMClient.shared().login(withUsername = userId, password = password, completion = completion);
-        }
-      } catch (error) {
-        console.error('[iOS] Login error:', error);
-        reject(error);
-      }
-    });
-  }
-
-  logout(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        const completion = (error: EMError | null): void => {
-          if (error != null) {
-            const code = error!.code.rawValue as number;
-            const msg = error!.errorDescription ?? 'Logout failed';
-            console.error('[iOS] Logout failed:', code, msg);
-            reject(new Error(`Logout failed: ${code} - ${msg}`));
-          } else {
-            console.log('[iOS] Logout success');
-            resolve();
-          }
-        };
-
-        EMClient.shared().logout(true, completion = completion);
-      } catch (error) {
-        console.error('[iOS] Logout error:', error);
-        reject(error);
-      }
-    });
-  }
-
-  destroy(): void {
-    emBridgeTeardownDelegate();
-    emBridgeTeardownMessageDelegate();
-    this._client = null;
-    this._isInitialized = false;
-    console.log('[iOS] EMClient SDK destroyed');
-  }
-
-  // MARK: - 事件监听
-
-  @UTSJS.keepAlive
-  onConnected(listener: (() => void) | null): void {
-    emBridgeSetOnConnected(callback = listener);
-  }
-
-  @UTSJS.keepAlive
-  onDisconnected(listener: ((errorCode: number) => void) | null): void {
-    emBridgeSetOnDisconnected(callback = listener);
-  }
-
-  @UTSJS.keepAlive
-  onLogout(listener: ((errorCode: number) => void) | null): void {
-    emBridgeSetOnLogout(callback = listener);
-  }
-
-  @UTSJS.keepAlive
-  onTokenWillExpire(listener: EMTokenWillExpireListener | null): void {
-    emBridgeSetOnTokenWillExpire(callback = listener);
-  }
-
-  @UTSJS.keepAlive
-  onTokenExpired(listener: EMTokenExpiredListener | null): void {
-    emBridgeSetOnTokenExpired(callback = listener);
-  }
-
-  @UTSJS.keepAlive
-  onMessageReceived(listener: ((messages: Message[]) => void) | null): void {
-    emBridgeSetOnMessageReceived(callback = (jsonString: string) => {
-      try {
-        const messages = JSON.parse(jsonString) as Message[];
-        listener?.(messages);
-      } catch (e) {
-        console.error('[iOS] onMessageReceived JSON parse error:', e);
-      }
-    });
-  }
-
-  onCmdMessageReceived(_listener: ((messages: Message[]) => void) | null): void {
-    // 桩函数：待 iOS 桥接实现
-  }
-
-  @UTSJS.keepAlive
-  onConversationRead(listener: ((from: string, to?: string) => void) | null): void {
-    emBridgeSetOnConversationRead(callback = (from: string, to: string) => {
-      listener?.(from, to)
-    })
-  }
-
-  sendConversationReadAck(convId: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        EMClient.shared().chatManager?.ackConversationRead(convId)
-        resolve()
-      } catch (error) {
-        console.error('[iOS] sendConversationReadAck error:', error)
-        reject(error)
-      }
-    })
-  }
-
-  markAllMessagesAsRead(convId: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        const conversation = EMClient.shared().chatManager?.getConversation(convId)
-        if (conversation != null) {
-          conversation.markAllMessagesAsRead()
-          resolve()
-        } else {
-          reject(new Error(`Conversation not found: ${convId}`))
-        }
-      } catch (error) {
-        console.error('[iOS] markAllMessagesAsRead error:', error)
-        reject(error)
-      }
-    })
-  }
-
-  getUnreadMessageCount(): number {
-    return EMClient.shared().chatManager?.getUnreadMessageCount() ?? 0
-  }
-
-  getConversationUnreadMsgCount(convId: string): number {
-    const conversation = EMClient.shared().chatManager?.getConversation(convId)
-    return conversation?.getUnreadMsgCount() ?? 0
-  }
-
-  markAllConversationsAsRead(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        EMClient.shared().chatManager?.markAllConversationsAsRead()
-        resolve()
-      } catch (error) {
-        console.error('[iOS] markAllConversationsAsRead error:', error)
-        reject(error)
-      }
-    })
-  }
-
-  deleteConversationFromServer(_convId: string, _convType: number, _isDeleteServerMessages: boolean): Promise<void> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('deleteConversationFromServer is not implemented on iOS yet'))
-    })
-  }
-
-  deleteConversation(_convId: string, _withMessage: boolean): Promise<void> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('deleteConversation is not implemented on iOS yet'))
-    })
-  }
-
-  fetchHistoryMessages(_convId: string, _convType: number, _pageSize: number, _startMsgId: string): Promise<EMCursorResult<Message>> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('fetchHistoryMessages is not implemented on iOS yet'))
-    })
-  }
-
-  searchLocalMessagesByKeywords(_convId: string, _keywords: string, _timestamp: number, _maxCount: number, _from: string, _direction: number): Promise<Message[]> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('searchLocalMessagesByKeywords is not implemented on iOS yet'))
-    })
-  }
-
-  searchLocalMessagesByTimeRange(_convId: string, _startTimestamp: number, _endTimestamp: number, _maxCount: number, _from: string, _direction: number): Promise<Message[]> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('searchLocalMessagesByTimeRange is not implemented on iOS yet'))
-    })
-  }
-
-  loadLocalMessages(_convId: string, _startMsgId: string, _pageSize: number): Promise<Message[]> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('loadLocalMessages is not implemented on iOS yet'))
-    })
-  }
-
-  // MARK: - 状态查询
-
-  getVersion(): string {
-    return EMClient.shared().version;
-  }
-
-  isConnected(): boolean {
-    return EMClient.shared().isConnected;
-  }
-
-  isLoggedIn(): boolean {
-    return EMClient.shared().isLoggedIn;
-  }
-
-  getCurrentUser(): string | null {
-    return EMClient.shared().currentUsername;
-  }
-
-  // MARK: - 桩函数
-
-  onError(listener: EMErrorListener | null): void {
-    // 桩函数：待实现
-  }
-
-  sendTextMessage(_config: SendTextMessageConfig): Promise<Message> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('sendTextMessage is not implemented on iOS yet'));
-    });
-  }
-
-  sendCmdMessage(_config: SendCmdMessageConfig): Promise<Message> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('sendCmdMessage is not implemented on iOS yet'));
-    });
-  }
-
-  sendCustomMessage(_config: SendCustomMessageConfig): Promise<Message> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('sendCustomMessage is not implemented on iOS yet'));
-    });
-  }
-
-  fetchConversationsFromServer(_limit: number, _cursor: string): Promise<EMCursorResult<EMConversation>> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('fetchConversationsFromServer is not implemented on iOS yet'));
-    });
-  }
-
-  getAllConversationsBySort(): Promise<EMConversation[]> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('getAllConversationsBySort is not implemented on iOS yet'));
-    });
-  }
-
-  getAllConversations(): Promise<EMConversation[]> {
-    return new Promise((resolve, reject) => {
-      reject(new Error('getAllConversations is not implemented on iOS yet'));
-    });
-  }
+export type IMError = {
+	errorCode : number,
+	errorDesc : string
 }
 
-// ==================== 导出 ====================
+// 初始化
+export function initEasemob(config : EMInitConfig) : IMError | null {
+	const appKey = config.appKey!;
+	const autoLogin = config.autoLogin ?? false;
+	const options = new EMOptions(appkey = appKey);
+	options.isAutoLogin = autoLogin;
 
-export function create(config: EMInitConfig): EasemobClient {
-  return EMClientImpl.create(config);
+	const err : EMError | null = EMClient.shared().initializeSDK(with = options)
+	console.log(`initializeSDK:${err}`)
+	if (err == null) {
+		return null
+	}
+	return {
+		errorCode: err!.code.rawValue as number,
+		errorDesc: err!.errorDescription ?? '初始化失败'
+	} as IMError
 }
 
-export function getClient(): EasemobClient | null {
-  return EMClientImpl.getClient();
+export function login(config : UTSJSONObject) : Promise<void> {
+	return new Promise((resolve, reject) => {
+		try {
+			const userId = config['userId'] as string;
+			const password = config['password'] as string;
+			const useToken = (config['useToken'] as boolean) ?? false;
+
+			const completion = (username : string, error : EMError | null) : void => {
+				if (error != null) {
+					const code = error!.code.rawValue as number;
+					const msg = error!.errorDescription ?? 'Login failed';
+					console.error('[iOS] Login failed:', code, msg);
+					reject(new Error(`Login failed: ${code} - ${msg}`));
+				} else {
+					console.log('[iOS] Login success:', username);
+					resolve();
+				}
+			};
+
+			if (useToken) {
+				EMClient.shared().login(withUsername = userId, token = password, completion = completion);
+			} else {
+				EMClient.shared().login(withUsername = userId, password = password, completion = completion);
+			}
+		} catch (error) {
+			console.error('[iOS] Login error:', error);
+			reject(error);
+		}
+	});
 }
+
+export function logout() : Promise<void> {
+	return new Promise((resolve, reject) => {
+		try {
+			const completion = (error : EMError | null) : void => {
+				if (error != null) {
+					const code = error!.code.rawValue as number;
+					const msg = error!.errorDescription ?? 'Logout failed';
+					console.error('[iOS] Logout failed:', code, msg);
+					reject(new Error(`Logout failed: ${code} - ${msg}`));
+				} else {
+					console.log('[iOS] Logout success');
+					resolve();
+				}
+			};
+
+			EMClient.shared().logout(true, completion = completion);
+		} catch (error) {
+			console.error('[iOS] Logout error:', error);
+			reject(error);
+		}
+	});
+}
+
+export function sendConversationReadAck(convId : string) : Promise<void> {
+	return new Promise((resolve, reject) => {
+		try {
+			EMClient.shared().chatManager?.ackConversationRead(convId)
+			resolve()
+		} catch (error) {
+			console.error('[iOS] sendConversationReadAck error:', error)
+			reject(error)
+		}
+	})
+}
+
+export function markAllMessagesAsRead(_convId : string) : Promise<void> {
+	return new Promise((_resolve, reject) => {
+		reject(new Error('markAllMessagesAsRead is not implemented on iOS yet'))
+	})
+}
+
+export function getUnreadMessageCount() : number {
+	const conversations = EMClient.shared().chatManager?.getAllConversations() ?? []
+	let count = 0
+	for (const conv of conversations) {
+		count = count + (conv.unreadMessagesCount as number)
+	}
+	return count
+}
+
+export function getConversationUnreadMsgCount(convId : string) : number {
+	const conversation = EMClient.shared().chatManager?.getConversationWithConvId(convId)
+	return (conversation?.unreadMessagesCount as number) ?? 0
+}
+
+export function markAllConversationsAsRead() : Promise<void> {
+	return new Promise((resolve, reject) => {
+		try {
+			EMClient.shared().chatManager?.markAllConversationsAsRead()
+			resolve()
+		} catch (error) {
+			console.error('[iOS] markAllConversationsAsRead error:', error)
+			reject(error)
+		}
+	})
+}
+
+export function deleteConversationFromServer(_convId : string, _convType : number, _isDeleteServerMessages : boolean) : Promise<void> {
+	return new Promise((resolve, reject) => {
+		reject(new Error('deleteConversationFromServer is not implemented on iOS yet'))
+	})
+}
+
+export function deleteConversation(convId : string, withMessage : boolean) : Promise<void> {
+	return new Promise((resolve, reject) => {
+		try {
+			EMClient.shared().chatManager?.deleteConversation(convId, isDeleteMessages = withMessage)
+			resolve()
+		} catch (error) {
+			console.error('[iOS] deleteConversation error:', error)
+			reject(error)
+		}
+	})
+}
+
+export function fetchHistoryMessages(_convId : string, _convType : number, _pageSize : number, _startMsgId : string) : Promise<EMCursorResult<Message>> {
+	return new Promise((resolve, reject) => {
+		reject(new Error('fetchHistoryMessages is not implemented on iOS yet'))
+	})
+}
+
+export function searchLocalMessagesByKeywords(_convId : string, _keywords : string, _timestamp : number, _maxCount : number, _from : string, _direction : number) : Promise<Message[]> {
+	return new Promise((resolve, reject) => {
+		reject(new Error('searchLocalMessagesByKeywords is not implemented on iOS yet'))
+	})
+}
+
+export function searchLocalMessagesByTimeRange(_convId : string, _startTimestamp : number, _endTimestamp : number, _maxCount : number, _from : string, _direction : number) : Promise<Message[]> {
+	return new Promise((resolve, reject) => {
+		reject(new Error('searchLocalMessagesByTimeRange is not implemented on iOS yet'))
+	})
+}
+
+export function loadLocalMessages(_convId : string, _startMsgId : string, _pageSize : number) : Promise<Message[]> {
+	return new Promise((resolve, reject) => {
+		reject(new Error('loadLocalMessages is not implemented on iOS yet'))
+	})
+}
+
+// MARK: - 状态查询
+
+export function getVersion() : string {
+	return EMClient.shared().version;
+}
+
+export function isConnected() : boolean {
+	return EMClient.shared().isConnected;
+}
+
+export function isLoggedIn() : boolean {
+	return EMClient.shared().isLoggedIn;
+}
+
+export function getCurrentUser() : string | null {
+	return EMClient.shared().currentUsername;
+}
+
+function _doSendTextMessage(config : SendTextMessageConfig, resolve : (value : Message) => void, reject : (reason : any) => void) : void {
+	const body = new EMTextMessageBody(text = config.content)
+	const msg = new EMChatMessage(conversationID = config.to, body = body, ext = null)
+	msg.chatType = config.chatType == 'groupChat' ? EMChatType.groupChat : EMChatType.chat
+
+	const completion = (message : EMChatMessage | null, error : EMError | null) : void => {
+		if (error != null) {
+			reject(new Error('send text message failed: ' + (error!.errorDescription ?? '')));
+			return;
+		}
+		if (message == null) {
+			reject(new Error('send text message failed'));
+			return;
+		}
+		resolve({
+			msgId: message!.messageId,
+			from: message!.from,
+			to: message!.to,
+			conversationId: message!.conversationId,
+			chatType: message!.chatType.rawValue as number,
+			body: {
+				type: 'txt',
+				message: (message!.body as EMTextMessageBody).text ?? null
+			}
+		} as Message)
+	}
+	EMClient.shared().chatManager?.send(msg, progress = null, completion = completion)
+}
+
+export function sendTextMessage(config : SendTextMessageConfig) : Promise<Message> {
+	return new Promise((resolve, reject) => {
+		_doSendTextMessage(config, resolve, reject)
+	});
+}
+
+function _doSendCmdMessage(config : SendCmdMessageConfig, resolve : (value : Message) => void, reject : (reason : any) => void) : void {
+	const body = new EMCmdMessageBody(action = config.action)
+	const msg = new EMChatMessage(conversationID = config.to, body = body, ext = null)
+	msg.chatType = config.chatType == 'groupChat' ? EMChatType.groupChat : EMChatType.chat
+	if (config.ext != null) {
+		EMMessageHelper.setMessageExt(msg, extJson = JSON.stringify(config.ext))
+
+	}
+
+
+	const completion = (message : EMChatMessage | null, error : EMError | null) : void => {
+		if (error != null) {
+			reject(new Error('send cmd message failed: ' + (error!.errorDescription ?? '')));
+			return;
+		}
+		if (message == null) {
+			reject(new Error('send cmd message failed'));
+			return;
+		}
+		resolve({
+			msgId: message!.messageId,
+			from: message!.from,
+			to: message!.to,
+			conversationId: message!.conversationId,
+			chatType: message!.chatType.rawValue as number,
+			body: {
+				type: 'cmd',
+				message: (message!.body as EMCmdMessageBody).action ?? null
+			}
+		} as Message)
+	}
+	EMClient.shared().chatManager?.send(msg, progress = null, completion = completion)
+}
+
+export function sendCmdMessage(config : SendCmdMessageConfig) : Promise<Message> {
+	return new Promise((resolve, reject) => {
+		_doSendCmdMessage(config, resolve, reject)
+	});
+}
+
+function _doSendCustomMessage(config : SendCustomMessageConfig, resolve : (value : Message) => void, reject : (reason : any) => void) : void {
+	const paramsJson = config.params != null ? JSON.stringify(config.params) : null
+	const body = EMMessageHelper.createCustomMessageBody(event = config.event, paramsJson = paramsJson)!
+	const msg = new EMChatMessage(conversationID = config.to, body = body, ext = null)
+	msg.chatType = config.chatType == 'groupChat' ? EMChatType.groupChat : EMChatType.chat
+	if (config.ext != null) {
+		EMMessageHelper.setMessageExt(msg, extJson = JSON.stringify(config.ext))
+	}
+
+	const completion = (message : EMChatMessage | null, error : EMError | null) : void => {
+		if (error != null) {
+			reject(new Error('send custom message failed: ' + (error!.errorDescription ?? '')));
+			return;
+		}
+		if (message == null) {
+			reject(new Error('send custom message failed'));
+			return;
+		}
+		resolve({
+			msgId: message!.messageId,
+			from: message!.from,
+			to: message!.to,
+			conversationId: message!.conversationId,
+			chatType: message!.chatType.rawValue as number,
+			body: {
+				type: 'custom',
+				message: (message!.body as EMCustomMessageBody).event ?? null
+			}
+		} as Message)
+	}
+	EMClient.shared().chatManager?.send(msg, progress = null, completion = completion)
+}
+
+export function sendCustomMessage(config : SendCustomMessageConfig) : Promise<Message> {
+	return new Promise((resolve, reject) => {
+		_doSendCustomMessage(config, resolve, reject)
+	});
+}
+
+// function _doFetchConversationsFromServer(limit : number, cursor : string, resolve : (value : EMCursorResult<EMConversation>) => void, reject : (reason : any) => void) : void {
+// 	const completion = (array : any[] | null, nextCursor : string, errorMsg : string | null) : void => {
+// 		if (errorMsg != null) {
+// 			reject(new Error(errorMsg))
+// 			return
+// 		}
+// 		const list = array ?? []
+// 		let conversations : EMConversation[] = []
+// 		for (const item of list) {
+// 			const conv = item as UTSJSONObject
+// 			conversations.push({
+// 				conversationId: conv["conversationId"] as string,
+// 				type: conv["type"] as number,
+// 				unreadMsgCount: conv["unreadMessagesCount"] as number,
+// 				lastMessage: null
+// 			} as EMConversation)
+// 		}
+// 		resolve({
+// 			data: conversations,
+// 			cursor: nextCursor
+// 		} as EMCursorResult<EMConversation>)
+// 	}
+// 	EMClient.shared().chatManager?.fetchConversationsFromServer(cursor: cursor, pageSize: limit, completion: completion)
+// }
+
+// export function fetchConversationsFromServer(limit : number, cursor : string) : Promise<EMCursorResult<EMConversation>> {
+// 	return new Promise((resolve, reject) => {
+// 		_doFetchConversationsFromServer(limit, cursor, resolve, reject)
+// 	});
+// }
+
+export function getAllConversationsBySort() : Promise<EMConversation[]> {
+	return new Promise((resolve, reject) => {
+		const list = EMClient.shared().chatManager?.getAllConversations(true) ?? []
+		console.log(`getAllConversationsBySort:${list}`)
+		let conversations : EMConversation[] = []
+		for (const conv of list) {
+			conversations.push({
+				conversationId: conv.conversationId,
+				type: conv.type.rawValue as number,
+				unreadMsgCount: conv.unreadMessagesCount as number,
+				lastMessage: null
+			} as EMConversation)
+		}
+		console.log(`getAllConversationsBySort:${conversations}`)
+
+		resolve(conversations)
+	});
+}
+
+export function getAllConversations() : EMConversation[] {
+	const list = EMClient.shared().chatManager?.getAllConversations() ?? []
+	let conversations : EMConversation[] = []
+	for (const conv of list) {
+		conversations.push({
+			conversationId: conv.conversationId,
+			type: conv.type.rawValue as number,
+			unreadMsgCount: conv.unreadMessagesCount as number,
+			lastMessage: null
+		} as EMConversation)
+	}
+	return conversations
+}
+
+// iOS beta: 仅导出独立函数，不提供 EasemobClient 实例封装

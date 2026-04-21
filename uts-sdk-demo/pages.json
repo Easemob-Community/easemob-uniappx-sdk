@@ -1,6 +1,5 @@
 {
-	"pages": [
-		{
+	"pages": [{
 			"path": "pages/index/index",
 			"style": {
 				"navigationBarTitleText": "uni-app x"
@@ -12,22 +11,51 @@
 				"navigationBarTitleText": "SDK 测试"
 			}
 		},
+
 		{
 			"path": "pages/message/message",
 			"style": {
 				"navigationBarTitleText": "发送消息"
 			}
 		},
+
 		{
 			"path": "pages/conversation/conversation",
 			"style": {
 				"navigationBarTitleText": "会话列表"
 			}
 		},
+
 		{
 			"path": "pages/message-operation/message-operation",
 			"style": {
 				"navigationBarTitleText": "消息操作"
+			}
+		},
+
+
+		{
+			"path": "pages/sdk-demo-ios/sdk-demo",
+			"style": {
+				"navigationBarTitleText": "ios SDK 测试"
+			}
+		},
+		{
+			"path": "pages/sdk-demo-ios/conversation",
+			"style": {
+				"navigationBarTitleText": "ios 会话列表"
+			}
+		},
+		{
+			"path": "pages/sdk-demo-ios/message",
+			"style": {
+				"navigationBarTitleText": "ios 发送消息"
+			}
+		},
+		{
+			"path": "pages/sdk-demo-ios/message-operation",
+			"style": {
+				"navigationBarTitleText": "ios 消息操作"
 			}
 		}
 	],

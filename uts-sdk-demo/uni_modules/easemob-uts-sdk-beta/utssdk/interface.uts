@@ -90,115 +90,114 @@ export type EMCursorResult<T> = {
 
 /**
  * Easemob IM SDK 客户端实例接口
- * 使用 abstract class 替代 interface，以兼容 UTS/HBuilderX 的类型推断
  */
-export abstract class EasemobClient {
+export interface EasemobClient {
   // MARK: - 事件监听（已实现）
 
   /** 注册已连接监听 */
-  abstract onConnected(listener: (() => void) | null): void;
+  onConnected(listener: (() => void) | null): void;
 
   /** 注册连接断开监听 */
-  abstract onDisconnected(listener: ((errorCode: number) => void) | null): void;
+  onDisconnected(listener: ((errorCode: number) => void) | null): void;
 
   /** 注册被登出监听 */
-  abstract onLogout(listener: ((errorCode: number) => void) | null): void;
+  onLogout(listener: ((errorCode: number) => void) | null): void;
 
   /** 注册消息接收监听 */
-  abstract onMessageReceived(listener: ((messages: Message[]) => void) | null): void;
+  onMessageReceived(listener: ((messages: Message[]) => void) | null): void;
 
   /** 注册 CMD 消息接收监听 */
-  abstract onCmdMessageReceived(listener: ((messages: Message[]) => void) | null): void;
+  onCmdMessageReceived(listener: ((messages: Message[]) => void) | null): void;
 
   /** 注册会话已读监听 */
-  abstract onConversationRead(listener: ((from: string, to?: string) => void) | null): void;
+  onConversationRead(listener: ((from: string, to?: string) => void) | null): void;
 
   // MARK: - 事件监听（桩函数）
 
   /** 注册错误监听（桩函数） */
-  abstract onError(listener: EMErrorListener | null): void;
+  onError(listener: EMErrorListener | null): void;
 
   /** 注册 Token 即将过期监听 */
-  abstract onTokenWillExpire(listener: EMTokenWillExpireListener | null): void;
+  onTokenWillExpire(listener: EMTokenWillExpireListener | null): void;
 
   /** 注册 Token 已过期监听 */
-  abstract onTokenExpired(listener: EMTokenExpiredListener | null): void;
+  onTokenExpired(listener: EMTokenExpiredListener | null): void;
 
   // MARK: - 核心方法（已实现）
 
   /** 登录（Android/iOS 均已实现） */
-  abstract login(config: UTSJSONObject): Promise<void>;
+  login(config: UTSJSONObject): Promise<void>;
 
   /** 登出（Android/iOS 均已实现） */
-  abstract logout(): Promise<void>;
+  logout(): Promise<void>;
 
   /** 销毁 SDK 实例 */
-  abstract destroy(): void;
+  destroy(): void;
 
   /** 从服务器分页获取会话列表 */
-  abstract fetchConversationsFromServer(limit: number, cursor: string): Promise<EMCursorResult<EMConversation>>;
+  fetchConversationsFromServer(limit: number, cursor: string): Promise<EMCursorResult<EMConversation>>;
 
   /** 从本地获取所有会话（按活跃时间倒序，置顶在前） */
-  abstract getAllConversationsBySort(): Promise<EMConversation[]>;
+  getAllConversationsBySort(): Promise<EMConversation[]>;
 
   /** 从本地获取所有会话（Map 结构转数组） */
-  abstract getAllConversations(): Promise<EMConversation[]>;
+  getAllConversations(): Promise<EMConversation[]>;
 
   /** 发送会话已读回执 */
-  abstract sendConversationReadAck(convId: string): Promise<void>;
+  sendConversationReadAck(convId: string): Promise<void>;
 
   /** 将指定会话的本地未读消息数清零 */
-  abstract markAllMessagesAsRead(convId: string): Promise<void>;
+  markAllMessagesAsRead(convId: string): Promise<void>;
 
   /** 获取所有会话的未读消息总数 */
-  abstract getUnreadMessageCount(): number;
+  getUnreadMessageCount(): number;
 
   /** 获取指定会话的未读消息数 */
-  abstract getConversationUnreadMsgCount(convId: string): number;
+  getConversationUnreadMsgCount(convId: string): number;
 
   /** 清除所有会话的未读消息数 */
-  abstract markAllConversationsAsRead(): Promise<void>;
+  markAllConversationsAsRead(): Promise<void>;
 
   /** 从服务器删除会话 */
-  abstract deleteConversationFromServer(convId: string, convType: number, isDeleteServerMessages: boolean): Promise<void>;
+  deleteConversationFromServer(convId: string, convType: number, isDeleteServerMessages: boolean): Promise<void>;
 
   /** 删除本地会话 */
-  abstract deleteConversation(convId: string, withMessage: boolean): Promise<void>;
+  deleteConversation(convId: string, withMessage: boolean): Promise<void>;
 
   /** 从服务器获取指定会话的历史消息 */
-  abstract fetchHistoryMessages(convId: string, convType: number, pageSize: number, startMsgId: string): Promise<EMCursorResult<Message>>;
+  fetchHistoryMessages(convId: string, convType: number, pageSize: number, startMsgId: string): Promise<EMCursorResult<Message>>;
 
   /** 根据关键字搜索本地会话中的消息 */
-  abstract searchLocalMessagesByKeywords(convId: string, keywords: string, timestamp: number, maxCount: number, from: string, direction: number): Promise<Message[]>;
+  searchLocalMessagesByKeywords(convId: string, keywords: string, timestamp: number, maxCount: number, from: string, direction: number): Promise<Message[]>;
 
   /** 根据时间范围搜索本地会话中的消息 */
-  abstract searchLocalMessagesByTimeRange(convId: string, startTimestamp: number, endTimestamp: number, maxCount: number, from: string, direction: number): Promise<Message[]>;
+  searchLocalMessagesByTimeRange(convId: string, startTimestamp: number, endTimestamp: number, maxCount: number, from: string, direction: number): Promise<Message[]>;
 
   /** 从本地读取指定会话的消息 */
-  abstract loadLocalMessages(convId: string, startMsgId: string, pageSize: number): Promise<Message[]>;
+  loadLocalMessages(convId: string, startMsgId: string, pageSize: number): Promise<Message[]>;
 
   // MARK: - 核心方法（桩函数）
 
   /** 获取 SDK 版本号（iOS 已实现） */
-  abstract getVersion(): string;
+  getVersion(): string;
 
   /** 判断是否已连接（iOS 已实现） */
-  abstract isConnected(): boolean;
+  isConnected(): boolean;
 
   /** 判断是否已登录（iOS 已实现） */
-  abstract isLoggedIn(): boolean;
+  isLoggedIn(): boolean;
 
   /** 获取当前登录用户 ID（iOS 已实现） */
-  abstract getCurrentUser(): string | null;
+  getCurrentUser(): string | null;
 
   /** 发送文本消息 */
-  abstract sendTextMessage(config: SendTextMessageConfig): Promise<Message>;
+  sendTextMessage(config: SendTextMessageConfig): Promise<Message>;
 
   /** 发送 CMD 消息 */
-  abstract sendCmdMessage(config: SendCmdMessageConfig): Promise<Message>;
+  sendCmdMessage(config: SendCmdMessageConfig): Promise<Message>;
 
   /** 发送自定义消息 */
-  abstract sendCustomMessage(config: SendCustomMessageConfig): Promise<Message>;
+  sendCustomMessage(config: SendCustomMessageConfig): Promise<Message>;
 }
 
 /** 发送文本消息配置 */

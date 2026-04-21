@@ -17,12 +17,39 @@ export {
   SendTextMessageConfig,
   SendCmdMessageConfig,
   SendCustomMessageConfig,
+  Message,
+  EMConversation,
+  EMCursorResult,
 } from './interface.uts';
 
 // ==================== 平台相关实现 ====================
 
 // #ifdef APP-IOS
-import { create as _createIOS, getClient as _getClientIOS } from './app-ios/index.uts';
+export {
+  initEasemob,
+  login,
+  logout,
+  sendTextMessage,
+  sendCmdMessage,
+  sendCustomMessage,
+  getAllConversationsBySort,
+  getAllConversations,
+  sendConversationReadAck,
+  markAllMessagesAsRead,
+  getUnreadMessageCount,
+  getConversationUnreadMsgCount,
+  markAllConversationsAsRead,
+  deleteConversationFromServer,
+  deleteConversation,
+  fetchHistoryMessages,
+  searchLocalMessagesByKeywords,
+  searchLocalMessagesByTimeRange,
+  loadLocalMessages,
+  getVersion,
+  isConnected,
+  isLoggedIn,
+  getCurrentUser,
+} from './app-ios/index.uts';
 // #endif
 
 // #ifdef APP-ANDROID
@@ -31,21 +58,20 @@ import { create as _createAndroid, getClient as _getClientAndroid } from './app-
 
 import type { EMInitConfig as _EMInitConfig, EasemobClient as _EasemobClient } from './interface.uts';
 
-export function create(config: _EMInitConfig): _EasemobClient {
+export function create(_config: _EMInitConfig): _EasemobClient {
   // #ifdef APP-IOS
-  return _createIOS(config);
+  return null as _EasemobClient;
   // #endif
   // #ifdef APP-ANDROID
-  return _createAndroid(config);
+  return _createAndroid(_config);
   // #endif
 }
 
 export function getClient(): _EasemobClient | null {
   // #ifdef APP-IOS
-  return _getClientIOS();
+  return null;
   // #endif
   // #ifdef APP-ANDROID
   return _getClientAndroid();
   // #endif
 }
-

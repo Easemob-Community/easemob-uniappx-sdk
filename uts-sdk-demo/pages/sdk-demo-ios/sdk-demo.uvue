@@ -1,0 +1,267 @@
+<template>
+	<scroll-view class="container" scroll-y="true">
+		<view class="content">
+			<text class="title">SDK Beta 测试页面</text>
+			<text class="subtitle">Android / iOS 初始化 + 登录测试</text>
+
+			<view class="section">
+				<text class="section-title">初始化</text>
+				<input class="input" v-model="appKey" placeholder="输入 AppKey" />
+				<button class="btn" type="primary" @click="handleInit">初始化 SDK</button>
+			</view>
+
+			<view class="section">
+				<text class="section-title">登录</text>
+				<input class="input" v-model="userId" placeholder="输入用户 ID" />
+				<input class="input" v-model="password" placeholder="输入密码" password />
+				<button class="btn" type="primary" @click="handleLogin">登录</button>
+				<button class="btn" type="default" @click="handleLogout">登出</button>
+			</view>
+
+			<view class="section">
+				<text class="section-title">页面跳转</text>
+				<button class="btn" type="primary" @click="goToMessage">发消息</button>
+				<button class="btn" type="primary" @click="goToConversation">会话列表</button>
+				<button class="btn" type="primary" @click="goToMessageOperation">消息操作</button>
+			</view>
+
+			<view class="section">
+				<text class="section-title">连接状态</text>
+				<text class="status">状态: {{ connectionStatus }}</text>
+			</view>
+
+			<view class="section">
+				<view class="log-header">
+					<text class="section-title">日志</text>
+					<button class="log-clear" type="warn" size="mini" @click="clearLogs">清空</button>
+				</view>
+				<scroll-view class="log-scroll" scroll-y="true" :scroll-top="logScrollTop">
+					<text class="log-text">{{ logs }}</text>
+				</scroll-view>
+			</view>
+		</view>
+	</scroll-view>
+</template>
+
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	import {
+		create,
+		type EasemobClient,
+		type Message,
+		initEasemob,
+		login,
+		logout,
+	} from '@/uni_modules/easemob-uts-sdk-beta'
+
+	const appKey = ref('easemob-demo#support')
+	const userId = ref('hfp')
+	const password = ref('1')
+	const connectionStatus = ref('未连接')
+	const logs = ref('')
+	const logScrollTop = ref(0)
+
+	let easemob : EasemobClient | null = null
+
+	function addLog(message : string) : void {
+		const time = new Date().toLocaleTimeString()
+		logs.value += '[' + time + '] ' + message + '\n'
+		// 自动置底：每次更新后将 scroll-top 设为极大值
+		setTimeout(() => {
+			logScrollTop.value = 99999
+		}, 50)
+	}
+
+	function clearLogs() : void {
+		logs.value = ''
+		logScrollTop.value = 0
+	}
+
+	async function handleInit() {
+
+		addLog('开始初始化...')
+		const config = { appKey: appKey.value, autoLogin: true }
+		const err = initEasemob(config)
+		addLog(err)
+		console.log(err)
+		// try {
+
+		// addLog('初始化成功')
+
+		// // 监听连接状态
+		// easemob.onConnected(() => {
+		// 	console.log('[sdk-demo] onConnected callback executed')
+		// 	setTimeout(() => {
+		// 		connectionStatus.value = '已连接'
+		// 		addLog('[beta] onConnected: 已连接')
+		// 	}, 0)
+		// })
+
+		// easemob.onDisconnected((errorCode) => {
+		// 	console.log('[sdk-demo] onDisconnected callback executed, errorCode=' + errorCode)
+		// 	setTimeout(() => {
+		// 		connectionStatus.value = '已断开'
+		// 		addLog('[beta] onDisconnected: 已断开, errorCode=' + errorCode)
+		// 	}, 0)
+		// })
+
+		// easemob.onLogout((errorCode) => {
+		// 	console.log('[sdk-demo] onLogout callback executed, errorCode=' + errorCode)
+		// 	setTimeout(() => {
+		// 		connectionStatus.value = '已登出'
+		// 		addLog('[beta] onLogout: 被登出, errorCode=' + errorCode)
+		// 	}, 0)
+		// })
+
+		// // 监听消息接收
+		// easemob.onMessageReceived((messages : Message[]) => {
+		// 	console.log('[sdk-demo] onMessageReceived callback executed, count=' + messages.length)
+		// 	for (const msg of messages) {
+		// 		const body = msg.body
+		// 		addLog('[beta] onMessageReceived: from=' + msg.from + ', type=' + body.type + ', msg=' + (body.message ?? 'null'))
+		// 	}
+		// })
+
+		// // 监听 CMD 消息接收
+		// easemob.onCmdMessageReceived((messages : Message[]) => {
+		// 	console.log('[sdk-demo] onCmdMessageReceived callback executed, count=' + messages.length)
+		// 	for (const msg of messages) {
+		// 		const body = msg.body
+		// 		addLog('[beta] onCmdMessageReceived: from=' + msg.from + ', type=' + body.type + ', msg=' + (body.message ?? 'null'))
+		// 	}
+		// })
+		// } catch (error) {
+		// 	addLog('初始化失败: ' + error)
+		// }
+	}
+	async function handleLogin() : Promise<void> {
+		try {
+			addLog('开始登录...')
+			const config = {
+				userId: userId.value,
+				password: password.value,
+				useToken: false
+			}
+			login(config)
+			addLog('登录成功')
+		} catch (error) {
+			addLog('登录失败: ' + error)
+		}
+	}
+
+	async function handleLogout() : Promise<void> {
+		try {
+			addLog('开始登出...')
+			logout()
+			addLog('登出成功')
+		} catch (error) {
+			addLog('登出失败: ' + error)
+		}
+	}
+
+	function goToMessage() : void {
+		uni.navigateTo({
+			url: '/pages/sdk-demo-ios/message'
+		})
+	}
+
+	function goToConversation() : void {
+		uni.navigateTo({
+			url: '/pages/sdk-demo-ios/conversation'
+		})
+	}
+
+	function goToMessageOperation() : void {
+		uni.navigateTo({
+			url: '/pages/sdk-demo-ios/message-operation'
+		})
+	}
+</script>
+
+<style>
+	.container {
+		flex: 1;
+		background-color: #f5f5f5;
+	}
+
+	.content {
+		padding: 15px;
+	}
+
+	.title {
+		font-size: 24px;
+		font-weight: bold;
+		text-align: center;
+		margin-bottom: 10px;
+		color: #333333;
+	}
+
+	.subtitle {
+		font-size: 14px;
+		color: #666666;
+		text-align: center;
+		margin-bottom: 20px;
+	}
+
+	.section {
+		background-color: #ffffff;
+		border-radius: 10px;
+		padding: 15px;
+		margin-bottom: 15px;
+	}
+
+	.section-title {
+		font-size: 16px;
+		font-weight: bold;
+		color: #333333;
+		margin-bottom: 10px;
+	}
+
+	.input {
+		height: 40px;
+		border-width: 1px;
+		border-color: #dddddd;
+		border-radius: 5px;
+		padding-left: 10px;
+		padding-right: 10px;
+		margin-bottom: 10px;
+		background-color: #f9f9f9;
+		font-size: 14px;
+	}
+
+	.btn {
+		margin-top: 10px;
+	}
+
+	.status {
+		font-size: 14px;
+		color: #333333;
+		padding: 10px;
+		background-color: #f9f9f9;
+		border-radius: 5px;
+	}
+
+	.log-header {
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 10px;
+	}
+
+	.log-clear {
+		margin: 0;
+	}
+
+	.log-scroll {
+		height: 150px;
+		background-color: #f9f9f9;
+		border-radius: 5px;
+		padding: 10px;
+	}
+
+	.log-text {
+		font-size: 12px;
+		color: #666666;
+	}
+</style>

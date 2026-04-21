@@ -1,0 +1,364 @@
+<template>
+	<scroll-view class="container" scroll-y="true">
+		<view class="content">
+			<text class="title">消息操作</text>
+
+			<view class="section">
+				<text class="section-title">通用参数</text>
+				<view class="param-row">
+					<text class="param-label">convId:</text>
+					<input class="param-input" v-model="convId" placeholder="会话 ID" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">convType:</text>
+					<input class="param-input" v-model="convTypeStr" type="number" placeholder="0=单聊,1=群组,2=聊天室" />
+				</view>
+			</view>
+
+			<view class="section">
+				<text class="section-title">从服务器获取历史消息</text>
+				<view class="param-row">
+					<text class="param-label">pageSize:</text>
+					<input class="param-input" v-model="pageSizeStr" type="number" placeholder="每页数量" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">startMsgId:</text>
+					<input class="param-input" v-model="startMsgId" placeholder="起始消息 ID，首次为空" />
+				</view>
+				<button class="btn" type="primary" @click="handleFetchHistoryMessages" :disabled="isLoading || convId.length === 0">获取服务端历史消息</button>
+			</view>
+
+			<view class="section">
+				<text class="section-title">关键字搜索本地消息</text>
+				<view class="param-row">
+					<text class="param-label">keywords:</text>
+					<input class="param-input" v-model="keywords" placeholder="关键字" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">timestamp:</text>
+					<input class="param-input" v-model="timestampStr" type="number" placeholder="时间戳（毫秒）" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">maxCount:</text>
+					<input class="param-input" v-model="maxCountStr" type="number" placeholder="最大条数" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">from:</text>
+					<input class="param-input" v-model="fromUser" placeholder="发送者，空表示全部" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">direction:</text>
+					<input class="param-input" v-model="directionStr" type="number" placeholder="0=更早(UP), 1=更晚(DOWN)" />
+				</view>
+				<button class="btn" type="primary" @click="handleSearchByKeywords" :disabled="isLoading || convId.length === 0">关键字搜索</button>
+			</view>
+
+			<view class="section">
+				<text class="section-title">时间范围搜索本地消息</text>
+				<view class="param-row">
+					<text class="param-label">startTime:</text>
+					<input class="param-input" v-model="startTimeStr" type="number" placeholder="开始时间戳（毫秒）" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">endTime:</text>
+					<input class="param-input" v-model="endTimeStr" type="number" placeholder="结束时间戳（毫秒）" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">maxCount:</text>
+					<input class="param-input" v-model="maxCountStr2" type="number" placeholder="最大条数" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">from:</text>
+					<input class="param-input" v-model="fromUser2" placeholder="发送者，空表示全部" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">direction:</text>
+					<input class="param-input" v-model="directionStr2" type="number" placeholder="0=更早(UP), 1=更晚(DOWN)" />
+				</view>
+				<button class="btn" type="primary" @click="handleSearchByTimeRange" :disabled="isLoading || convId.length === 0">时间范围搜索</button>
+			</view>
+
+			<view class="section">
+				<text class="section-title">从本地读取指定会话消息</text>
+				<view class="param-row">
+					<text class="param-label">startMsgId:</text>
+					<input class="param-input" v-model="localStartMsgId" placeholder="起始消息 ID，空表示全部" />
+				</view>
+				<view class="param-row">
+					<text class="param-label">pageSize:</text>
+					<input class="param-input" v-model="localPageSizeStr" type="number" placeholder="每页数量 [1,400]" />
+				</view>
+				<button class="btn" type="primary" @click="handleLoadLocalMessages" :disabled="isLoading || convId.length === 0">读取本地消息</button>
+			</view>
+
+			<view class="section">
+				<text class="section-title">消息列表 ({{ messages.length }})</text>
+				<view v-if="messages.length === 0" class="empty">
+					<text class="empty-text">暂无消息，点击上方按钮获取</text>
+				</view>
+				<view v-else class="list">
+					<view v-for="(item, index) in messages" :key="item.msgId + index" class="list-item">
+						<view class="item-header">
+							<text class="item-type">[{{ formatMsgType(item.body?.type ?? '') }}]</text>
+							<text class="item-from">{{ item.from }} → {{ item.to }}</text>
+						</view>
+						<text class="item-body">{{ item.body?.message ?? '[无内容]' }}</text>
+						<text class="item-id">msgId: {{ item.msgId }}</text>
+					</view>
+				</view>
+			</view>
+		</view>
+	</scroll-view>
+</template>
+
+<script setup lang="uts">
+	import { ref } from 'vue'
+	import {
+		getClient,
+		type EasemobClient,
+		type Message,
+	} from '@/uni_modules/easemob-uts-sdk-beta'
+
+	const convId = ref('')
+	const convTypeStr = ref('0')
+	const pageSizeStr = ref('20')
+	const startMsgId = ref('')
+	const keywords = ref('')
+	const timestampStr = ref('')
+	const maxCountStr = ref('20')
+	const fromUser = ref('')
+	const directionStr = ref('1')
+	const startTimeStr = ref('')
+	const endTimeStr = ref('')
+	const maxCountStr2 = ref('20')
+	const fromUser2 = ref('')
+	const directionStr2 = ref('1')
+	const isLoading = ref(false)
+	const messages = ref<Message[]>([])
+	const localStartMsgId = ref('')
+	const localPageSizeStr = ref('20')
+
+	function formatMsgType(type: string): string {
+		switch (type) {
+			case 'txt': return '文本'
+			case 'img': return '图片'
+			case 'voice': return '语音'
+			case 'video': return '视频'
+			case 'location': return '位置'
+			case 'file': return '文件'
+			case 'cmd': return '命令'
+			case 'custom': return '自定义'
+			default: return type.length > 0 ? type : '未知'
+		}
+	}
+
+	async function handleFetchHistoryMessages(): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			const pageSize = parseInt(pageSizeStr.value)
+			const convType = parseInt(convTypeStr.value)
+			const result = await easemob.fetchHistoryMessages(convId.value, convType, Number.isNaN(pageSize) ? 20 : pageSize, startMsgId.value)
+			messages.value = result.data
+			uni.showToast({ title: '获取成功: ' + result.data.length + ' 条', icon: 'success' })
+		} catch (error) {
+			console.error('[message-operation] 获取历史消息失败:', error)
+			uni.showToast({ title: '获取失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
+
+	async function handleSearchByKeywords(): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			const timestamp = parseInt(timestampStr.value)
+			const maxCount = parseInt(maxCountStr.value)
+			const direction = parseInt(directionStr.value)
+			const result = await easemob.searchLocalMessagesByKeywords(
+				convId.value,
+				keywords.value,
+				Number.isNaN(timestamp) ? 0 : timestamp,
+				Number.isNaN(maxCount) ? 20 : maxCount,
+				fromUser.value,
+				Number.isNaN(direction) ? 1 : direction
+			)
+			messages.value = result
+			uni.showToast({ title: '搜索成功: ' + result.length + ' 条', icon: 'success' })
+		} catch (error) {
+			console.error('[message-operation] 关键字搜索失败:', error)
+			uni.showToast({ title: '搜索失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
+
+	async function handleSearchByTimeRange(): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			const startTime = parseInt(startTimeStr.value)
+			const endTime = parseInt(endTimeStr.value)
+			const maxCount = parseInt(maxCountStr2.value)
+			const direction = parseInt(directionStr2.value)
+			const result = await easemob.searchLocalMessagesByTimeRange(
+				convId.value,
+				Number.isNaN(startTime) ? 0 : startTime,
+				Number.isNaN(endTime) ? 0 : endTime,
+				Number.isNaN(maxCount) ? 20 : maxCount,
+				fromUser2.value,
+				Number.isNaN(direction) ? 1 : direction
+			)
+			messages.value = result
+			uni.showToast({ title: '搜索成功: ' + result.length + ' 条', icon: 'success' })
+		} catch (error) {
+			console.error('[message-operation] 时间范围搜索失败:', error)
+			uni.showToast({ title: '搜索失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
+
+	async function handleLoadLocalMessages(): Promise<void> {
+		isLoading.value = true
+		try {
+			const easemob = getClient()
+			if (easemob == null) {
+				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
+				return
+			}
+			const pageSize = parseInt(localPageSizeStr.value)
+			const result = await easemob.loadLocalMessages(convId.value, localStartMsgId.value, Number.isNaN(pageSize) ? 20 : pageSize)
+			messages.value = result
+			uni.showToast({ title: '读取成功: ' + result.length + ' 条', icon: 'success' })
+		} catch (error) {
+			console.error('[message-operation] 读取本地消息失败:', error)
+			uni.showToast({ title: '读取失败: ' + error, icon: 'none' })
+		} finally {
+			isLoading.value = false
+		}
+	}
+</script>
+
+<style>
+	.container {
+		flex: 1;
+		background-color: #f5f5f5;
+	}
+
+	.content {
+		padding: 15px;
+	}
+
+	.title {
+		font-size: 24px;
+		font-weight: bold;
+		text-align: center;
+		margin-bottom: 20px;
+		color: #333333;
+	}
+
+	.section {
+		background-color: #ffffff;
+		border-radius: 10px;
+		padding: 15px;
+		margin-bottom: 15px;
+	}
+
+	.section-title {
+		font-size: 16px;
+		font-weight: bold;
+		color: #333333;
+		margin-bottom: 10px;
+	}
+
+	.param-row {
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 10px;
+	}
+
+	.param-label {
+		width: 80px;
+		font-size: 14px;
+		color: #666666;
+	}
+
+	.param-input {
+		flex: 1;
+		height: 36px;
+		border-width: 1px;
+		border-color: #dddddd;
+		border-radius: 5px;
+		padding-left: 10px;
+		padding-right: 10px;
+		background-color: #f9f9f9;
+		font-size: 14px;
+	}
+
+	.btn {
+		margin-top: 10px;
+	}
+
+	.empty {
+		padding: 20px;
+		align-items: center;
+	}
+
+	.empty-text {
+		font-size: 14px;
+		color: #999999;
+	}
+
+	.list {
+		margin-top: 5px;
+	}
+
+	.list-item {
+		border-bottom-width: 1px;
+		border-bottom-color: #eeeeee;
+		padding-top: 12px;
+		padding-bottom: 12px;
+	}
+
+	.item-header {
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 5px;
+	}
+
+	.item-type {
+		font-size: 13px;
+		color: #007aff;
+		margin-right: 8px;
+	}
+
+	.item-from {
+		font-size: 13px;
+		color: #666666;
+	}
+
+	.item-body {
+		font-size: 14px;
+		color: #333333;
+		margin-bottom: 5px;
+	}
+
+	.item-id {
+		font-size: 12px;
+		color: #999999;
+	}
+</style>
