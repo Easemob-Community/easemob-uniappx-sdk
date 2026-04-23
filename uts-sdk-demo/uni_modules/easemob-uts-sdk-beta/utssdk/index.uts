@@ -49,6 +49,9 @@ export {
   isConnected,
   isLoggedIn,
   getCurrentUser,
+  addMessageListener,
+  removeMessageListener,
+  removeAllMessageListeners,
 } from './app-ios/index.uts';
 // #endif
 

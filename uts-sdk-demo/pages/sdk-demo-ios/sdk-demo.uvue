@@ -20,6 +20,10 @@
 
 			<view class="section">
 				<text class="section-title">页面跳转</text>
+				<button class="btn" type="primary" @click="addListener">添加监听</button>
+				<button class="btn" type="primary" @click="removeListener">移除监听</button>
+
+
 				<button class="btn" type="primary" @click="goToMessage">发消息</button>
 				<button class="btn" type="primary" @click="goToConversation">会话列表</button>
 				<button class="btn" type="primary" @click="goToMessageOperation">消息操作</button>
@@ -53,10 +57,12 @@
 		initEasemob,
 		login,
 		logout,
+		addMessageListener,
+		removeMessageListener
 	} from '@/uni_modules/easemob-uts-sdk-beta'
 
 	const appKey = ref('easemob-demo#support')
-	const userId = ref('hfp')
+	const userId = ref('wf1')
 	const password = ref('1')
 	const connectionStatus = ref('未连接')
 	const logs = ref('')
@@ -160,6 +166,25 @@
 		}
 	}
 
+	function addListener() : void {
+
+		addMessageListener(
+			'my-message-listener',
+			(messagesJson : string) => {
+				const messages = JSON.parse(messagesJson) as Message[];
+				console.log('收到消息', JSON.stringify(messages, null, 2));
+			},
+			(cmdMessagesJson : string) => {
+				const cmdMessages = JSON.parse(cmdMessagesJson) as Message[];
+				console.log('收到CMD', JSON.stringify(cmdMessages, null, 2));
+			}
+		);
+	}
+
+	function removeListener() : void {
+		// 移除时
+		removeMessageListener('my-message-listener');
+	}
 	function goToMessage() : void {
 		uni.navigateTo({
 			url: '/pages/sdk-demo-ios/message'

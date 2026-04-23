@@ -7,7 +7,13 @@ import {
 	EMClient,
 	EMOptions,
 	EMError,
+	EMMessageBodyType,
 	EMTextMessageBody,
+	EMImageMessageBody,
+	EMVoiceMessageBody,
+	EMVideoMessageBody,
+	EMFileMessageBody,
+	EMLocationMessageBody,
 	EMCmdMessageBody,
 	EMCustomMessageBody,
 	EMChatMessage,
@@ -25,6 +31,7 @@ import {
 	EMConversation,
 	EMCursorResult,
 	type EasemobClient,
+	MessageBody
 } from '../interface.uts';
 
 export type IMError = {
@@ -248,8 +255,7 @@ function _doSendCmdMessage(config : SendCmdMessageConfig, resolve : (value : Mes
 	const msg = new EMChatMessage(conversationID = config.to, body = body, ext = null)
 	msg.chatType = config.chatType == 'groupChat' ? EMChatType.groupChat : EMChatType.chat
 	if (config.ext != null) {
-		EMMessageHelper.setMessageExt(msg, extJson = JSON.stringify(config.ext))
-
+		UNIEMClient.shared.setMessageExt(msg, extJson = JSON.stringify(config.ext))
 	}
 
 
@@ -285,11 +291,11 @@ export function sendCmdMessage(config : SendCmdMessageConfig) : Promise<Message>
 
 function _doSendCustomMessage(config : SendCustomMessageConfig, resolve : (value : Message) => void, reject : (reason : any) => void) : void {
 	const paramsJson = config.params != null ? JSON.stringify(config.params) : null
-	const body = EMMessageHelper.createCustomMessageBody(event = config.event, paramsJson = paramsJson)!
+	const body = UNIEMClient.shared.createCustomMessageBody(event = config.event, paramsJson = paramsJson)!
 	const msg = new EMChatMessage(conversationID = config.to, body = body, ext = null)
 	msg.chatType = config.chatType == 'groupChat' ? EMChatType.groupChat : EMChatType.chat
 	if (config.ext != null) {
-		EMMessageHelper.setMessageExt(msg, extJson = JSON.stringify(config.ext))
+		UNIEMClient.shared.setMessageExt(msg, extJson = JSON.stringify(config.ext))
 	}
 
 	const completion = (message : EMChatMessage | null, error : EMError | null) : void => {
@@ -384,6 +390,111 @@ export function getAllConversations() : EMConversation[] {
 		} as EMConversation)
 	}
 	return conversations
+}
+
+// ==================== 消息监听（Block 回调方式）====================
+
+/** 将 EMChatMessage 转为 UTS Message */
+function convertEMMessage(msg : EMChatMessage) : Message {
+	let body : MessageBody = {
+		type: 'txt',
+		message: null
+	};
+
+	const msgBody = msg.body;
+	if (msgBody.type == EMMessageBodyType.text) {
+		body.type = 'txt';
+		body.message = (msgBody as EMTextMessageBody).text ?? null;
+	} else if (msgBody.type == EMMessageBodyType.image) {
+		const imageBody = msgBody as EMImageMessageBody;
+		body.type = 'img';
+		body.message = imageBody.remotePath ?? null;
+	} else if (msgBody.type == EMMessageBodyType.voice) {
+		const voiceBody = msgBody as EMVoiceMessageBody;
+		body.type = 'voice';
+		body.message = voiceBody.remotePath ?? null;
+	} else if (msgBody.type == EMMessageBodyType.video) {
+		const videoBody = msgBody as EMVideoMessageBody;
+		body.type = 'video';
+		body.message = videoBody.remotePath ?? null;
+	} else if (msgBody.type == EMMessageBodyType.location) {
+		const locBody = msgBody as EMLocationMessageBody;
+		body.type = 'location';
+		body.message = locBody.address ?? null;
+	} else if (msgBody.type == EMMessageBodyType.file) {
+		const fileBody = msgBody as EMFileMessageBody;
+		body.type = 'file';
+		body.message = fileBody.remotePath ?? null;
+	} else if (msgBody.type == EMMessageBodyType.cmd) {
+		const cmdBody = msgBody as EMCmdMessageBody;
+		body.type = 'cmd';
+		body.message = cmdBody.action ?? null;
+	} else if (msgBody.type == EMMessageBodyType.custom) {
+		const customBody = msgBody as EMCustomMessageBody;
+		body.type = 'custom';
+		body.message = customBody.event ?? null;
+	}
+	return {
+		msgId: msg.messageId ?? '',
+		from: msg.from ?? '',
+		to: msg.to ?? '',
+		conversationId: msg.conversationId ?? '',
+		chatType: msg.chatType.rawValue as number,
+		body: body
+	};
+}
+
+type MessageListener = {
+	onMessageReceived : ((messages : string) => void) | null;
+	onCmdMessageReceived : ((messages : string) => void) | null;
+}
+
+const messageCallbackMap : Map<string, MessageListener> = new Map();
+
+export function addMessageListener(
+	listenerId : string,
+	onMessageReceived : ((messages : string) => void) | null,
+	onCmdMessageReceived : ((messages : string) => void) | null
+) : void {
+	messageCallbackMap.set(listenerId, {
+		onMessageReceived,
+		onCmdMessageReceived
+	});
+
+	if (messageCallbackMap.size == 1) {
+		UNIEMClient.shared.onMessagesReceivedBlock = (messages : EMChatMessage[]) : void => {
+			const msgList = messages.map((msg : EMChatMessage) : Message => convertEMMessage(msg));
+			const json = JSON.stringify(msgList) ?? "[]";
+			messageCallbackMap.forEach((cbs : MessageListener, _id : string) : void => {
+				cbs.onMessageReceived?.(json);
+			});
+		};
+		UNIEMClient.shared.onCmdMessagesReceivedBlock = (messages : EMChatMessage[]) : void => {
+			const msgList = messages.map((msg : EMChatMessage) : Message => convertEMMessage(msg));
+			const json = JSON.stringify(msgList) ?? "[]";
+			messageCallbackMap.forEach((cbs : MessageListener, _id : string) : void => {
+				cbs.onCmdMessageReceived?.(json);
+			});
+		};
+	}
+
+	console.log('[iOS] addMessageListener:', listenerId);
+}
+
+export function removeMessageListener(listenerId : string) : void {
+	messageCallbackMap.delete(listenerId);
+	if (messageCallbackMap.size == 0) {
+		UNIEMClient.shared.onMessagesReceivedBlock = null;
+		UNIEMClient.shared.onCmdMessagesReceivedBlock = null;
+	}
+	console.log('[iOS] removeMessageListener:', listenerId);
+}
+
+export function removeAllMessageListeners() : void {
+	messageCallbackMap.clear();
+	UNIEMClient.shared.onMessagesReceivedBlock = null;
+	UNIEMClient.shared.onCmdMessagesReceivedBlock = null;
+	console.log('[iOS] removeAllMessageListeners');
 }
 
 // iOS beta: 仅导出独立函数，不提供 EasemobClient 实例封装
