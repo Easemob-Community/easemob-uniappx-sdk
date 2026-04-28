@@ -3,8 +3,52 @@
 	let firstBackTime = 0
 	// #endif
 
+	import { create } from '@/uni_modules/easemob-uts-sdk-beta'
+
 	onLaunch(() => {
 		console.log('App Launch')
+
+		// ========== 环信 SDK 初始化 ==========
+		// 替换为你的环信 AppKey
+		const emClient = create({
+			appKey: 'easemob-demo#support',
+			autoLogin: false
+		})
+
+		// 注册连接监听
+		emClient.onConnected(() => {
+			console.log('[App] 环信连接已建立')
+		})
+
+		emClient.onDisconnected((errorCode) => {
+			console.log('[App] 环信连接已断开, code=' + errorCode)
+		})
+
+		emClient.onLogout((errorCode) => {
+			console.log('[App] 被强制登出, code=' + errorCode)
+		})
+
+		emClient.onTokenWillExpire(() => {
+			console.log('[App] Token 即将过期')
+		})
+
+		emClient.onTokenExpired(() => {
+			console.log('[App] Token 已过期')
+		})
+
+		// 注册消息接收监听
+		emClient.onMessageReceived((messages) => {
+			for (const msg of messages) {
+				console.log('[App] 收到消息:', msg.from, msg.body.type, msg.body.message)
+			}
+		})
+
+		// CMD 消息接收（当前仅 Android 支持）
+		emClient.onCmdMessageReceived((messages) => {
+			for (const msg of messages) {
+				console.log('[App] 收到 CMD:', msg.from, msg.body.message)
+			}
+		})
 	})
 
 	onAppShow(() => {

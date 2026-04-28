@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "@zego/ZIM": "./libs/ZIM.har"
-  }
-}
