@@ -57,8 +57,10 @@
 		initEasemob,
 		login,
 		logout,
-		addMessageListener,
-		removeMessageListener
+		addChatManagerListener,
+		removeChatManagerListener,
+		addConnectionListener,
+		removeConnectionListener
 	} from '@/uni_modules/easemob-uts-sdk-beta'
 
 	const appKey = ref('easemob-demo#support')
@@ -167,23 +169,109 @@
 	}
 
 	function addListener() : void {
-
-		addMessageListener(
-			'my-message-listener',
-			(messagesJson : string) => {
+		addChatManagerListener('my-message-listener', {
+			onMessageReceived: (messagesJson : string) => {
 				const messages = JSON.parse(messagesJson) as Message[];
 				console.log('收到消息', JSON.stringify(messages, null, 2));
+				addLog('[消息] 收到 ' + messages.length + ' 条消息');
 			},
-			(cmdMessagesJson : string) => {
+			onCmdMessageReceived: (cmdMessagesJson : string) => {
 				const cmdMessages = JSON.parse(cmdMessagesJson) as Message[];
 				console.log('收到CMD', JSON.stringify(cmdMessages, null, 2));
+				addLog('[消息] 收到 ' + cmdMessages.length + ' 条CMD消息');
+			},
+			onConversationListDidUpdate: (conversationsJson : string) => {
+				console.log('会话列表更新', conversationsJson);
+				addLog('[会话] 列表更新');
+			},
+			onMessagesDidRead: (messagesJson : string) => {
+				console.log('消息已读', messagesJson);
+				addLog('[消息] 已读回执');
+			},
+			onGroupMessageDidRead: (infoJson : string) => {
+				console.log('群消息已读', infoJson);
+				addLog('[消息] 群已读回执');
+			},
+			onGroupMessageAckHasChanged: () => {
+				console.log('群已读数量变化');
+				addLog('[消息] 群已读数量变化');
+			},
+			onConversationRead: (from : string, to : string) => {
+				console.log('会话已读', from, to);
+				addLog('[会话] 已读 from=' + from + ' to=' + to);
+			},
+			onMessagesDidDeliver: (messagesJson : string) => {
+				console.log('消息已送达', messagesJson);
+				addLog('[消息] 已送达');
+			},
+			onMessagesInfoDidRecall: (infosJson : string) => {
+				console.log('消息撤回', infosJson);
+				addLog('[消息] 撤回通知');
+			},
+			onMessageStatusDidChange: (msgJson : string, errorJson : string) => {
+				console.log('消息状态变化', msgJson, errorJson);
+				addLog('[消息] 状态变化');
+			},
+			onMessageAttachmentStatusDidChange: (msgJson : string, errorJson : string) => {
+				console.log('附件状态变化', msgJson, errorJson);
+				addLog('[消息] 附件状态变化');
+			},
+			onMessageContentChanged: (msgJson : string, operatorId : string, operationTime : number) => {
+				console.log('消息内容变化', msgJson, operatorId, operationTime);
+				addLog('[消息] 内容变化 by=' + operatorId);
+			},
+			onMessageReactionDidChange: (changesJson : string) => {
+				console.log('Reaction变化', changesJson);
+				addLog('[消息] Reaction变化');
 			}
-		);
+		});
+		addConnectionListener('my-connection-listener', {
+			onConnected: () => {
+				console.log('[sdk-demo] onConnected')
+				connectionStatus.value = '已连接'
+				addLog('[连接] 已连接')
+			},
+			onDisconnected: (errorCode: number) => {
+				console.log('[sdk-demo] onDisconnected, errorCode=' + errorCode)
+				connectionStatus.value = '已断开'
+				addLog('[连接] 已断开, errorCode=' + errorCode)
+			},
+			onLogout: (errorCode: number) => {
+				console.log('[sdk-demo] onLogout, errorCode=' + errorCode)
+				connectionStatus.value = '被登出'
+				addLog('[连接] 被登出, errorCode=' + errorCode)
+			},
+			onAutoLoginDidComplete: (errorJson: string | null) => {
+				console.log('[sdk-demo] 自动登录完成', errorJson)
+				addLog('[连接] 自动登录完成')
+			},
+			onUserAccountDidLoginFromOtherDevice: (deviceName: string | null) => {
+				console.log('[sdk-demo] 其他设备登录', deviceName)
+				addLog('[连接] 其他设备登录: ' + (deviceName ?? ''))
+			},
+			onUserAccountDidRemoveFromServer: () => {
+				console.log('[sdk-demo] 账号被服务器删除')
+				addLog('[连接] 账号被服务器删除')
+			},
+			onUserDidForbidByServer: () => {
+				console.log('[sdk-demo] 账号被禁用')
+				addLog('[连接] 账号被禁用')
+			},
+			onTokenWillExpire: () => {
+				console.log('[sdk-demo] token即将过期')
+				addLog('[连接] token即将过期')
+			},
+			onTokenExpired: () => {
+				console.log('[sdk-demo] token已过期')
+				addLog('[连接] token已过期')
+			}
+		})
 	}
 
 	function removeListener() : void {
 		// 移除时
-		removeMessageListener('my-message-listener');
+		removeChatManagerListener('my-message-listener');
+		removeConnectionListener('my-connection-listener');
 	}
 	function goToMessage() : void {
 		uni.navigateTo({

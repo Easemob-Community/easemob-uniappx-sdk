@@ -1,9 +1,6 @@
 {
   "deploymentTarget": "12",
-  "dependencies-pods": [
-    {
-      "name": "HyphenateChat",
-      "version": "4.20.0"
-    }
-  ]
+  "Frameworks": [
+      "HyphenateChat.xcframework"
+    ]
 }

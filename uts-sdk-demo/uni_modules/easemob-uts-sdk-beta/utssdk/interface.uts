@@ -74,14 +74,13 @@ export type Message = {
 
 // ==================== 会话类型 ====================
 
-export type EMConversation = {
+export type UNIEMConversation = {
   conversationId: string;
   type: number;
   unreadMsgCount: number;
   lastMessage?: Message | null;
 }
-
-export type EMCursorResult<T> = {
+export type UNIEMCursorResult<T> = {
   data: T[];
   cursor: string;
 }

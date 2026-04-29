@@ -17,6 +17,8 @@ import {
 	EMCmdMessageBody,
 	EMCustomMessageBody,
 	EMChatMessage,
+	EMConversation,
+	EMCursorResult,
 	EMChatType,
 } from 'HyphenateChat';
 import {
@@ -28,8 +30,8 @@ import {
 	SendTextMessageConfig,
 	SendCmdMessageConfig,
 	SendCustomMessageConfig,
-	EMConversation,
-	EMCursorResult,
+	UNIEMCursorResult,
+	UNIEMConversation,
 	type EasemobClient,
 	MessageBody
 } from '../interface.uts';
@@ -114,13 +116,23 @@ export function logout() : Promise<void> {
 export function sendConversationReadAck(convId : string) : Promise<void> {
 	return new Promise((resolve, reject) => {
 		try {
-			EMClient.shared().chatManager?.ackConversationRead(convId)
-			resolve()
+			const completion = (error : EMError | null) : void => {
+				if (error != null) {
+					const code = error!.code.rawValue as number;
+					const msg = error!.errorDescription ?? 'sendConversationReadAck failed';
+					console.error('[iOS] sendConversationReadAck failed:', code, msg);
+					reject(new Error(`sendConversationReadAck failed: ${code} - ${msg}`));
+				} else {
+					resolve();
+				}
+			};
+
+			EMClient.shared().chatManager?.ackConversationRead(convId, completion = completion);
 		} catch (error) {
-			console.error('[iOS] sendConversationReadAck error:', error)
-			reject(error)
+			console.error('[iOS] sendConversationReadAck error:', error);
+			reject(error);
 		}
-	})
+	});
 }
 
 export function markAllMessagesAsRead(_convId : string) : Promise<void> {
@@ -173,7 +185,7 @@ export function deleteConversation(convId : string, withMessage : boolean) : Pro
 	})
 }
 
-export function fetchHistoryMessages(_convId : string, _convType : number, _pageSize : number, _startMsgId : string) : Promise<EMCursorResult<Message>> {
+export function fetchHistoryMessages(_convId : string, _convType : number, _pageSize : number, _startMsgId : string) : Promise<UNIEMCursorResult<Message>> {
 	return new Promise((resolve, reject) => {
 		reject(new Error('fetchHistoryMessages is not implemented on iOS yet'))
 	})
@@ -328,173 +340,312 @@ export function sendCustomMessage(config : SendCustomMessageConfig) : Promise<Me
 	});
 }
 
-// function _doFetchConversationsFromServer(limit : number, cursor : string, resolve : (value : EMCursorResult<EMConversation>) => void, reject : (reason : any) => void) : void {
-// 	const completion = (array : any[] | null, nextCursor : string, errorMsg : string | null) : void => {
-// 		if (errorMsg != null) {
-// 			reject(new Error(errorMsg))
-// 			return
-// 		}
-// 		const list = array ?? []
-// 		let conversations : EMConversation[] = []
-// 		for (const item of list) {
-// 			const conv = item as UTSJSONObject
-// 			conversations.push({
-// 				conversationId: conv["conversationId"] as string,
-// 				type: conv["type"] as number,
-// 				unreadMsgCount: conv["unreadMessagesCount"] as number,
-// 				lastMessage: null
-// 			} as EMConversation)
-// 		}
-// 		resolve({
-// 			data: conversations,
-// 			cursor: nextCursor
-// 		} as EMCursorResult<EMConversation>)
-// 	}
-// 	EMClient.shared().chatManager?.fetchConversationsFromServer(cursor: cursor, pageSize: limit, completion: completion)
-// }
-
-// export function fetchConversationsFromServer(limit : number, cursor : string) : Promise<EMCursorResult<EMConversation>> {
-// 	return new Promise((resolve, reject) => {
-// 		_doFetchConversationsFromServer(limit, cursor, resolve, reject)
-// 	});
-// }
-
-export function getAllConversationsBySort() : Promise<EMConversation[]> {
-	return new Promise((resolve, reject) => {
-		const list = EMClient.shared().chatManager?.getAllConversations(true) ?? []
-		console.log(`getAllConversationsBySort:${list}`)
-		let conversations : EMConversation[] = []
-		for (const conv of list) {
+function _doFetchConversationsFromServer(limit : number, cursor : string, resolve : (value : UNIEMCursorResult<UNIEMConversation>) => void, reject : (reason : any) => void) : void {
+	const completion = (result : EMCursorResult<EMConversation> | null, error : EMError | null) : void => {
+		if (error != null) {
+			const code = error!.code.rawValue as number;
+			const msg = error!.errorDescription ?? 'Fetch conversations failed';
+			reject(new Error(`Fetch conversations failed: ${code} - ${msg}`));
+			return
+		}
+		const convList = result?.list ?? []
+		const nextCursor = result?.cursor ?? ''
+		let conversations : UNIEMConversation[] = []
+		for (const conv of convList) {
 			conversations.push({
-				conversationId: conv.conversationId,
+				conversationId: conv.conversationId as string,
 				type: conv.type.rawValue as number,
 				unreadMsgCount: conv.unreadMessagesCount as number,
 				lastMessage: null
-			} as EMConversation)
+			} as UNIEMConversation)
 		}
-		console.log(`getAllConversationsBySort:${conversations}`)
+		resolve({
+			data: conversations,
+			cursor: nextCursor
+		} as UNIEMCursorResult<UNIEMConversation>)
+	}
+	UNIEMClient.shared.fetchConversationsFromServer(cursor = cursor, pageSize = limit, completion = completion)
+}
 
-		resolve(conversations)
+export function fetchConversationsFromServer(limit : number, cursor : string) : Promise<UNIEMCursorResult<UNIEMConversation>> {
+	return new Promise((resolve, reject) => {
+		_doFetchConversationsFromServer(limit, cursor, resolve, reject)
 	});
 }
 
-export function getAllConversations() : EMConversation[] {
-	const list = EMClient.shared().chatManager?.getAllConversations() ?? []
-	let conversations : EMConversation[] = []
+export function getAllConversationsBySort() : UNIEMConversation[] {
+	const list = EMClient.shared().chatManager?.getAllConversations(true) ?? []
+	let conversations : UNIEMConversation[] = []
 	for (const conv of list) {
 		conversations.push({
 			conversationId: conv.conversationId,
 			type: conv.type.rawValue as number,
 			unreadMsgCount: conv.unreadMessagesCount as number,
 			lastMessage: null
-		} as EMConversation)
+		} as UNIEMConversation)
 	}
 	return conversations
 }
 
-// ==================== 消息监听（Block 回调方式）====================
-
-/** 将 EMChatMessage 转为 UTS Message */
-function convertEMMessage(msg : EMChatMessage) : Message {
-	let body : MessageBody = {
-		type: 'txt',
-		message: null
-	};
-
-	const msgBody = msg.body;
-	if (msgBody.type == EMMessageBodyType.text) {
-		body.type = 'txt';
-		body.message = (msgBody as EMTextMessageBody).text ?? null;
-	} else if (msgBody.type == EMMessageBodyType.image) {
-		const imageBody = msgBody as EMImageMessageBody;
-		body.type = 'img';
-		body.message = imageBody.remotePath ?? null;
-	} else if (msgBody.type == EMMessageBodyType.voice) {
-		const voiceBody = msgBody as EMVoiceMessageBody;
-		body.type = 'voice';
-		body.message = voiceBody.remotePath ?? null;
-	} else if (msgBody.type == EMMessageBodyType.video) {
-		const videoBody = msgBody as EMVideoMessageBody;
-		body.type = 'video';
-		body.message = videoBody.remotePath ?? null;
-	} else if (msgBody.type == EMMessageBodyType.location) {
-		const locBody = msgBody as EMLocationMessageBody;
-		body.type = 'location';
-		body.message = locBody.address ?? null;
-	} else if (msgBody.type == EMMessageBodyType.file) {
-		const fileBody = msgBody as EMFileMessageBody;
-		body.type = 'file';
-		body.message = fileBody.remotePath ?? null;
-	} else if (msgBody.type == EMMessageBodyType.cmd) {
-		const cmdBody = msgBody as EMCmdMessageBody;
-		body.type = 'cmd';
-		body.message = cmdBody.action ?? null;
-	} else if (msgBody.type == EMMessageBodyType.custom) {
-		const customBody = msgBody as EMCustomMessageBody;
-		body.type = 'custom';
-		body.message = customBody.event ?? null;
+export function getAllConversations() : UNIEMConversation[] {
+	const list = EMClient.shared().chatManager?.getAllConversations() ?? []
+	let conversations : UNIEMConversation[] = []
+	for (const conv of list) {
+		conversations.push({
+			conversationId: conv.conversationId,
+			type: conv.type.rawValue as number,
+			unreadMsgCount: conv.unreadMessagesCount as number,
+			lastMessage: null
+		} as UNIEMConversation)
 	}
-	return {
-		msgId: msg.messageId ?? '',
-		from: msg.from ?? '',
-		to: msg.to ?? '',
-		conversationId: msg.conversationId ?? '',
-		chatType: msg.chatType.rawValue as number,
-		body: body
-	};
+	return conversations
 }
 
-type MessageListener = {
-	onMessageReceived : ((messages : string) => void) | null;
-	onCmdMessageReceived : ((messages : string) => void) | null;
+
+
+// ==================== 连接监听（Block 回调方式）====================
+
+type ConnectionListener = {
+	onConnected?: (() => void) | null;
+	onDisconnected?: ((errorCode: number) => void) | null;
+	onLogout?: ((errorCode: number) => void) | null;
+	onAutoLoginDidComplete?: ((errorJson: string | null) => void) | null;
+	onUserAccountDidLoginFromOtherDevice?: ((deviceName: string | null) => void) | null;
+	onUserAccountDidRemoveFromServer?: (() => void) | null;
+	onUserDidForbidByServer?: (() => void) | null;
+	onTokenWillExpire?: (() => void) | null;
+	onTokenExpired?: (() => void) | null;
 }
 
-const messageCallbackMap : Map<string, MessageListener> = new Map();
+const connectionCallbackMap : Map<string, ConnectionListener> = new Map();
 
-export function addMessageListener(
+@UTSJS.keepAlive
+export function addConnectionListener(
 	listenerId : string,
-	onMessageReceived : ((messages : string) => void) | null,
-	onCmdMessageReceived : ((messages : string) => void) | null
+	listener : ConnectionListener
 ) : void {
-	messageCallbackMap.set(listenerId, {
-		onMessageReceived,
-		onCmdMessageReceived
-	});
+	connectionCallbackMap.set(listenerId, listener);
 
-	if (messageCallbackMap.size == 1) {
-		UNIEMClient.shared.onMessagesReceivedBlock = (messages : EMChatMessage[]) : void => {
-			const msgList = messages.map((msg : EMChatMessage) : Message => convertEMMessage(msg));
-			const json = JSON.stringify(msgList) ?? "[]";
-			messageCallbackMap.forEach((cbs : MessageListener, _id : string) : void => {
+	if (connectionCallbackMap.size == 1) {
+		UNIEMClient.shared.onConnectionStateDidChangeBlock = (state : number) : void => {
+			const isConnected = state == 0;
+			connectionCallbackMap.forEach((cbs : ConnectionListener, _id : string) : void => {
+				if (isConnected) {
+					cbs.onConnected?.();
+				} else {
+					cbs.onDisconnected?.(state);
+				}
+			});
+		};
+		UNIEMClient.shared.onUserAccountDidForcedToLogoutBlock = (errorJson : string | null) : void => {
+			let errorCode = 0;
+			if (errorJson != null) {
+				try {
+					const obj = JSON.parse(errorJson) as UTSJSONObject;
+					errorCode = (obj['code'] as number) ?? 0;
+				} catch (e) {}
+			}
+			connectionCallbackMap.forEach((cbs : ConnectionListener, _id : string) : void => {
+				cbs.onLogout?.(errorCode);
+			});
+		};
+		UNIEMClient.shared.onTokenWillExpireBlock = (_code : number) : void => {
+			connectionCallbackMap.forEach((cbs : ConnectionListener, _id : string) : void => {
+				cbs.onTokenWillExpire?.();
+			});
+		};
+		UNIEMClient.shared.onTokenDidExpireBlock = (_code : number) : void => {
+			connectionCallbackMap.forEach((cbs : ConnectionListener, _id : string) : void => {
+				cbs.onTokenExpired?.();
+			});
+		};
+		UNIEMClient.shared.onAutoLoginDidCompleteBlock = (errorJson : string | null) : void => {
+			connectionCallbackMap.forEach((cbs : ConnectionListener, _id : string) : void => {
+				cbs.onAutoLoginDidComplete?.(errorJson);
+			});
+		};
+		UNIEMClient.shared.onUserAccountDidLoginFromOtherDeviceBlock = (deviceName : string | null) : void => {
+			connectionCallbackMap.forEach((cbs : ConnectionListener, _id : string) : void => {
+				cbs.onUserAccountDidLoginFromOtherDevice?.(deviceName);
+			});
+		};
+		UNIEMClient.shared.onUserAccountDidRemoveFromServerBlock = () : void => {
+			connectionCallbackMap.forEach((cbs : ConnectionListener, _id : string) : void => {
+				cbs.onUserAccountDidRemoveFromServer?.();
+			});
+		};
+		UNIEMClient.shared.onUserDidForbidByServerBlock = () : void => {
+			connectionCallbackMap.forEach((cbs : ConnectionListener, _id : string) : void => {
+				cbs.onUserDidForbidByServer?.();
+			});
+		};
+	}
+
+	console.log('[iOS] addConnectionListener:', listenerId);
+}
+
+export function removeConnectionListener(listenerId : string) : void {
+	connectionCallbackMap.delete(listenerId);
+	if (connectionCallbackMap.size == 0) {
+		UNIEMClient.shared.onConnectionStateDidChangeBlock = null;
+		UNIEMClient.shared.onUserAccountDidForcedToLogoutBlock = null;
+		UNIEMClient.shared.onTokenWillExpireBlock = null;
+		UNIEMClient.shared.onTokenDidExpireBlock = null;
+		UNIEMClient.shared.onAutoLoginDidCompleteBlock = null;
+		UNIEMClient.shared.onUserAccountDidLoginFromOtherDeviceBlock = null;
+		UNIEMClient.shared.onUserAccountDidRemoveFromServerBlock = null;
+		UNIEMClient.shared.onUserDidForbidByServerBlock = null;
+	}
+	console.log('[iOS] removeConnectionListener:', listenerId);
+}
+
+export function removeAllConnectionListeners() : void {
+	connectionCallbackMap.clear();
+	UNIEMClient.shared.onConnectionStateDidChangeBlock = null;
+	UNIEMClient.shared.onUserAccountDidForcedToLogoutBlock = null;
+	UNIEMClient.shared.onTokenWillExpireBlock = null;
+	UNIEMClient.shared.onTokenDidExpireBlock = null;
+	UNIEMClient.shared.onAutoLoginDidCompleteBlock = null;
+	UNIEMClient.shared.onUserAccountDidLoginFromOtherDeviceBlock = null;
+	UNIEMClient.shared.onUserAccountDidRemoveFromServerBlock = null;
+	UNIEMClient.shared.onUserDidForbidByServerBlock = null;
+	console.log('[iOS] removeAllConnectionListeners');
+}
+
+// ==================== 聊天管理监听（Block 回调方式）====================
+
+type ChatManagerListener = {
+	onMessageReceived?: ((messages: string) => void) | null;
+	onCmdMessageReceived?: ((messages: string) => void) | null;
+	onConversationListDidUpdate?: ((conversations: string) => void) | null;
+	onMessagesDidRead?: ((messages: string) => void) | null;
+	onGroupMessageDidRead?: ((info: string) => void) | null;
+	onGroupMessageAckHasChanged?: (() => void) | null;
+	onConversationRead?: ((from: string, to: string) => void) | null;
+	onMessagesDidDeliver?: ((messages: string) => void) | null;
+	onMessagesInfoDidRecall?: ((infos: string) => void) | null;
+	onMessageStatusDidChange?: ((message: string, error: string) => void) | null;
+	onMessageAttachmentStatusDidChange?: ((message: string, error: string) => void) | null;
+	onMessageContentChanged?: ((message: string, operatorId: string, operationTime: number) => void) | null;
+	onMessageReactionDidChange?: ((changes: string) => void) | null;
+}
+
+const chatManagerCallbackMap : Map<string, ChatManagerListener> = new Map();
+
+@UTSJS.keepAlive
+export function addChatManagerListener(
+	listenerId : string,
+	listener : ChatManagerListener
+) : void {
+	chatManagerCallbackMap.set(listenerId, listener);
+
+	if (chatManagerCallbackMap.size == 1) {
+		UNIEMClient.shared.onMessagesReceivedBlock = (json : string) : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
 				cbs.onMessageReceived?.(json);
 			});
 		};
-		UNIEMClient.shared.onCmdMessagesReceivedBlock = (messages : EMChatMessage[]) : void => {
-			const msgList = messages.map((msg : EMChatMessage) : Message => convertEMMessage(msg));
-			const json = JSON.stringify(msgList) ?? "[]";
-			messageCallbackMap.forEach((cbs : MessageListener, _id : string) : void => {
+		UNIEMClient.shared.onCmdMessagesReceivedBlock = (json : string) : void => {			
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
 				cbs.onCmdMessageReceived?.(json);
+			});
+		};
+		UNIEMClient.shared.onConversationListDidUpdateBlock = (conversationsJson : string) : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
+				cbs.onConversationListDidUpdate?.(conversationsJson);
+			});
+		};
+		UNIEMClient.shared.onMessagesDidReadBlock = (json : string) : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
+				cbs.onMessagesDidRead?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupMessageDidReadBlock = (infoJson : string) : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
+				cbs.onGroupMessageDidRead?.(infoJson);
+			});
+		};
+		UNIEMClient.shared.onGroupMessageAckHasChangedBlock = () : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
+				cbs.onGroupMessageAckHasChanged?.();
+			});
+		};
+		UNIEMClient.shared.onConversationReadBlock = (from : string, to : string) : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
+				cbs.onConversationRead?.(from, to);
+			});
+		};
+		UNIEMClient.shared.onMessagesDidDeliverBlock = (json : string) : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
+				cbs.onMessagesDidDeliver?.(json);
+			});
+		};
+		UNIEMClient.shared.onMessagesInfoDidRecallBlock = (infosJson : string) : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
+				cbs.onMessagesInfoDidRecall?.(infosJson);
+			});
+		};
+		UNIEMClient.shared.onMessageStatusDidChangeBlock = (msgJson : string, errorJson : string) : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
+				cbs.onMessageStatusDidChange?.(msgJson, errorJson);
+			});
+		};
+		UNIEMClient.shared.onMessageAttachmentStatusDidChangeBlock = (msgJson : string, errorJson : string) : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
+				cbs.onMessageAttachmentStatusDidChange?.(msgJson, errorJson);
+			});
+		};
+		UNIEMClient.shared.onMessageContentChangedBlock = (msgJson : string, operatorId : string, operationTime : number) : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
+				cbs.onMessageContentChanged?.(msgJson, operatorId, operationTime);
+			});
+		};
+		UNIEMClient.shared.onMessageReactionDidChangeBlock = (changesJson : string) : void => {
+			chatManagerCallbackMap.forEach((cbs : ChatManagerListener, _id : string) : void => {
+				cbs.onMessageReactionDidChange?.(changesJson);
 			});
 		};
 	}
 
-	console.log('[iOS] addMessageListener:', listenerId);
+	console.log('[iOS] addChatManagerListener:', listenerId);
 }
 
-export function removeMessageListener(listenerId : string) : void {
-	messageCallbackMap.delete(listenerId);
-	if (messageCallbackMap.size == 0) {
+export function removeChatManagerListener(listenerId : string) : void {
+	chatManagerCallbackMap.delete(listenerId);
+	if (chatManagerCallbackMap.size == 0) {
 		UNIEMClient.shared.onMessagesReceivedBlock = null;
 		UNIEMClient.shared.onCmdMessagesReceivedBlock = null;
+		UNIEMClient.shared.onConversationListDidUpdateBlock = null;
+		UNIEMClient.shared.onMessagesDidReadBlock = null;
+		UNIEMClient.shared.onGroupMessageDidReadBlock = null;
+		UNIEMClient.shared.onGroupMessageAckHasChangedBlock = null;
+		UNIEMClient.shared.onConversationReadBlock = null;
+		UNIEMClient.shared.onMessagesDidDeliverBlock = null;
+		UNIEMClient.shared.onMessagesInfoDidRecallBlock = null;
+		UNIEMClient.shared.onMessageStatusDidChangeBlock = null;
+		UNIEMClient.shared.onMessageAttachmentStatusDidChangeBlock = null;
+		UNIEMClient.shared.onMessageContentChangedBlock = null;
+		UNIEMClient.shared.onMessageReactionDidChangeBlock = null;
 	}
-	console.log('[iOS] removeMessageListener:', listenerId);
+	console.log('[iOS] removeChatManagerListener:', listenerId);
 }
 
-export function removeAllMessageListeners() : void {
-	messageCallbackMap.clear();
+export function removeAllChatManagerListeners() : void {
+	chatManagerCallbackMap.clear();
 	UNIEMClient.shared.onMessagesReceivedBlock = null;
 	UNIEMClient.shared.onCmdMessagesReceivedBlock = null;
-	console.log('[iOS] removeAllMessageListeners');
+	UNIEMClient.shared.onConversationListDidUpdateBlock = null;
+	UNIEMClient.shared.onMessagesDidReadBlock = null;
+	UNIEMClient.shared.onGroupMessageDidReadBlock = null;
+	UNIEMClient.shared.onGroupMessageAckHasChangedBlock = null;
+	UNIEMClient.shared.onConversationReadBlock = null;
+	UNIEMClient.shared.onMessagesDidDeliverBlock = null;
+	UNIEMClient.shared.onMessagesInfoDidRecallBlock = null;
+	UNIEMClient.shared.onMessageStatusDidChangeBlock = null;
+	UNIEMClient.shared.onMessageAttachmentStatusDidChangeBlock = null;
+	UNIEMClient.shared.onMessageContentChangedBlock = null;
+	UNIEMClient.shared.onMessageReactionDidChangeBlock = null;
+	console.log('[iOS] removeAllChatManagerListeners');
 }
 
 // iOS beta: 仅导出独立函数，不提供 EasemobClient 实例封装

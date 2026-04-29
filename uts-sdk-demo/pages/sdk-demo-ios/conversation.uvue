@@ -114,19 +114,20 @@
 <script setup lang="uts">
 	import { ref } from 'vue'
 	import {
-		getClient,
 		getAllConversations,
 		getAllConversationsBySort,
 		getUnreadMessageCount,
+		fetchConversationsFromServer,
+		sendConversationReadAck,
 		type EasemobClient,
-		type EMConversation,
+		type UNIEMConversation,
 	} from '@/uni_modules/easemob-uts-sdk-beta'
 
 	const limitStr = ref('10')
 	const cursor = ref('')
 	const nextCursor = ref('')
 	const isLoading = ref(false)
-	const conversations = ref<EMConversation[]>([])
+	const conversations = ref<UNIEMConversation[]>([])
 	const ackConvId = ref('')
 	const unreadMessageCount = ref(0)
 	const convTypeStr = ref('0')
@@ -153,10 +154,6 @@
 		}
 	}
 
-	function updateUnreadMessageCount() : void {
-		getUnreadMessageCount()
-	}
-
 	function toggleDeleteMessage() : void {
 		isDeleteMessage.value = !isDeleteMessage.value
 	}
@@ -167,12 +164,8 @@
 	}
 
 	function handleGetConversationUnreadMsgCount() : void {
-		const easemob = getClient()
-		if (easemob == null) {
-			uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
-			return
-		}
-		const count = easemob.getConversationUnreadMsgCount(ackConvId.value)
+
+		const count = getConversationUnreadMsgCount(ackConvId.value)
 		uni.showToast({ title: ackConvId.value + ' 未读: ' + count, icon: 'none' })
 	}
 
@@ -180,15 +173,14 @@
 		isLoading.value = true
 		try {
 
-			// const result = await fetchConversationsFromServer(limit, cursorValue)
-			// if (cursorValue.length === 0) {
-			// 	conversations.value = result.data
-			// } else {
-			// 	conversations.value = conversations.value.concat(result.data)
-			// }
+			const result = await fetchConversationsFromServer(limit, cursorValue)
+			if (cursorValue.length === 0) {
+				conversations.value = result.data
+			} else {
+				conversations.value = conversations.value.concat(result.data)
+			}
 			nextCursor.value = result.cursor
 			cursor.value = cursorValue
-			updateUnreadMessageCount()
 			uni.showToast({ title: '获取成功: ' + result.data.length + ' 条', icon: 'success' })
 		} catch (error) {
 			console.error('[conversation] 获取会话列表失败:', error)
@@ -216,7 +208,6 @@
 		conversations.value = result
 		nextCursor.value = ''
 		cursor.value = ''
-		updateUnreadMessageCount()
 		uni.showToast({ title: '本地排序获取成功: ' + result.length + ' 条', icon: 'success' })
 	}
 
@@ -226,7 +217,6 @@
 		conversations.value = result
 		nextCursor.value = ''
 		cursor.value = ''
-		updateUnreadMessageCount()
 		uni.showToast({ title: '本地 Map 获取成功: ' + result.length + ' 条', icon: 'success' })
 	}
 
@@ -238,12 +228,7 @@
 	async function handleSendConversationReadAck() : Promise<void> {
 		isLoading.value = true
 		try {
-			const easemob = getClient()
-			if (easemob == null) {
-				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
-				return
-			}
-			await easemob.sendConversationReadAck(ackConvId.value)
+			await sendConversationReadAck(ackConvId.value)
 			uni.showToast({ title: '发送会话已读回执成功', icon: 'success' })
 		} catch (error) {
 			console.error('[conversation] 发送会话已读回执失败:', error)
@@ -256,13 +241,7 @@
 	async function handleMarkAllMessagesAsRead() : Promise<void> {
 		isLoading.value = true
 		try {
-			const easemob = getClient()
-			if (easemob == null) {
-				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
-				return
-			}
-			await easemob.markAllMessagesAsRead(ackConvId.value)
-			updateUnreadMessageCount()
+			await markAllMessagesAsRead(ackConvId.value)
 			uni.showToast({ title: '本地未读清零成功', icon: 'success' })
 		} catch (error) {
 			console.error('[conversation] 本地未读清零失败:', error)
@@ -275,13 +254,7 @@
 	async function handleMarkAllMessagesAsReadById(conversationId : string) : Promise<void> {
 		isLoading.value = true
 		try {
-			const easemob = getClient()
-			if (easemob == null) {
-				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
-				return
-			}
-			await easemob.markAllMessagesAsRead(conversationId)
-			updateUnreadMessageCount()
+			await markAllMessagesAsRead(conversationId)
 			uni.showToast({ title: '本地未读清零成功', icon: 'success' })
 		} catch (error) {
 			console.error('[conversation] 本地未读清零失败:', error)
@@ -294,12 +267,7 @@
 	async function handleMarkAllConversationsAsRead() : Promise<void> {
 		isLoading.value = true
 		try {
-			const easemob = getClient()
-			if (easemob == null) {
-				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
-				return
-			}
-			await easemob.markAllConversationsAsRead()
+			await markAllConversationsAsRead()
 			updateUnreadMessageCount()
 			uni.showToast({ title: '全部会话已读清零成功', icon: 'success' })
 		} catch (error) {
@@ -313,13 +281,8 @@
 	async function handleDeleteConversationFromServer() : Promise<void> {
 		isLoading.value = true
 		try {
-			const easemob = getClient()
-			if (easemob == null) {
-				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
-				return
-			}
 			const convType = parseInt(convTypeStr.value)
-			await easemob.deleteConversationFromServer(ackConvId.value, convType, isDeleteMessage.value)
+			await deleteConversationFromServer(ackConvId.value, convType, isDeleteMessage.value)
 			uni.showToast({ title: '删除远端会话成功', icon: 'success' })
 		} catch (error) {
 			console.error('[conversation] 删除远端会话失败:', error)
@@ -332,12 +295,7 @@
 	async function handleDeleteConversation() : Promise<void> {
 		isLoading.value = true
 		try {
-			const easemob = getClient()
-			if (easemob == null) {
-				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
-				return
-			}
-			await easemob.deleteConversation(ackConvId.value, isDeleteMessage.value)
+			await deleteConversation(ackConvId.value, isDeleteMessage.value)
 			uni.showToast({ title: '删除本地会话成功', icon: 'success' })
 		} catch (error) {
 			console.error('[conversation] 删除本地会话失败:', error)
