@@ -84,6 +84,47 @@ public class UNIEMClient: NSObject {
     public func fetchConversationsFromServer(cursor: String?, pageSize: NSNumber, completion: @escaping (EMCursorResult<EMConversation>?, EMError?) -> Void) {
         EMClient.shared().chatManager?.getConversationsFromServer(withCursor: cursor, pageSize: UInt8(pageSize.intValue), completion: completion)
     }
+
+    public func fetchMessagesFromServerBy(_ conversationId: String, conversationType: NSNumber, cursor: String?, pageSize: NSNumber, completion: @escaping (EMCursorResult<EMChatMessage>?, EMError?) -> Void) {
+        let type = EMConversationType(rawValue: conversationType.intValue) ?? .chat
+        EMClient.shared().chatManager?.fetchMessagesFromServer(by: conversationId, conversationType: type, cursor: cursor, pageSize: UInt(pageSize.intValue), option: nil, completion: completion)    }
+
+    public func messagesToJsonString(_ messages: [EMChatMessage]) -> String? {
+        return messagesToJson(messages)
+    }
+
+    public func messageToJsonString(_ message: EMChatMessage) -> String? {
+        return messageToJson(message)
+    }
+
+    public func searchLocalMessagesByKeywords(convId: String, keywords: String?, timestamp: NSNumber, maxCount: NSNumber, from: [String]?, direction: NSNumber, scope: NSNumber, completion: @escaping (String?, EMError?) -> Void) {
+        guard let conversation = EMClient.shared().chatManager?.getConversationWithConvId(convId) else {
+            completion("[]", nil)
+            return
+        }
+        let dir = EMMessageSearchDirection(rawValue: direction.intValue) ?? .up
+        let sc = EMMessageSearchScope(rawValue: scope.intValue) ?? .content
+        let ts = timestamp.int64Value
+        let cnt = maxCount.int32Value
+        conversation.loadMessages(withKeyword: keywords, timestamp: ts, count: cnt, fromUsers: from, searchDirection: dir, scope: sc) { messages, error in
+            let json = self.messagesToJsonString(messages ?? [])
+            completion(json, error)
+        }
+    }
+
+    public func loadLocalMessages(convId: String, startMsgId: String?, pageSize: NSNumber, completion: @escaping (String?, EMError?) -> Void) {
+        guard let conversation = EMClient.shared().chatManager?.getConversationWithConvId(convId) else {
+            completion("[]", nil)
+            return
+        }
+        let dir = EMMessageSearchDirection.up
+        let cnt = pageSize.int32Value
+        let msgId = startMsgId
+        conversation.loadMessagesStart(fromId: msgId, count: cnt, searchDirection: dir) { messages, error in
+            let json = self.messagesToJsonString(messages ?? [])
+            completion(json, error)
+        }
+    }
 }
 // MARK: - Helpers
 

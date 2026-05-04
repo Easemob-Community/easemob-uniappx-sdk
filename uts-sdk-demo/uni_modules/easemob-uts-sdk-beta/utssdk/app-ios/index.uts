@@ -7,19 +7,14 @@ import {
 	EMClient,
 	EMOptions,
 	EMError,
-	EMMessageBodyType,
 	EMTextMessageBody,
-	EMImageMessageBody,
-	EMVoiceMessageBody,
-	EMVideoMessageBody,
-	EMFileMessageBody,
-	EMLocationMessageBody,
 	EMCmdMessageBody,
 	EMCustomMessageBody,
 	EMChatMessage,
 	EMConversation,
 	EMCursorResult,
 	EMChatType,
+	EMConversationType,
 } from 'HyphenateChat';
 import {
 	EMInitConfig,
@@ -40,7 +35,22 @@ export type IMError = {
 	errorCode : number,
 	errorDesc : string
 }
-
+export function getEasemobLogPath(): string {
+    // 获取 Library 目录
+    let libPaths = NSSearchPathForDirectoriesInDomains(
+        FileManager.SearchPathDirectory.libraryDirectory,
+        FileManager.SearchPathDomainMask.userDomainMask,
+        true
+    )
+    
+    let libraryPath = libPaths.length > 0 ? libPaths[0] : NSHomeDirectory() + "/Library"
+    
+    // 拼接环信日志路径
+    let logPath = libraryPath + "/Application Support/HyphenateSDK/easemobLog/easemob.log"
+    
+    console.log("环信日志路径: " + logPath)
+    return logPath
+}
 // 初始化
 export function initEasemob(config : EMInitConfig) : IMError | null {
 	const appKey = config.appKey!;
@@ -114,6 +124,8 @@ export function logout() : Promise<void> {
 }
 
 export function sendConversationReadAck(convId : string) : Promise<void> {
+	
+	console.log(convId)
 	return new Promise((resolve, reject) => {
 		try {
 			const completion = (error : EMError | null) : void => {
@@ -135,9 +147,20 @@ export function sendConversationReadAck(convId : string) : Promise<void> {
 	});
 }
 
-export function markAllMessagesAsRead(_convId : string) : Promise<void> {
-	return new Promise((_resolve, reject) => {
-		reject(new Error('markAllMessagesAsRead is not implemented on iOS yet'))
+export function markAllMessagesAsRead(convId : string) : Promise<void> {
+	return new Promise((resolve, reject) => {
+		try {
+			const conversation = EMClient.shared().chatManager?.getConversationWithConvId(convId)
+			if (conversation != null) {
+				conversation!.markAllMessages(asRead = null)
+				resolve()
+			} else {
+				reject(new Error(`Conversation not found: ${convId}`))
+			}
+		} catch (error) {
+			console.error('[iOS] markAllMessagesAsRead error:', error)
+			reject(error)
+		}
 	})
 }
 
@@ -152,7 +175,10 @@ export function getUnreadMessageCount() : number {
 
 export function getConversationUnreadMsgCount(convId : string) : number {
 	const conversation = EMClient.shared().chatManager?.getConversationWithConvId(convId)
-	return (conversation?.unreadMessagesCount as number) ?? 0
+	if (conversation ==null){
+		return 0
+	}
+	return (conversation!.unreadMessagesCount as number)
 }
 
 export function markAllConversationsAsRead() : Promise<void> {
@@ -167,9 +193,32 @@ export function markAllConversationsAsRead() : Promise<void> {
 	})
 }
 
-export function deleteConversationFromServer(_convId : string, _convType : number, _isDeleteServerMessages : boolean) : Promise<void> {
+export function deleteConversationFromServer(convId : string, convType : number, isDeleteServerMessages : boolean) : Promise<void> {
 	return new Promise((resolve, reject) => {
-		reject(new Error('deleteConversationFromServer is not implemented on iOS yet'))
+		try {
+			let type : EMConversationType = EMConversationType.chat
+			if (convType == 1) {
+				type = EMConversationType.groupChat
+			} else if (convType == 2) {
+				type = EMConversationType.chatRoom
+			}
+
+			const completion = (_aConversationId : string | null, error : EMError | null) : void => {
+				if (error != null) {
+					const code = error!.code.rawValue as number
+					const msg = error!.errorDescription ?? 'deleteConversationFromServer failed'
+					console.error('[iOS] deleteConversationFromServer failed:', code, msg)
+					reject(new Error(`deleteConversationFromServer failed: ${code} - ${msg}`))
+				} else {
+					resolve()
+				}
+			}
+
+			EMClient.shared().chatManager?.deleteServerConversation(convId, conversationType = type, isDeleteServerMessages = isDeleteServerMessages, completion = completion)
+		} catch (error) {
+			console.error('[iOS] deleteConversationFromServer error:', error)
+			reject(error)
+		}
 	})
 }
 
@@ -185,27 +234,98 @@ export function deleteConversation(convId : string, withMessage : boolean) : Pro
 	})
 }
 
-export function fetchHistoryMessages(_convId : string, _convType : number, _pageSize : number, _startMsgId : string) : Promise<UNIEMCursorResult<Message>> {
+export function fetchHistoryMessages(convId : string, convType : number, pageSize : number, startMsgId : string) : Promise<UNIEMCursorResult<string>> {
 	return new Promise((resolve, reject) => {
-		reject(new Error('fetchHistoryMessages is not implemented on iOS yet'))
+		try {
+			const completion = (result : EMCursorResult<EMChatMessage> | null, error : EMError | null) : void => {
+				if (error != null) {
+					const code = error!.code.rawValue as number
+					const msg = error!.errorDescription ?? 'fetchHistoryMessages failed'
+					console.error('[iOS] fetchHistoryMessages failed:', code, msg)
+					reject(new Error(`fetchHistoryMessages failed: ${code} - ${msg}`))
+					return
+				}
+				const msgList = result?.list ?? []
+				const nextCursor = result?.cursor ?? ''
+				const json = UNIEMClient.shared.messagesToJsonString(msgList)
+				console.log(json)
+				resolve({
+					data: [json],
+					cursor: nextCursor
+				} as UNIEMCursorResult<string>)
+			}
+
+			UNIEMClient.shared.fetchMessagesFromServerBy(convId, conversationType = convType, cursor = startMsgId, pageSize = pageSize, completion = completion)
+		} catch (error) {
+			console.error('[iOS] fetchHistoryMessages error:', error)
+			reject(error)
+		}
 	})
 }
 
-export function searchLocalMessagesByKeywords(_convId : string, _keywords : string, _timestamp : number, _maxCount : number, _from : string, _direction : number) : Promise<Message[]> {
+export function searchLocalMessagesByKeywords(_convId : string, _keywords : string, _timestamp : number, _maxCount : number, _from : string[], _direction : number, _scope : number = 0) : Promise<string> {
+	
 	return new Promise((resolve, reject) => {
-		reject(new Error('searchLocalMessagesByKeywords is not implemented on iOS yet'))
+		try {
+			const completion = (jsonStr : string | null, error : EMError | null) : void => {
+				if (error != null) {
+					const code = error!.code.rawValue as number
+					const msg = error!.errorDescription ?? 'searchLocalMessagesByKeywords failed'
+					console.error('[iOS] searchLocalMessagesByKeywords failed:', code, msg)
+					reject(new Error(`searchLocalMessagesByKeywords failed: ${code} - ${msg}`))
+					return
+				}
+				console.log(jsonStr)
+				resolve(jsonStr ?? '[]')
+			}
+			
+			console.log(`searchLocalMessagesByKeywords convId=${_convId} keywords=${_keywords} timestamp=${_timestamp} maxCount=${_maxCount} from=${JSON.stringify(_from)} direction=${_direction} scope=${_scope}`)
+			UNIEMClient.shared.searchLocalMessagesByKeywords(
+				convId = _convId,
+				keywords = _keywords.length > 0 ? _keywords : null,
+				timestamp = _timestamp,
+				maxCount = _maxCount,
+				from = _from,
+				direction = _direction,
+				scope = _scope,
+				completion = completion
+			)
+		} catch (error) {
+			console.error('[iOS] searchLocalMessagesByKeywords error:', error)
+			reject(error)
+		}
 	})
 }
 
-export function searchLocalMessagesByTimeRange(_convId : string, _startTimestamp : number, _endTimestamp : number, _maxCount : number, _from : string, _direction : number) : Promise<Message[]> {
-	return new Promise((resolve, reject) => {
-		reject(new Error('searchLocalMessagesByTimeRange is not implemented on iOS yet'))
-	})
-}
 
-export function loadLocalMessages(_convId : string, _startMsgId : string, _pageSize : number) : Promise<Message[]> {
+export function loadLocalMessages(_convId : string, _startMsgId : string, _pageSize : number) : Promise<string> {
 	return new Promise((resolve, reject) => {
-		reject(new Error('loadLocalMessages is not implemented on iOS yet'))
+		try {
+			const completion = (jsonStr : string | null, error : EMError | null) : void => {
+				if (error != null) {
+					const code = error!.code.rawValue as number
+					const msg = error!.errorDescription ?? 'loadLocalMessages failed'
+					console.error('[iOS] loadLocalMessages failed:', code, msg)
+					reject(new Error(`loadLocalMessages failed: ${code} - ${msg}`))
+					return
+				}
+				if (jsonStr == null) {
+					resolve("[]")
+					return
+				}
+				resolve(jsonStr)
+			}
+
+			UNIEMClient.shared.loadLocalMessages(
+				convId = _convId,
+				startMsgId = _startMsgId.length > 0 ? _startMsgId : null,
+				pageSize = _pageSize,
+				completion = completion
+			)
+		} catch (error) {
+			console.error('[iOS] loadLocalMessages error:', error)
+			reject(error)
+		}
 	})
 }
 
@@ -499,19 +619,6 @@ export function removeConnectionListener(listenerId : string) : void {
 	console.log('[iOS] removeConnectionListener:', listenerId);
 }
 
-export function removeAllConnectionListeners() : void {
-	connectionCallbackMap.clear();
-	UNIEMClient.shared.onConnectionStateDidChangeBlock = null;
-	UNIEMClient.shared.onUserAccountDidForcedToLogoutBlock = null;
-	UNIEMClient.shared.onTokenWillExpireBlock = null;
-	UNIEMClient.shared.onTokenDidExpireBlock = null;
-	UNIEMClient.shared.onAutoLoginDidCompleteBlock = null;
-	UNIEMClient.shared.onUserAccountDidLoginFromOtherDeviceBlock = null;
-	UNIEMClient.shared.onUserAccountDidRemoveFromServerBlock = null;
-	UNIEMClient.shared.onUserDidForbidByServerBlock = null;
-	console.log('[iOS] removeAllConnectionListeners');
-}
-
 // ==================== 聊天管理监听（Block 回调方式）====================
 
 type ChatManagerListener = {
@@ -630,22 +737,5 @@ export function removeChatManagerListener(listenerId : string) : void {
 	console.log('[iOS] removeChatManagerListener:', listenerId);
 }
 
-export function removeAllChatManagerListeners() : void {
-	chatManagerCallbackMap.clear();
-	UNIEMClient.shared.onMessagesReceivedBlock = null;
-	UNIEMClient.shared.onCmdMessagesReceivedBlock = null;
-	UNIEMClient.shared.onConversationListDidUpdateBlock = null;
-	UNIEMClient.shared.onMessagesDidReadBlock = null;
-	UNIEMClient.shared.onGroupMessageDidReadBlock = null;
-	UNIEMClient.shared.onGroupMessageAckHasChangedBlock = null;
-	UNIEMClient.shared.onConversationReadBlock = null;
-	UNIEMClient.shared.onMessagesDidDeliverBlock = null;
-	UNIEMClient.shared.onMessagesInfoDidRecallBlock = null;
-	UNIEMClient.shared.onMessageStatusDidChangeBlock = null;
-	UNIEMClient.shared.onMessageAttachmentStatusDidChangeBlock = null;
-	UNIEMClient.shared.onMessageContentChangedBlock = null;
-	UNIEMClient.shared.onMessageReactionDidChangeBlock = null;
-	console.log('[iOS] removeAllChatManagerListeners');
-}
 
 // iOS beta: 仅导出独立函数，不提供 EasemobClient 实例封装

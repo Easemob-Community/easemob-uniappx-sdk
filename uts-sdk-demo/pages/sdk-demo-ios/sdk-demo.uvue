@@ -57,6 +57,7 @@
 		initEasemob,
 		login,
 		logout,
+		getEasemobLogPath,
 		addChatManagerListener,
 		removeChatManagerListener,
 		addConnectionListener,
@@ -88,6 +89,7 @@
 
 	async function handleInit() {
 
+        getEasemobLogPath()
 		addLog('开始初始化...')
 		const config = { appKey: appKey.value, autoLogin: true }
 		const err = initEasemob(config)

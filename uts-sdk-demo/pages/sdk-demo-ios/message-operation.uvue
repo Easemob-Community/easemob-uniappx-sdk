@@ -97,7 +97,7 @@
 					<text class="empty-text">暂无消息，点击上方按钮获取</text>
 				</view>
 				<view v-else class="list">
-					<view v-for="(item, index) in messages" :key="item.msgId + index" class="list-item">
+					<view v-for="(item, index) in messages" :key="(item.msgId ?? '') + '_' + index" class="list-item">
 						<view class="item-header">
 							<text class="item-type">[{{ formatMsgType(item.body?.type ?? '') }}]</text>
 							<text class="item-from">{{ item.from }} → {{ item.to }}</text>
@@ -115,6 +115,9 @@
 	import { ref } from 'vue'
 	import {
 		getClient,
+		fetchHistoryMessages,
+		searchLocalMessagesByKeywords,
+		loadLocalMessages,
 		type EasemobClient,
 		type Message,
 	} from '@/uni_modules/easemob-uts-sdk-beta'
@@ -155,16 +158,11 @@
 	async function handleFetchHistoryMessages(): Promise<void> {
 		isLoading.value = true
 		try {
-			const easemob = getClient()
-			if (easemob == null) {
-				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
-				return
-			}
+	
 			const pageSize = parseInt(pageSizeStr.value)
 			const convType = parseInt(convTypeStr.value)
-			const result = await easemob.fetchHistoryMessages(convId.value, convType, Number.isNaN(pageSize) ? 20 : pageSize, startMsgId.value)
-			messages.value = result.data
-			uni.showToast({ title: '获取成功: ' + result.data.length + ' 条', icon: 'success' })
+			const result = await fetchHistoryMessages(convId.value, convType, Number.isNaN(pageSize) ? 20 : pageSize, startMsgId.value)
+			uni.showToast({ title: '获取成功: ' + result.data, icon: 'success' })
 		} catch (error) {
 			console.error('[message-operation] 获取历史消息失败:', error)
 			uni.showToast({ title: '获取失败: ' + error, icon: 'none' })
@@ -176,24 +174,22 @@
 	async function handleSearchByKeywords(): Promise<void> {
 		isLoading.value = true
 		try {
-			const easemob = getClient()
-			if (easemob == null) {
-				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
-				return
-			}
 			const timestamp = parseInt(timestampStr.value)
 			const maxCount = parseInt(maxCountStr.value)
 			const direction = parseInt(directionStr.value)
-			const result = await easemob.searchLocalMessagesByKeywords(
+			const result = await  searchLocalMessagesByKeywords(
 				convId.value,
 				keywords.value,
 				Number.isNaN(timestamp) ? 0 : timestamp,
 				Number.isNaN(maxCount) ? 20 : maxCount,
-				fromUser.value,
-				Number.isNaN(direction) ? 1 : direction
+				[],
+				Number.isNaN(direction) ? 1 : direction,
+				0
 			)
 			messages.value = result
-			uni.showToast({ title: '搜索成功: ' + result.length + ' 条', icon: 'success' })
+			console.log(result)
+			
+			uni.showToast({ title: '搜索成功: ' + result + ' 条', icon: 'success' })
 		} catch (error) {
 			console.error('[message-operation] 关键字搜索失败:', error)
 			uni.showToast({ title: '搜索失败: ' + error, icon: 'none' })
@@ -205,16 +201,12 @@
 	async function handleSearchByTimeRange(): Promise<void> {
 		isLoading.value = true
 		try {
-			const easemob = getClient()
-			if (easemob == null) {
-				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
-				return
-			}
+
 			const startTime = parseInt(startTimeStr.value)
 			const endTime = parseInt(endTimeStr.value)
 			const maxCount = parseInt(maxCountStr2.value)
 			const direction = parseInt(directionStr2.value)
-			const result = await easemob.searchLocalMessagesByTimeRange(
+			const result = await searchLocalMessagesByTimeRange(
 				convId.value,
 				Number.isNaN(startTime) ? 0 : startTime,
 				Number.isNaN(endTime) ? 0 : endTime,
@@ -235,15 +227,10 @@
 	async function handleLoadLocalMessages(): Promise<void> {
 		isLoading.value = true
 		try {
-			const easemob = getClient()
-			if (easemob == null) {
-				uni.showToast({ title: 'SDK 未初始化，请先初始化', icon: 'none' })
-				return
-			}
 			const pageSize = parseInt(localPageSizeStr.value)
-			const result = await easemob.loadLocalMessages(convId.value, localStartMsgId.value, Number.isNaN(pageSize) ? 20 : pageSize)
-			messages.value = result
-			uni.showToast({ title: '读取成功: ' + result.length + ' 条', icon: 'success' })
+			const result = await loadLocalMessages(convId.value, localStartMsgId.value, Number.isNaN(pageSize) ? 20 : pageSize)
+			console.log(result)
+			uni.showToast({ title: '读取成功: ', icon: 'success' })
 		} catch (error) {
 			console.error('[message-operation] 读取本地消息失败:', error)
 			uni.showToast({ title: '读取失败: ' + error, icon: 'none' })

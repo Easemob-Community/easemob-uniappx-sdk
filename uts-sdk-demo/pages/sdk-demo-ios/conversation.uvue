@@ -119,6 +119,11 @@
 		getUnreadMessageCount,
 		fetchConversationsFromServer,
 		sendConversationReadAck,
+		markAllConversationsAsRead,
+		markAllMessagesAsRead,
+		getConversationUnreadMsgCount,
+		deleteConversation,
+		deleteConversationFromServer,
 		type EasemobClient,
 		type UNIEMConversation,
 	} from '@/uni_modules/easemob-uts-sdk-beta'
@@ -159,7 +164,7 @@
 	}
 
 	function handleGetUnreadMessageCount() : void {
-		updateUnreadMessageCount()
+		getUnreadMessageCount()
 		uni.showToast({ title: '总未读: ' + unreadMessageCount.value, icon: 'none' })
 	}
 
@@ -268,7 +273,7 @@
 		isLoading.value = true
 		try {
 			await markAllConversationsAsRead()
-			updateUnreadMessageCount()
+			getUnreadMessageCount()
 			uni.showToast({ title: '全部会话已读清零成功', icon: 'success' })
 		} catch (error) {
 			console.error('[conversation] 全部会话已读清零失败:', error)
