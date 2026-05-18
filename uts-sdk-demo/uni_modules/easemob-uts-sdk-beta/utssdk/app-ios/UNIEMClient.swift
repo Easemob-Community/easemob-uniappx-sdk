@@ -55,10 +55,98 @@ public class UNIEMClient: NSObject {
     /// UTS 侧设置的 token 已过期回调 block
     public var onTokenDidExpireBlock: ((NSNumber) -> Void)?
 
+    // MARK: - EMGroupManagerDelegate blocks
+
+    /// 收到群组邀请
+    public var onGroupInvitationDidReceiveBlock: ((String) -> Void)?
+    /// 群组邀请被接受
+    public var onGroupInvitationDidAcceptBlock: ((String) -> Void)?
+    /// 群组邀请被拒绝
+    public var onGroupInvitationDidDeclineBlock: ((String) -> Void)?
+    /// 自动加入群组
+    public var onDidJoinGroupBlock: ((String) -> Void)?
+    /// 离开群组
+    public var onDidLeaveGroupBlock: ((String) -> Void)?
+    /// 收到入群申请
+    public var onJoinGroupRequestDidReceiveBlock: ((String) -> Void)?
+    /// 入群申请被拒绝
+    public var onJoinGroupRequestDidDeclineBlock: ((String) -> Void)?
+    /// 入群申请被同意
+    public var onJoinGroupRequestDidApproveBlock: ((String) -> Void)?
+    /// 群组列表更新
+    public var onGroupListDidUpdateBlock: ((String) -> Void)?
+    /// 群成员加入禁言列表
+    public var onGroupMuteListAddedBlock: ((String) -> Void)?
+    /// 群成员移出禁言列表
+    public var onGroupMuteListRemovedBlock: ((String) -> Void)?
+    /// 群成员加入白名单
+    public var onGroupWhiteListAddedBlock: ((String) -> Void)?
+    /// 群成员移出白名单
+    public var onGroupWhiteListRemovedBlock: ((String) -> Void)?
+    /// 全员禁言状态变化
+    public var onGroupAllMemberMuteChangedBlock: ((String) -> Void)?
+    /// 管理员添加
+    public var onGroupAdminAddedBlock: ((String) -> Void)?
+    /// 管理员移除
+    public var onGroupAdminRemovedBlock: ((String) -> Void)?
+    /// 群主变更
+    public var onGroupOwnerDidUpdateBlock: ((String) -> Void)?
+    /// 用户加入群组
+    public var onUserDidJoinGroupBlock: ((String) -> Void)?
+    /// 用户离开群组
+    public var onUserDidLeaveGroupBlock: ((String) -> Void)?
+    /// 群公告更新
+    public var onGroupAnnouncementDidUpdateBlock: ((String) -> Void)?
+    /// 群共享文件添加
+    public var onGroupFileListAddedBlock: ((String) -> Void)?
+    /// 群共享文件移除
+    public var onGroupFileListRemovedBlock: ((String) -> Void)?
+    /// 群禁用状态变化
+    public var onGroupStateChangedBlock: ((String) -> Void)?
+    /// 群详情更新
+    public var onGroupSpecificationDidUpdateBlock: ((String) -> Void)?
+    /// 群成员自定义属性变更
+    public var onGroupMemberAttributesChangedBlock: ((String) -> Void)?
+
+    // MARK: - EMChatroomManagerDelegate blocks
+
+    /// 用户加入聊天室
+    public var onChatroomUserJoinedBlock: ((String) -> Void)?
+    /// 用户离开聊天室
+    public var onChatroomUserLeftBlock: ((String) -> Void)?
+    /// 被踢出聊天室
+    public var onChatroomDidDismissBlock: ((String) -> Void)?
+    /// 聊天室详情更新
+    public var onChatroomSpecificationDidUpdateBlock: ((String) -> Void)?
+    /// 聊天室成员加入禁言列表
+    public var onChatroomMuteListAddedBlock: ((String) -> Void)?
+    /// 聊天室成员移出禁言列表
+    public var onChatroomMuteListRemovedBlock: ((String) -> Void)?
+    /// 聊天室成员加入白名单
+    public var onChatroomWhiteListAddedBlock: ((String) -> Void)?
+    /// 聊天室成员移出白名单
+    public var onChatroomWhiteListRemovedBlock: ((String) -> Void)?
+    /// 聊天室全员禁言状态变化
+    public var onChatroomAllMemberMuteChangedBlock: ((String) -> Void)?
+    /// 聊天室管理员添加
+    public var onChatroomAdminAddedBlock: ((String) -> Void)?
+    /// 聊天室管理员移除
+    public var onChatroomAdminRemovedBlock: ((String) -> Void)?
+    /// 聊天室所有者更新
+    public var onChatroomOwnerDidUpdateBlock: ((String) -> Void)?
+    /// 聊天室公告更新
+    public var onChatroomAnnouncementDidUpdateBlock: ((String) -> Void)?
+    /// 聊天室自定义属性更新
+    public var onChatroomAttributesUpdatedBlock: ((String) -> Void)?
+    /// 聊天室自定义属性移除
+    public var onChatroomAttributesRemovedBlock: ((String) -> Void)?
+
     private override init() {
         super.init()
         EMClient.shared().chatManager?.add(self, delegateQueue: nil)
         EMClient.shared().add(self, delegateQueue: nil)
+        EMClient.shared().groupManager?.add(self, delegateQueue: nil)
+        EMClient.shared().roomManager?.add(self, delegateQueue: nil)
     }
 
     public func createCustomMessageBody(event: String, paramsJson: String?) -> EMCustomMessageBody? {
@@ -437,6 +525,131 @@ private extension UNIEMClient {
         guard let data = try? JSONSerialization.data(withJSONObject: dicts, options: []) else { return nil }
         return String(data: data, encoding: .utf8)
     }
+
+    func groupToDict(_ group: EMGroup) -> [String: Any] {
+        let desc = (group.value(forKey: "description") as? String) ?? ""
+        var dict: [String: Any] = [
+            "groupId": group.groupId ?? "",
+            "groupName": group.groupName ?? "",
+            "groupAvatar": group.groupAvatar ?? "",
+            "description": desc,
+            "announcement": group.announcement ?? "",
+            "occupantsCount": group.occupantsCount,
+            "isPublic": group.isPublic,
+            "isMuteAllMembers": group.isMuteAllMembers,
+            "isDisabled": group.isDisabled,
+            "isBlocked": group.isBlocked,
+            "isPushNotificationEnabled": group.isPushNotificationEnabled,
+            "permissionType": group.permissionType.rawValue,
+            "owner": group.owner ?? ""
+        ]
+        if let settings = group.settings {
+            dict["maxUsers"] = settings.maxUsers
+            dict["style"] = settings.style.rawValue
+            if let ext = settings.ext {
+                dict["ext"] = ext
+            }
+        }
+        if let admins = group.adminList {
+            dict["adminList"] = admins
+        }
+        if let members = group.memberList {
+            dict["memberList"] = members
+        }
+        if let users = group.users {
+            dict["users"] = users
+        }
+        if let blacklist = group.blacklist {
+            dict["blacklist"] = blacklist
+        }
+        if let muteList = group.muteList {
+            dict["muteList"] = muteList
+        }
+        if let whiteList = group.whiteList {
+            dict["whiteList"] = whiteList
+        }
+        if let files = group.sharedFileList {
+            dict["sharedFileList"] = files.map { sharedFileToDict($0) }
+        }
+        return dict
+    }
+
+    func groupToJson(_ group: EMGroup) -> String? {
+        let dict = groupToDict(group)
+        guard let data = try? JSONSerialization.data(withJSONObject: dict, options: []) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    func groupListToJson(_ groups: [EMGroup]) -> String? {
+        let dicts = groups.map { groupToDict($0) }
+        guard let data = try? JSONSerialization.data(withJSONObject: dicts, options: []) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    func sharedFileToDict(_ file: EMGroupSharedFile) -> [String: Any] {
+        return [
+            "fileId": file.fileId ?? "",
+            "fileName": file.fileName ?? "",
+            "fileOwner": file.fileOwner ?? "",
+            "fileSize": file.fileSize,
+            "createdAt": file.createdAt
+        ]
+    }
+
+    func sharedFileToJson(_ file: EMGroupSharedFile) -> String? {
+        let dict = sharedFileToDict(file)
+        guard let data = try? JSONSerialization.data(withJSONObject: dict, options: []) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    func chatroomToDict(_ room: EMChatroom) -> [String: Any] {
+        let desc = (room.value(forKey: "description") as? String) ?? ""
+        var dict: [String: Any] = [
+            "chatroomId": room.chatroomId ?? "",
+            "subject": room.subject ?? "",
+            "description": desc,
+            "owner": room.owner ?? "",
+            "announcement": room.announcement ?? "",
+            "permissionType": room.permissionType.rawValue,
+            "maxOccupantsCount": room.maxOccupantsCount,
+            "occupantsCount": room.occupantsCount,
+            "isMuteAllMembers": room.isMuteAllMembers,
+            "isInWhitelist": room.isInWhitelist,
+            "createTimestamp": room.createTimestamp,
+            "muteExpireTimestamp": room.muteExpireTimestamp
+        ]
+        if let admins = room.adminList {
+            dict["adminList"] = admins
+        }
+        if let members = room.memberList {
+            dict["memberList"] = members
+        }
+        if let blacklist = room.blacklist {
+            dict["blacklist"] = blacklist
+        }
+        if let whitelist = room.whitelist {
+            dict["whitelist"] = whitelist
+        }
+        if let muteMembers = room.muteMembers {
+            var muteDict: [String: Any] = [:]
+            for (k, v) in muteMembers {
+                muteDict[k] = v
+            }
+            dict["muteMembers"] = muteDict
+        }
+        return dict
+    }
+
+    func chatroomToJson(_ room: EMChatroom) -> String? {
+        let dict = chatroomToDict(room)
+        guard let data = try? JSONSerialization.data(withJSONObject: dict, options: []) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    func dictToJsonString(_ dict: [String: Any]) -> String? {
+        guard let data = try? JSONSerialization.data(withJSONObject: dict, options: []) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
 }
 
 // MARK: - EMChatManagerDelegate
@@ -607,6 +820,539 @@ extension UNIEMClient: EMClientDelegate {
     public func tokenDidExpire(_ aErrorCode: EMErrorCode) {
         DispatchQueue.main.async {
             self.onTokenDidExpireBlock?(NSNumber(value: aErrorCode.rawValue))
+        }
+    }
+}
+
+// MARK: - EMGroupManagerDelegate
+
+extension UNIEMClient: EMGroupManagerDelegate {
+
+    /// 收到群组邀请
+    @objc(groupInvitationDidReceive:groupName:inviter:message:)
+    public func groupInvitationDidReceive(_ aGroupId: String, groupName aGroupName: String, inviter aInviter: String, message aMessage: String?) {
+        let dict: [String: Any] = [
+            "groupId": aGroupId,
+            "groupName": aGroupName,
+            "inviter": aInviter,
+            "message": aMessage ?? ""
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupInvitationDidReceiveBlock?(json)
+        }
+    }
+
+    /// 群组邀请被接受
+    @objc(groupInvitationDidAccept:invitee:)
+    public func groupInvitationDidAccept(_ aGroup: EMGroup, invitee aInvitee: String) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "invitee": aInvitee
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupInvitationDidAcceptBlock?(json)
+        }
+    }
+
+    /// 群组邀请被拒绝
+    @objc(groupInvitationDidDecline:invitee:reason:)
+    public func groupInvitationDidDecline(_ aGroup: EMGroup, invitee aInvitee: String, reason aReason: String?) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "invitee": aInvitee,
+            "reason": aReason ?? ""
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupInvitationDidDeclineBlock?(json)
+        }
+    }
+
+    /// 自动加入群组
+    @objc(didJoinGroup:inviter:message:)
+    public func didJoinGroup(_ aGroup: EMGroup, inviter aInviter: String, message aMessage: String?) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "inviter": aInviter,
+            "message": aMessage ?? ""
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onDidJoinGroupBlock?(json)
+        }
+    }
+
+    /// 离开群组
+    @objc(didLeaveGroup:reason:)
+    public func didLeaveGroup(_ aGroup: EMGroup, reason aReason: EMGroupLeaveReason) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "reason": aReason.rawValue
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onDidLeaveGroupBlock?(json)
+        }
+    }
+
+    /// 收到入群申请
+    @objc(joinGroupRequestDidReceive:user:reason:)
+    public func joinGroupRequestDidReceive(_ aGroup: EMGroup, user aUsername: String, reason aReason: String?) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "applicant": aUsername,
+            "reason": aReason ?? ""
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onJoinGroupRequestDidReceiveBlock?(json)
+        }
+    }
+
+    /// 入群申请被拒绝
+    @objc(joinGroupRequestDidDecline:reason:decliner:applicant:)
+    public func joinGroupRequestDidDecline(_ aGroupId: String, reason aReason: String?, decliner aDecliner: String?, applicant aApplicant: String) {
+        let dict: [String: Any] = [
+            "groupId": aGroupId,
+            "reason": aReason ?? "",
+            "decliner": aDecliner ?? "",
+            "applicant": aApplicant
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onJoinGroupRequestDidDeclineBlock?(json)
+        }
+    }
+
+    /// 入群申请被同意
+    @objc(joinGroupRequestDidApprove:)
+    public func joinGroupRequestDidApprove(_ aGroup: EMGroup) {
+        guard let json = groupToJson(aGroup) else { return }
+        DispatchQueue.main.async {
+            self.onJoinGroupRequestDidApproveBlock?(json)
+        }
+    }
+
+    /// 群组列表更新
+    @objc(groupListDidUpdate:)
+    public func groupListDidUpdate(_ aGroupList: [EMGroup]) {
+        guard let json = groupListToJson(aGroupList) else { return }
+        DispatchQueue.main.async {
+            self.onGroupListDidUpdateBlock?(json)
+        }
+    }
+
+    /// 群成员加入禁言列表
+    @objc(groupMuteListDidUpdate:addedMutedMembers:muteExpire:)
+    public func groupMuteListDidUpdate(_ aGroup: EMGroup, addedMutedMembers aMutedMembers: [String], muteExpire aMuteExpire: Int) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "mutedMembers": aMutedMembers,
+            "muteExpire": aMuteExpire
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupMuteListAddedBlock?(json)
+        }
+    }
+
+    /// 群成员移出禁言列表
+    @objc(groupMuteListDidUpdate:removedMutedMembers:)
+    public func groupMuteListDidUpdate(_ aGroup: EMGroup, removedMutedMembers aMutedMembers: [String]) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "mutedMembers": aMutedMembers
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupMuteListRemovedBlock?(json)
+        }
+    }
+
+    /// 群成员加入白名单
+    @objc(groupWhiteListDidUpdate:addedWhiteListMembers:)
+    public func groupWhiteListDidUpdate(_ aGroup: EMGroup, addedWhiteListMembers aMembers: [String]) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "members": aMembers
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupWhiteListAddedBlock?(json)
+        }
+    }
+
+    /// 群成员移出白名单
+    @objc(groupWhiteListDidUpdate:removedWhiteListMembers:)
+    public func groupWhiteListDidUpdate(_ aGroup: EMGroup, removedWhiteListMembers aMembers: [String]) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "members": aMembers
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupWhiteListRemovedBlock?(json)
+        }
+    }
+
+    /// 全员禁言状态变化
+    @objc(groupAllMemberMuteChanged:isAllMemberMuted:)
+    public func groupAllMemberMuteChanged(_ aGroup: EMGroup, isAllMemberMuted aMuted: Bool) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "isAllMuted": aMuted
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupAllMemberMuteChangedBlock?(json)
+        }
+    }
+
+    /// 添加管理员
+    @objc(groupAdminListDidUpdate:addedAdmin:)
+    public func groupAdminListDidUpdate(_ aGroup: EMGroup, addedAdmin aAdmin: String) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "admin": aAdmin
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupAdminAddedBlock?(json)
+        }
+    }
+
+    /// 移除管理员
+    @objc(groupAdminListDidUpdate:removedAdmin:)
+    public func groupAdminListDidUpdate(_ aGroup: EMGroup, removedAdmin aAdmin: String) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "admin": aAdmin
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupAdminRemovedBlock?(json)
+        }
+    }
+
+    /// 群主变更
+    @objc(groupOwnerDidUpdate:newOwner:oldOwner:)
+    public func groupOwnerDidUpdate(_ aGroup: EMGroup, newOwner aNewOwner: String, oldOwner aOldOwner: String) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "newOwner": aNewOwner,
+            "oldOwner": aOldOwner
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupOwnerDidUpdateBlock?(json)
+        }
+    }
+
+    /// 用户加入群组
+    @objc(userDidJoinGroup:users:)
+    public func userDidJoinGroup(_ group: EMGroup, users userIds: [String]) {
+        let dict: [String: Any] = [
+            "group": groupToDict(group),
+            "userIds": userIds
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onUserDidJoinGroupBlock?(json)
+        }
+    }
+
+    /// 用户离开群组
+    @objc(userDidLeaveGroup:users:)
+    public func userDidLeaveGroup(_ group: EMGroup, users userIds: [String]) {
+        let dict: [String: Any] = [
+            "group": groupToDict(group),
+            "userIds": userIds
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onUserDidLeaveGroupBlock?(json)
+        }
+    }
+
+    /// 群公告更新
+    @objc(groupAnnouncementDidUpdate:announcement:)
+    public func groupAnnouncementDidUpdate(_ aGroup: EMGroup, announcement aAnnouncement: String?) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "announcement": aAnnouncement ?? ""
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupAnnouncementDidUpdateBlock?(json)
+        }
+    }
+
+    /// 群共享文件添加
+    @objc(groupFileListDidUpdate:addedSharedFile:)
+    public func groupFileListDidUpdate(_ aGroup: EMGroup, addedSharedFile aSharedFile: EMGroupSharedFile) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "sharedFile": sharedFileToDict(aSharedFile)
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupFileListAddedBlock?(json)
+        }
+    }
+
+    /// 群共享文件移除
+    @objc(groupFileListDidUpdate:removedSharedFile:)
+    public func groupFileListDidUpdate(_ aGroup: EMGroup, removedSharedFile aFileId: String) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "fileId": aFileId
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupFileListRemovedBlock?(json)
+        }
+    }
+
+    /// 群禁用状态变化
+    @objc(groupStateChanged:isDisabled:)
+    public func groupStateChanged(_ aGroup: EMGroup, isDisabled aDisabled: Bool) {
+        let dict: [String: Any] = [
+            "group": groupToDict(aGroup),
+            "isDisabled": aDisabled
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupStateChangedBlock?(json)
+        }
+    }
+
+    /// 群详情更新
+    @objc(groupSpecificationDidUpdate:)
+    public func groupSpecificationDidUpdate(_ aGroup: EMGroup) {
+        guard let json = groupToJson(aGroup) else { return }
+        DispatchQueue.main.async {
+            self.onGroupSpecificationDidUpdateBlock?(json)
+        }
+    }
+
+    /// 群成员自定义属性变更
+    @objc(onAttributesChangedOfGroupMember:userId:attributes:operatorId:)
+    public func onAttributesChangedOfGroupMember(_ groupId: String, userId: String, attributes: [String: String]?, operatorId: String) {
+        let dict: [String: Any] = [
+            "groupId": groupId,
+            "userId": userId,
+            "attributes": attributes ?? [:],
+            "operatorId": operatorId
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onGroupMemberAttributesChangedBlock?(json)
+        }
+    }
+}
+
+// MARK: - EMChatroomManagerDelegate
+
+extension UNIEMClient: EMChatroomManagerDelegate {
+
+    /// 用户加入聊天室
+    @objc(userDidJoinChatroom:user:ext:)
+    public func userDidJoinChatroom(_ aChatroom: EMChatroom, user aUsername: String, ext: String?) {
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "user": aUsername,
+            "ext": ext ?? ""
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomUserJoinedBlock?(json)
+        }
+    }
+
+    /// 用户离开聊天室
+    @objc(userDidLeaveChatroom:user:)
+    public func userDidLeaveChatroom(_ aChatroom: EMChatroom, user aUsername: String) {
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "user": aUsername
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomUserLeftBlock?(json)
+        }
+    }
+
+    /// 被踢出聊天室
+    @objc(didDismissFromChatroom:reason:)
+    public func didDismissFromChatroom(_ aChatroom: EMChatroom, reason aReason: EMChatroomBeKickedReason) {
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "reason": aReason.rawValue
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomDidDismissBlock?(json)
+        }
+    }
+
+    /// 聊天室详情更新
+    @objc(chatroomSpecificationDidUpdate:)
+    public func chatroomSpecificationDidUpdate(_ aChatroom: EMChatroom) {
+        guard let json = chatroomToJson(aChatroom) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomSpecificationDidUpdateBlock?(json)
+        }
+    }
+
+    /// 聊天室成员加入禁言列表
+    @objc(chatroomMuteListDidUpdate:addedMutedMembers:)
+    public func chatroomMuteListDidUpdate(_ aChatroom: EMChatroom, addedMutedMembers aMutes: [String: NSNumber]) {
+        var muteDict: [String: Any] = [:]
+        for (k, v) in aMutes {
+            muteDict[k] = v
+        }
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "mutedMembers": muteDict
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomMuteListAddedBlock?(json)
+        }
+    }
+
+    /// 聊天室成员移出禁言列表
+    @objc(chatroomMuteListDidUpdate:removedMutedMembers:)
+    public func chatroomMuteListDidUpdate(_ aChatroom: EMChatroom, removedMutedMembers aMutes: [String]) {
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "mutedMembers": aMutes
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomMuteListRemovedBlock?(json)
+        }
+    }
+
+    /// 聊天室成员加入白名单
+    @objc(chatroomWhiteListDidUpdate:addedWhiteListMembers:)
+    public func chatroomWhiteListDidUpdate(_ aChatroom: EMChatroom, addedWhiteListMembers aMembers: [String]) {
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "members": aMembers
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomWhiteListAddedBlock?(json)
+        }
+    }
+
+    /// 聊天室成员移出白名单
+    @objc(chatroomWhiteListDidUpdate:removedWhiteListMembers:)
+    public func chatroomWhiteListDidUpdate(_ aChatroom: EMChatroom, removedWhiteListMembers aMembers: [String]) {
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "members": aMembers
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomWhiteListRemovedBlock?(json)
+        }
+    }
+
+    /// 聊天室全员禁言状态变化
+    @objc(chatroomAllMemberMuteChanged:isAllMemberMuted:)
+    public func chatroomAllMemberMuteChanged(_ aChatroom: EMChatroom, isAllMemberMuted aMuted: Bool) {
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "isAllMemberMuted": aMuted
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomAllMemberMuteChangedBlock?(json)
+        }
+    }
+
+    /// 聊天室管理员添加
+    @objc(chatroomAdminListDidUpdate:addedAdmin:)
+    public func chatroomAdminListDidUpdate(_ aChatroom: EMChatroom, addedAdmin aAdmin: String) {
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "admin": aAdmin
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomAdminAddedBlock?(json)
+        }
+    }
+
+    /// 聊天室管理员移除
+    @objc(chatroomAdminListDidUpdate:removedAdmin:)
+    public func chatroomAdminListDidUpdate(_ aChatroom: EMChatroom, removedAdmin aAdmin: String) {
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "admin": aAdmin
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomAdminRemovedBlock?(json)
+        }
+    }
+
+    /// 聊天室所有者更新
+    @objc(chatroomOwnerDidUpdate:newOwner:oldOwner:)
+    public func chatroomOwnerDidUpdate(_ aChatroom: EMChatroom, newOwner aNewOwner: String, oldOwner aOldOwner: String) {
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "newOwner": aNewOwner,
+            "oldOwner": aOldOwner
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomOwnerDidUpdateBlock?(json)
+        }
+    }
+
+    /// 聊天室公告更新
+    @objc(chatroomAnnouncementDidUpdate:announcement:)
+    public func chatroomAnnouncementDidUpdate(_ aChatroom: EMChatroom, announcement aAnnouncement: String?) {
+        let dict: [String: Any] = [
+            "chatroom": chatroomToDict(aChatroom),
+            "announcement": aAnnouncement ?? ""
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomAnnouncementDidUpdateBlock?(json)
+        }
+    }
+
+    /// 聊天室自定义属性更新
+    @objc(chatroomAttributesDidUpdated:attributeMap:from:)
+    public func chatroomAttributesDidUpdated(_ roomId: String, attributeMap: [String: String], from fromId: String) {
+        let dict: [String: Any] = [
+            "roomId": roomId,
+            "attributeMap": attributeMap,
+            "fromId": fromId
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomAttributesUpdatedBlock?(json)
+        }
+    }
+
+    /// 聊天室自定义属性移除
+    @objc(chatroomAttributesDidRemoved:attributes:from:)
+    public func chatroomAttributesDidRemoved(_ roomId: String, attributes: [String], from fromId: String) {
+        let dict: [String: Any] = [
+            "roomId": roomId,
+            "attributes": attributes,
+            "fromId": fromId
+        ]
+        guard let json = dictToJsonString(dict) else { return }
+        DispatchQueue.main.async {
+            self.onChatroomAttributesRemovedBlock?(json)
         }
     }
 }

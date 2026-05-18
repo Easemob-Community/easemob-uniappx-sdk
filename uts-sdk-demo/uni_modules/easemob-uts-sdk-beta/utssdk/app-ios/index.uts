@@ -737,5 +737,380 @@ export function removeChatManagerListener(listenerId : string) : void {
 	console.log('[iOS] removeChatManagerListener:', listenerId);
 }
 
+// ==================== 群组管理监听（Block 回调方式）====================
+
+type GroupManagerListener = {
+	/** 收到群组邀请 JSON: {groupId, groupName, inviter, message} */
+	onGroupInvitationDidReceive?: ((data: string) => void) | null;
+	/** 群组邀请被接受 JSON: {group, invitee} */
+	onGroupInvitationDidAccept?: ((data: string) => void) | null;
+	/** 群组邀请被拒绝 JSON: {group, invitee, reason} */
+	onGroupInvitationDidDecline?: ((data: string) => void) | null;
+	/** 自动加入群组 JSON: {group, inviter, message} */
+	onDidJoinGroup?: ((data: string) => void) | null;
+	/** 离开群组 JSON: {group, reason} */
+	onDidLeaveGroup?: ((data: string) => void) | null;
+	/** 收到入群申请 JSON: {group, applicant, reason} */
+	onJoinGroupRequestDidReceive?: ((data: string) => void) | null;
+	/** 入群申请被拒绝 JSON: {groupId, reason, decliner, applicant} */
+	onJoinGroupRequestDidDecline?: ((data: string) => void) | null;
+	/** 入群申请被同意 JSON: group object */
+	onJoinGroupRequestDidApprove?: ((data: string) => void) | null;
+	/** 群组列表更新 JSON: group[] */
+	onGroupListDidUpdate?: ((data: string) => void) | null;
+	/** 群成员加入禁言列表 JSON: {group, mutedMembers, muteExpire} */
+	onGroupMuteListAdded?: ((data: string) => void) | null;
+	/** 群成员移出禁言列表 JSON: {group, mutedMembers} */
+	onGroupMuteListRemoved?: ((data: string) => void) | null;
+	/** 群成员加入白名单 JSON: {group, members} */
+	onGroupWhiteListAdded?: ((data: string) => void) | null;
+	/** 群成员移出白名单 JSON: {group, members} */
+	onGroupWhiteListRemoved?: ((data: string) => void) | null;
+	/** 全员禁言状态变化 JSON: {group, isAllMuted} */
+	onGroupAllMemberMuteChanged?: ((data: string) => void) | null;
+	/** 添加管理员 JSON: {group, admin} */
+	onGroupAdminAdded?: ((data: string) => void) | null;
+	/** 移除管理员 JSON: {group, admin} */
+	onGroupAdminRemoved?: ((data: string) => void) | null;
+	/** 群主变更 JSON: {group, newOwner, oldOwner} */
+	onGroupOwnerDidUpdate?: ((data: string) => void) | null;
+	/** 用户加入群组 JSON: {group, userIds} */
+	onUserDidJoinGroup?: ((data: string) => void) | null;
+	/** 用户离开群组 JSON: {group, userIds} */
+	onUserDidLeaveGroup?: ((data: string) => void) | null;
+	/** 群公告更新 JSON: {group, announcement} */
+	onGroupAnnouncementDidUpdate?: ((data: string) => void) | null;
+	/** 群共享文件添加 JSON: {group, sharedFile} */
+	onGroupFileListAdded?: ((data: string) => void) | null;
+	/** 群共享文件移除 JSON: {group, fileId} */
+	onGroupFileListRemoved?: ((data: string) => void) | null;
+	/** 群禁用状态变化 JSON: {group, isDisabled} */
+	onGroupStateChanged?: ((data: string) => void) | null;
+	/** 群详情更新 JSON: group object */
+	onGroupSpecificationDidUpdate?: ((data: string) => void) | null;
+	/** 群成员自定义属性变更 JSON: {groupId, userId, attributes, operatorId} */
+	onGroupMemberAttributesChanged?: ((data: string) => void) | null;
+}
+
+const groupManagerCallbackMap : Map<string, GroupManagerListener> = new Map();
+
+@UTSJS.keepAlive
+export function addGroupManagerListener(
+	listenerId : string,
+	listener : GroupManagerListener
+) : void {
+	groupManagerCallbackMap.set(listenerId, listener);
+
+	if (groupManagerCallbackMap.size == 1) {
+		UNIEMClient.shared.onGroupInvitationDidReceiveBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupInvitationDidReceive?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupInvitationDidAcceptBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupInvitationDidAccept?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupInvitationDidDeclineBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupInvitationDidDecline?.(json);
+			});
+		};
+		UNIEMClient.shared.onDidJoinGroupBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onDidJoinGroup?.(json);
+			});
+		};
+		UNIEMClient.shared.onDidLeaveGroupBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onDidLeaveGroup?.(json);
+			});
+		};
+		UNIEMClient.shared.onJoinGroupRequestDidReceiveBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onJoinGroupRequestDidReceive?.(json);
+			});
+		};
+		UNIEMClient.shared.onJoinGroupRequestDidDeclineBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onJoinGroupRequestDidDecline?.(json);
+			});
+		};
+		UNIEMClient.shared.onJoinGroupRequestDidApproveBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onJoinGroupRequestDidApprove?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupListDidUpdateBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupListDidUpdate?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupMuteListAddedBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupMuteListAdded?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupMuteListRemovedBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupMuteListRemoved?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupWhiteListAddedBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupWhiteListAdded?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupWhiteListRemovedBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupWhiteListRemoved?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupAllMemberMuteChangedBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupAllMemberMuteChanged?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupAdminAddedBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupAdminAdded?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupAdminRemovedBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupAdminRemoved?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupOwnerDidUpdateBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupOwnerDidUpdate?.(json);
+			});
+		};
+		UNIEMClient.shared.onUserDidJoinGroupBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onUserDidJoinGroup?.(json);
+			});
+		};
+		UNIEMClient.shared.onUserDidLeaveGroupBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onUserDidLeaveGroup?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupAnnouncementDidUpdateBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupAnnouncementDidUpdate?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupFileListAddedBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupFileListAdded?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupFileListRemovedBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupFileListRemoved?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupStateChangedBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupStateChanged?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupSpecificationDidUpdateBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupSpecificationDidUpdate?.(json);
+			});
+		};
+		UNIEMClient.shared.onGroupMemberAttributesChangedBlock = (json : string) : void => {
+			groupManagerCallbackMap.forEach((cbs : GroupManagerListener, _id : string) : void => {
+				cbs.onGroupMemberAttributesChanged?.(json);
+			});
+		};
+	}
+
+	console.log('[iOS] addGroupManagerListener:', listenerId);
+}
+
+export function removeGroupManagerListener(listenerId : string) : void {
+	groupManagerCallbackMap.delete(listenerId);
+	if (groupManagerCallbackMap.size == 0) {
+		UNIEMClient.shared.onGroupInvitationDidReceiveBlock = null;
+		UNIEMClient.shared.onGroupInvitationDidAcceptBlock = null;
+		UNIEMClient.shared.onGroupInvitationDidDeclineBlock = null;
+		UNIEMClient.shared.onDidJoinGroupBlock = null;
+		UNIEMClient.shared.onDidLeaveGroupBlock = null;
+		UNIEMClient.shared.onJoinGroupRequestDidReceiveBlock = null;
+		UNIEMClient.shared.onJoinGroupRequestDidDeclineBlock = null;
+		UNIEMClient.shared.onJoinGroupRequestDidApproveBlock = null;
+		UNIEMClient.shared.onGroupListDidUpdateBlock = null;
+		UNIEMClient.shared.onGroupMuteListAddedBlock = null;
+		UNIEMClient.shared.onGroupMuteListRemovedBlock = null;
+		UNIEMClient.shared.onGroupWhiteListAddedBlock = null;
+		UNIEMClient.shared.onGroupWhiteListRemovedBlock = null;
+		UNIEMClient.shared.onGroupAllMemberMuteChangedBlock = null;
+		UNIEMClient.shared.onGroupAdminAddedBlock = null;
+		UNIEMClient.shared.onGroupAdminRemovedBlock = null;
+		UNIEMClient.shared.onGroupOwnerDidUpdateBlock = null;
+		UNIEMClient.shared.onUserDidJoinGroupBlock = null;
+		UNIEMClient.shared.onUserDidLeaveGroupBlock = null;
+		UNIEMClient.shared.onGroupAnnouncementDidUpdateBlock = null;
+		UNIEMClient.shared.onGroupFileListAddedBlock = null;
+		UNIEMClient.shared.onGroupFileListRemovedBlock = null;
+		UNIEMClient.shared.onGroupStateChangedBlock = null;
+		UNIEMClient.shared.onGroupSpecificationDidUpdateBlock = null;
+		UNIEMClient.shared.onGroupMemberAttributesChangedBlock = null;
+	}
+	console.log('[iOS] removeGroupManagerListener:', listenerId);
+}
+
+
+// ==================== 聊天室管理监听（Block 回调方式）====================
+
+type ChatroomManagerListener = {
+	/** 用户加入聊天室 JSON: {chatroom, user, ext} */
+	onChatroomUserJoined?: ((data: string) => void) | null;
+	/** 用户离开聊天室 JSON: {chatroom, user} */
+	onChatroomUserLeft?: ((data: string) => void) | null;
+	/** 被踢出聊天室 JSON: {chatroom, reason}; reason: 0=被移除 1=聊天室销毁 2=离线 */
+	onChatroomDidDismiss?: ((data: string) => void) | null;
+	/** 聊天室详情更新 JSON: chatroom object */
+	onChatroomSpecificationDidUpdate?: ((data: string) => void) | null;
+	/** 聊天室成员加入禁言列表 JSON: {chatroom, mutedMembers} mutedMembers 为 {userId: expireTimestamp} 字典 */
+	onChatroomMuteListAdded?: ((data: string) => void) | null;
+	/** 聊天室成员移出禁言列表 JSON: {chatroom, mutedMembers} mutedMembers 为 string[] */
+	onChatroomMuteListRemoved?: ((data: string) => void) | null;
+	/** 聊天室成员加入白名单 JSON: {chatroom, members} */
+	onChatroomWhiteListAdded?: ((data: string) => void) | null;
+	/** 聊天室成员移出白名单 JSON: {chatroom, members} */
+	onChatroomWhiteListRemoved?: ((data: string) => void) | null;
+	/** 聊天室全员禁言状态变化 JSON: {chatroom, isAllMemberMuted} */
+	onChatroomAllMemberMuteChanged?: ((data: string) => void) | null;
+	/** 聊天室管理员添加 JSON: {chatroom, admin} */
+	onChatroomAdminAdded?: ((data: string) => void) | null;
+	/** 聊天室管理员移除 JSON: {chatroom, admin} */
+	onChatroomAdminRemoved?: ((data: string) => void) | null;
+	/** 聊天室所有者更新 JSON: {chatroom, newOwner, oldOwner} */
+	onChatroomOwnerDidUpdate?: ((data: string) => void) | null;
+	/** 聊天室公告更新 JSON: {chatroom, announcement} */
+	onChatroomAnnouncementDidUpdate?: ((data: string) => void) | null;
+	/** 聊天室自定义属性更新 JSON: {roomId, attributeMap, fromId} */
+	onChatroomAttributesUpdated?: ((data: string) => void) | null;
+	/** 聊天室自定义属性移除 JSON: {roomId, attributes, fromId} */
+	onChatroomAttributesRemoved?: ((data: string) => void) | null;
+}
+
+const chatroomManagerCallbackMap : Map<string, ChatroomManagerListener> = new Map();
+
+@UTSJS.keepAlive
+export function addChatroomManagerListener(
+	listenerId : string,
+	listener : ChatroomManagerListener
+) : void {
+	chatroomManagerCallbackMap.set(listenerId, listener);
+
+	if (chatroomManagerCallbackMap.size == 1) {
+		UNIEMClient.shared.onChatroomUserJoinedBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomUserJoined?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomUserLeftBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomUserLeft?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomDidDismissBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomDidDismiss?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomSpecificationDidUpdateBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomSpecificationDidUpdate?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomMuteListAddedBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomMuteListAdded?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomMuteListRemovedBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomMuteListRemoved?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomWhiteListAddedBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomWhiteListAdded?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomWhiteListRemovedBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomWhiteListRemoved?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomAllMemberMuteChangedBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomAllMemberMuteChanged?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomAdminAddedBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomAdminAdded?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomAdminRemovedBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomAdminRemoved?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomOwnerDidUpdateBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomOwnerDidUpdate?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomAnnouncementDidUpdateBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomAnnouncementDidUpdate?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomAttributesUpdatedBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomAttributesUpdated?.(json);
+			});
+		};
+		UNIEMClient.shared.onChatroomAttributesRemovedBlock = (json : string) : void => {
+			chatroomManagerCallbackMap.forEach((cbs : ChatroomManagerListener, _id : string) : void => {
+				cbs.onChatroomAttributesRemoved?.(json);
+			});
+		};
+	}
+
+	console.log('[iOS] addChatroomManagerListener:', listenerId);
+}
+
+export function removeChatroomManagerListener(listenerId : string) : void {
+	chatroomManagerCallbackMap.delete(listenerId);
+	if (chatroomManagerCallbackMap.size == 0) {
+		UNIEMClient.shared.onChatroomUserJoinedBlock = null;
+		UNIEMClient.shared.onChatroomUserLeftBlock = null;
+		UNIEMClient.shared.onChatroomDidDismissBlock = null;
+		UNIEMClient.shared.onChatroomSpecificationDidUpdateBlock = null;
+		UNIEMClient.shared.onChatroomMuteListAddedBlock = null;
+		UNIEMClient.shared.onChatroomMuteListRemovedBlock = null;
+		UNIEMClient.shared.onChatroomWhiteListAddedBlock = null;
+		UNIEMClient.shared.onChatroomWhiteListRemovedBlock = null;
+		UNIEMClient.shared.onChatroomAllMemberMuteChangedBlock = null;
+		UNIEMClient.shared.onChatroomAdminAddedBlock = null;
+		UNIEMClient.shared.onChatroomAdminRemovedBlock = null;
+		UNIEMClient.shared.onChatroomOwnerDidUpdateBlock = null;
+		UNIEMClient.shared.onChatroomAnnouncementDidUpdateBlock = null;
+		UNIEMClient.shared.onChatroomAttributesUpdatedBlock = null;
+		UNIEMClient.shared.onChatroomAttributesRemovedBlock = null;
+	}
+	console.log('[iOS] removeChatroomManagerListener:', listenerId);
+}
+
 
 // iOS beta: 仅导出独立函数，不提供 EasemobClient 实例封装

@@ -52,6 +52,10 @@ export {
   addMessageListener,
   removeMessageListener,
   removeAllMessageListeners,
+  addGroupManagerListener,
+  removeGroupManagerListener,
+  addChatroomManagerListener,
+  removeChatroomManagerListener,
 } from './app-ios/index.uts';
 // #endif
 
